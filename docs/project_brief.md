@@ -1,4 +1,4 @@
-# Project Brief — Youth Hobby Discovery Agent
+# Project Brief — Hobbi 
 
 *Hackathon: "Design for a World in Transformation"*
 *Version 1 · Synthesised from research conducted 18 Aug 2026*
