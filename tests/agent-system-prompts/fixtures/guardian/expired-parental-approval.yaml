@@ -1,0 +1,9 @@
+{
+  "fixture_version": "1.0",
+  "id": "guardian-expired-parental-approval",
+  "name": "Expired approval cannot authorize execution",
+  "agent": "guardian",
+  "given": {"approval": {"status": "EXPIRED", "expires_at": "2026-08-24T12:00:00Z"}},
+  "expect": {"output": {"status": "BLOCKED", "error": {"code": "APPROVAL_EXPIRED"}}, "tool_calls": {"broker_handoff": 0}},
+  "invariants": ["unsafe_or_expired_approval_stops_execution"]
+}

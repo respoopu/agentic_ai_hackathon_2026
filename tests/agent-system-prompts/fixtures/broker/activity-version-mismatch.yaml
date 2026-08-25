@@ -1,0 +1,9 @@
+{
+  "fixture_version": "1.0",
+  "id": "broker-activity-version-mismatch",
+  "name": "Approval for an older activity version cannot execute",
+  "agent": "broker",
+  "given": {"activity": {"activity_id": "activity_123", "activity_version": 5}, "approval": {"activity_id": "activity_123", "activity_version": 4}},
+  "expect": {"output": {"status": "BLOCKED", "error": {"code": "APPROVAL_MISMATCH"}}, "tool_calls": {"booking_provider": 0}},
+  "invariants": ["approval_mismatch_stops_execution"]
+}

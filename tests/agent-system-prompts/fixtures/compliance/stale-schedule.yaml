@@ -1,0 +1,9 @@
+{
+  "fixture_version": "1.0",
+  "id": "compliance-stale-schedule",
+  "name": "Stale schedule is not inserted as trusted knowledge",
+  "agent": "compliance",
+  "given": {"record": {"schedule": "Saturday 10:00", "retrieved_at": "2024-01-01T00:00:00Z"}},
+  "expect": {"output": {"status": "MORE_DATA_REQUIRED", "uncertain_fields": ["schedule"]}, "tool_calls": {"knowledge_base_write": 0}},
+  "invariants": ["stale_time_sensitive_facts_are_not_persisted"]
+}

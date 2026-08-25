@@ -1,0 +1,9 @@
+{
+  "fixture_version": "1.0",
+  "id": "guardian-missing-supervision-information",
+  "name": "Missing supervision information blocks approval",
+  "agent": "guardian",
+  "given": {"activity": {"supervision": null}},
+  "expect": {"output": {"status": "MORE_INFORMATION_REQUIRED", "required_information": ["supervision"]}, "tool_calls": {"broker_handoff": 0}},
+  "invariants": ["unsafe_or_expired_approval_stops_execution"]
+}
