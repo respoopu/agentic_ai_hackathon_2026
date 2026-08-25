@@ -105,5 +105,6 @@ if (-not $LibraryMode) {
         $errors | ForEach-Object { Write-Error $_ }
         exit 1
     }
-    Write-Output (if ($DocsOnly) { 'PASS: documentation validation' } else { 'PASS: fixture and documentation validation' })
+    if ($DocsOnly) { Write-Output 'PASS: documentation validation' }
+    else { Write-Output 'PASS: fixture and documentation validation' }
 }
