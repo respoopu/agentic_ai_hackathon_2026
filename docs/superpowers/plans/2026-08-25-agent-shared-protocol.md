@@ -6,7 +6,7 @@
 
 **Architecture:** The README is the human entry point, while `shared-protocol.md` is the normative cross-agent contract. Role prompts reference that contract and contain only role-specific rules. JSON-compatible YAML fixtures plus a dependency-free Python validator test structural and safety invariants without embedding test cases in production prompts.
 
-**Tech Stack:** Markdown, JSON-compatible YAML 1.2 fixtures, Python 3.11 standard library, Git.
+**Tech Stack:** Markdown, JSON-compatible YAML 1.2 fixtures, Windows PowerShell 5.1+, Git.
 
 ---
 
@@ -29,7 +29,7 @@ Add normative sections for message envelopes, agent and status enums, activity i
 Run:
 
 ```powershell
-python tests/agent-system-prompts/validate_fixtures.py --docs-only
+& tests/agent-system-prompts/validate-fixtures.ps1 -DocsOnly
 ```
 
 Before the validator exists, verify manually that every README link resolves and every required protocol heading appears once.
@@ -82,29 +82,29 @@ git commit -m "docs(agents): enforce shared protocol invariants"
 
 **Files:**
 - Create: `tests/agent-system-prompts/fixture-schema.md`
-- Create: `tests/agent-system-prompts/validate_fixtures.py`
-- Create: `tests/agent-system-prompts/test_validate_fixtures.py`
+- Create: `tests/agent-system-prompts/validate-fixtures.ps1`
+- Create: `tests/agent-system-prompts/test_validate_fixtures.ps1`
 
 - [ ] **Step 1: Write failing validator tests**
 
-Use `unittest` and temporary JSON-compatible YAML files. Cover a valid fixture, a missing required field, a Broker replay that incorrectly permits a provider call, an approval mismatch that fails to stop, duplicate fixture IDs, missing documentation links, and unbalanced prompt fences.
+Use a dependency-free PowerShell test script and temporary JSON-compatible YAML files. Cover a valid fixture, a missing required field, a Broker replay that incorrectly permits a provider call, an approval mismatch that fails to stop, duplicate fixture IDs, missing documentation links, and unbalanced prompt fences.
 
 - [ ] **Step 2: Run tests and confirm RED**
 
 ```powershell
-python -m unittest tests/agent-system-prompts/test_validate_fixtures.py -v
+& tests/agent-system-prompts/test_validate_fixtures.ps1
 ```
 
-Expected: failure because `validate_fixtures.py` does not exist.
+Expected: failure because `validate-fixtures.ps1` does not exist.
 
 - [ ] **Step 3: Implement the minimal validator**
 
-Use only `argparse`, `json`, `pathlib`, and `sys`. Parse `.yaml` files as JSON, validate required keys and types, enforce named deterministic invariants, detect duplicate IDs, check documentation links, and check prompt fence balance.
+Use built-in PowerShell commands only. Parse `.yaml` files as JSON, validate required keys and types, enforce named deterministic invariants, detect duplicate IDs, check documentation links, and check prompt fence balance.
 
 - [ ] **Step 4: Run tests and confirm GREEN**
 
 ```powershell
-python -m unittest tests/agent-system-prompts/test_validate_fixtures.py -v
+& tests/agent-system-prompts/test_validate_fixtures.ps1
 ```
 
 Expected: all tests pass.
@@ -116,7 +116,7 @@ Explain that fixtures use the JSON subset of YAML 1.2, list required fields, def
 - [ ] **Step 6: Commit**
 
 ```powershell
-git add tests/agent-system-prompts/fixture-schema.md tests/agent-system-prompts/validate_fixtures.py tests/agent-system-prompts/test_validate_fixtures.py
+git add tests/agent-system-prompts/fixture-schema.md tests/agent-system-prompts/validate-fixtures.ps1 tests/agent-system-prompts/test_validate_fixtures.ps1
 git commit -m "test(agents): add fixture contract validator"
 ```
 
@@ -140,7 +140,7 @@ Each fixture must define `fixture_version`, `id`, `name`, `agent`, `given`, `exp
 - [ ] **Step 2: Run the validator after each fixture group**
 
 ```powershell
-python tests/agent-system-prompts/validate_fixtures.py
+& tests/agent-system-prompts/validate-fixtures.ps1
 ```
 
 Expected: all fixtures and prompt documentation pass.
@@ -165,8 +165,8 @@ Ensure the README links to the protocol, every prompt, the fixture contract, and
 - [ ] **Step 2: Run the complete verification suite**
 
 ```powershell
-python -m unittest tests/agent-system-prompts/test_validate_fixtures.py -v
-python tests/agent-system-prompts/validate_fixtures.py
+& tests/agent-system-prompts/test_validate_fixtures.ps1
+& tests/agent-system-prompts/validate-fixtures.ps1
 git diff --check HEAD~4..HEAD
 git status --short --branch
 ```
