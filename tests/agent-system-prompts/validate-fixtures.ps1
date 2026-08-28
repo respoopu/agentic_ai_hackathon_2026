@@ -27,7 +27,7 @@ function Test-AgentFixture {
         if ($Fixture.expect.output.replayed -ne $true) { $errors.Add("$Source broker replay must set replayed=true") }
     }
     if ($Fixture.invariants -contains 'approval_mismatch_stops_execution') {
-        $stopStatuses = @('BLOCKED', 'AUTHORIZATION_REQUIRED', 'REJECTED')
+        $stopStatuses = @('BLOCKED', 'REJECTED')
         if ($Fixture.expect.output.status -notin $stopStatuses) { $errors.Add("$Source approval mismatch requires a stop status") }
         if ($Fixture.expect.tool_calls.booking_provider -ne 0) { $errors.Add("$Source approval mismatch permits a provider call") }
     }

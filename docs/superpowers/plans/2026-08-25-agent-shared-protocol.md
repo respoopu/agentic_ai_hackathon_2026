@@ -4,7 +4,7 @@
 
 **Goal:** Make the multi-agent prompt set conform to a shared, testable protocol with version-bound parental approval and idempotent Broker execution.
 
-**Architecture:** The README is the human entry point, while `shared-protocol.md` is the normative cross-agent contract. Role prompts reference that contract and contain only role-specific rules. JSON-compatible YAML fixtures plus a dependency-free Python validator test structural and safety invariants without embedding test cases in production prompts.
+**Architecture:** The README is the human entry point, while `shared-protocol.md` is the normative cross-agent contract. Role prompts reference that contract and contain only role-specific rules. JSON-compatible YAML fixtures plus a dependency-free PowerShell validator test structural and safety invariants without embedding test cases in production prompts.
 
 **Tech Stack:** Markdown, JSON-compatible YAML 1.2 fixtures, Windows PowerShell 5.1+, Git.
 

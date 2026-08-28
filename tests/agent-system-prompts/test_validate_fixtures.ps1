@@ -45,6 +45,14 @@ $mismatch.invariants = @('approval_mismatch_stops_execution')
 $mismatchErrors = @(Test-AgentFixture -Fixture $mismatch -Source 'fixture.yaml')
 Assert-True (($mismatchErrors -join ' ') -match 'stop status') 'approval mismatch without stop should fail'
 
+$unsupportedStatus = New-ValidFixture
+$unsupportedStatus.id = 'broker-unsupported-authorization-status'
+$unsupportedStatus.expect.output.status = 'AUTHORIZATION_REQUIRED'
+$unsupportedStatus.expect.tool_calls.booking_provider = 0
+$unsupportedStatus.invariants = @('approval_mismatch_stops_execution')
+$unsupportedStatusErrors = @(Test-AgentFixture -Fixture $unsupportedStatus -Source 'fixture.yaml')
+Assert-True (($unsupportedStatusErrors -join ' ') -match 'stop status') 'unsupported authorization status should fail'
+
 $temporary = Join-Path ([System.IO.Path]::GetTempPath()) ('agent-fixtures-' + [guid]::NewGuid())
 New-Item -ItemType Directory -Path $temporary | Out-Null
 try {
@@ -73,4 +81,4 @@ if ($failures.Count -gt 0) {
     exit 1
 }
 
-Write-Output 'PASS: 7 validator tests'
+Write-Output 'PASS: 8 validator tests'

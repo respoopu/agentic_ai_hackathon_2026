@@ -59,5 +59,5 @@ Agents receive only the data needed for their role. Child-identifying data must 
 Scenarios live outside production prompts under [`tests/agent-system-prompts/fixtures`](../../tests/agent-system-prompts/fixtures). The [fixture contract](../../tests/agent-system-prompts/fixture-schema.md) explains their format. Fixtures cover duplicate-booking prevention, approval-version matching, unknown provider outcomes, stale evidence, and prompt injection.
 
 ```powershell
-python tests/agent-system-prompts/validate_fixtures.py
+& tests/agent-system-prompts/validate-fixtures.ps1
 ```

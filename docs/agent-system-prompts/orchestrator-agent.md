@@ -124,6 +124,6 @@ Return:
   "reason": "...",
   "context": {},
   "required_action": "...",
-  "workflow_status": "active | awaiting_parent | completed | blocked"
+  "workflow_status": "ACTIVE | AWAITING_PARENT | COMPLETED | BLOCKED"
 }
 ```
