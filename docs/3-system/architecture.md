@@ -11,25 +11,27 @@ The diagram is the picture. **This document is the contract.** The editable HTML
 
 ## 1. Shape of the system
 
-**5 pipeline agents · 1 scheduled agent · 1 detached validation layer · 2 data stores · 2 bounded request loops + 1 ledger-bounded longitudinal feedback cycle.**
+**5 pipeline agents · 1 scheduled agent · 1 detached validation layer · 1 deterministic intake/setup service · 2 data stores · 2 bounded request loops + 1 ledger-bounded longitudinal feedback cycle.**
 
-The diagram's subtitle uses the same count: **Compliance is not a pipeline agent.** It runs on a schedule, off the request path, and never blocks a user-facing turn. Seven components in total.
+The diagram's subtitle uses the same count: **Compliance is not a pipeline agent.** It runs on a schedule, off the request path, and never blocks a user-facing turn. There are seven agentic components in total; Intake/Setup is deterministic application code and is not counted as an agent.
 
 ```
-Teen ──request──▶ I0 age boundary ──▶ Planner ──◀──1──▶ Discovery Engine ──write──▶ CKB
-                     │                      ▲
-                     │ approved plan        │ external fetch
-                     ▼                      │
-                  Guardian ──2──▶ (fail → Planner)
-                     │ pass
-                     ▼
-                  Broker ──G4 booking record──▶ teen attends / does not attend
-                     │
-                     ▼
-                  Observer ──3──▶ Personal Data ──▶ Planner (next cycle)
+Teen + parent ──▶ Intake/Setup ──I0 age boundary──▶ Planner ──◀──1──▶ Discovery Engine ──write──▶ CKB
+                       │                                ▲
+                       └──eligible setup + seeds──▶     │ external fetch
+                                                        │
+                                      approved plan     │
+                                           ▼            │
+                                        Guardian ──2──▶ (fail → Planner)
+                                           │ pass
+                                           ▼
+                                        Broker ──G4 booking record──▶ teen attends / does not attend
+                                           │
+                                           ▼
+                                        Observer ──3──▶ Personal Data ──▶ Planner (next cycle)
 
 Compliance Agent ── scheduled, off the request path ──▶ CKB freshness
-Orchestrator ───── validates every ◆ gate, in-band ─────
+Orchestrator ───── validates G1–G4 on-edge, in-band ─────
 ```
 
 Two stores, and the read/write asymmetry is the point:
@@ -37,9 +39,11 @@ Two stores, and the read/write asymmetry is the point:
 | Store | Holds | Who reads | Who writes |
 |---|---|---|---|
 | **Central Knowledge Base (CKB)** | listings · activities · locations · simulated cohort buckets | Planner, Discovery, Guardian, Compliance | **Seed loader** (build time) · **Discovery** (plan path) · **Compliance** (scheduled freshness) · deterministic cohort aggregator (roadmap) |
-| **Personal Data** | declared inputs · parental rules · consent records · budget ledger · plan-live flags · learned preferences | Planner, Guardian, Compliance | **Setup/input handler** (parent + teen inputs and cold-start seeds) · **Broker** (ledger commitments) · **Observer** (outcomes and preferences) · **Compliance** (dead-listing plan flags) |
+| **Personal Data** | declared inputs · parental rules · consent records · budget ledger · plan-live flags · learned preferences | Planner, Guardian, Compliance | **Intake/Setup** (parent + teen inputs and cold-start seeds) · **Broker** (ledger commitments) · **Observer** (outcomes and preferences) · **Compliance** (dead-listing plan flags) |
 
-**Planner is READ-ONLY on both stores.** It cannot write. That is deliberate: the component that reasons most freely is the one with no side effects, so a bad plan is discarded rather than persisted. The setup/input handler owns seed writes; Broker owns commitments; Observer owns outcome reconciliation. Discovery remains the only runtime writer to CKB on the request path.
+**Planner is READ-ONLY on both stores.** It cannot write. That is deliberate: the component that reasons most freely is the one with no side effects, so a bad plan is discarded rather than persisted. Intake/Setup owns declared-input and cold-start seed writes after I0 passes; Broker owns commitments; Observer owns outcome reconciliation. Discovery remains the only runtime writer to CKB on the request path.
+
+Broker and Observer use narrow transactional write commands rather than broad Personal Data reads. Broker submits the approved plan's `ledger_version` with its booking transaction; Observer submits an `AttendanceEvent` keyed to a booking. The storage layer rejects a stale version or duplicate transaction and applies the ledger update atomically. This is how they can reconcile the ledger without gaining read access to the rest of a minor's profile.
 
 ---
 
@@ -52,6 +56,12 @@ Two stores, and the read/write asymmetry is the point:
 | **External sources** | Activity listings, provider sites, public APIs, web search, venue schedules and pricing. **Outside the system boundary** — fetched, never trusted. | read by Discovery |
 
 The Parent is a **secondary user with veto power**, not an observer. See §7.
+
+### 2.1 Deterministic Intake/Setup service
+
+Intake/Setup is application code, not an agent. It collects the declared age, consent records, parent/teen constraints and optional cold-start chip taps; calls the pure `I0` validator; and terminates out-of-range requests before anything reaches Planner. For an eligible teen, it persists the setup inputs and any seed `Axis` records to Personal Data, then invokes Planner. The UI owns the fixed chip vocabulary and the setup handler owns the write, so Planner never has to mutate a store.
+
+The diagram shows both human inputs entering Intake/Setup, its I0 path to Planner, and its write to Personal Data. The planned implementation is `src/intake.py` (§11).
 
 **The age boundary is 13–17, both ends, and it is enforced before Planner runs (D7).** `I0` is a deterministic input validator, not an LLM decision and not one of the four inter-agent gates.
 
@@ -87,14 +97,14 @@ Each agent below states its job, its agent class (per the deck's taxonomy — se
 |---|---|
 | **Class** | Decision-Support (*Guide & Recommend*) + Personalized (*Adapt & Learn*) |
 | **Reads** | Personal Data (preferences, constraints, parental rules, **ledger**) · CKB (listings, activities, locations) |
-| **Writes** | Nothing. Emits `CandidatePlan` into state. |
+| **Writes** | Nothing. Emits `Plan` into request state. |
 | **Calls** | Discovery Engine — **and only passes it the plan**, never the raw stores |
 | **Cap** | `MAX_REPLANS = 3` per request, held in state |
 | **On cap** | Emit `no_viable_plan` with the binding constraint named, and escalate to the trusted adult. Never loop again. |
 
 **What it does**
 
-0. **Cold start only** — if `seeded_at` is `None` and there is no attendance history, offers 4–6 vibe chips (multi-select, skippable). See "Cold start" below.
+0. **Cold start only** — accepts either the low-confidence seeds written by Intake/Setup or an explicitly unseeded state when the teen chose *"Surprise me"*. Planner does not render the setup screen or write the selection. See "Cold start" below.
 1. Reads the ledger and the preference model.
 2. Retrieves candidate listings from CKB under hard filters: money remaining, hours free, travel radius, age range, parental rules.
 3. Sequences them as **experiments, cheapest first** — tasters and one-off workshops before short courses before term commitments. Explore before exploit.
@@ -104,11 +114,11 @@ Each agent below states its job, its agent class (per the deck's taxonomy — se
 
 **Why it cannot be a fixed workflow.** The sequence is state-dependent: what to try third depends on what happened at try one. Money and tries are finite and non-renewable, so every selection forecloses others. A ranked list recomputed from the same filters returns the same answer forever; this has to reason over what has already been spent.
 
-**Cold start (D10).** A teen with zero history has no behaviour to learn from — under Hidi & Renninger you cannot measure an interest in someone who has not yet had a trigger, so the cold start's job is to *produce* a trigger, not to diagnose one. Planner offers 4–6 vibe chips ("sporty", "artistic", "chill", "explorative"), multi-select. Five rules keep this a **seed** and not a **type**, and they are constraints on the build, not guidance:
+**Cold start (D10).** A teen with zero history has no behaviour to learn from — under Hidi & Renninger you cannot measure an interest in someone who has not yet had a trigger, so the cold start's job is to *produce* a trigger, not to diagnose one. After I0 passes and before Planner is invoked, Intake/Setup offers a fixed set of 4–6 vibe chips ("sporty", "artistic", "chill", "explorative"), multi-select. Five rules keep this a **seed** and not a **type**, and they are constraints on the build, not guidance:
 
 1. **Skippable.** *"Surprise me"* is a first-class option that produces a real plan. If it cannot be skipped it is a gate, and a gate is a quiz.
 2. **No result screen.** The chips never render a label back to the teen. *"You're an Explorer!"* is typing and is forbidden by `project_brief.md` §6.1.
-3. **Lowest confidence, and it decays.** The setup/input handler writes `Axis` with `provenance="seed"` before Planner runs. Planner only reads it. The **first attendance event outranks the entire cold-start screen.**
+3. **Lowest confidence, and it decays.** Intake/Setup writes `Axis` with `provenance="seed"` only after I0 passes and before it invokes Planner. Planner only reads it. The **first attendance event outranks the entire cold-start screen.**
 4. **Biases, never excludes.** Seeds shape the first one or two experiments. They never filter the candidate set — a mis-tap at signup must not narrow the world permanently. Invariant **A9**.
 5. **Asks where to start, not what you are like.** The wording is the distinction §6.1 protects.
 
@@ -245,7 +255,7 @@ Most quits are instance-level, not activity-level. Collapsing them is how a reco
 | **Reads** | CKB · Personal Data (to know which listings are live in someone's plan) |
 | **Writes** | **CKB** (`freshness_state`, `last_seen_at`, `verification`) · **Personal Data** (flags a plan whose listing died) |
 | **Trigger** | Scheduled, **off the request path**. Never blocks a user-facing turn. |
-| **Cap** | `MAX_LISTINGS_PER_SCAN`, and a per-domain fetch budget. |
+| **Cap** | `MAX_LISTINGS_PER_SCAN = 50`, plus `MAX_FETCHES_PER_DOMAIN = 5` per scan. |
 
 **Why it earns its place.** The differentiating supply — Telegram groups, Instagram coaches, informal run clubs — is exactly the supply that dies quietly. A dead link is worse than no result: it sends a shy 14-year-old to an empty room, and that is the failure that ends the habit. This agent is what makes long-tail indexing responsible rather than reckless.
 
@@ -268,17 +278,17 @@ The diagram says *"calls nothing, called by nothing."* Taken literally that cann
 
 > The Orchestrator is **not a node in the business graph**. It is invoked on every edge, as a validation step between nodes. No agent calls it as a peer, and it calls no agent as a peer — but nothing advances until it passes.
 
-Concretely, in LangGraph, it is a validation function applied at each gate (◆), not a routed node. **Recommended rename: `Validator`** — "Orchestrator" implies it holds control flow and a budget ledger, which is what `project_brief.md` v1 said it did and what it no longer does. (Discrepancy A2.)
+Concretely, in LangGraph, it is a validation function applied at each gate (`G1`–`G4`), not a routed node. **Recommended rename: `Validator`** — "Orchestrator" implies it holds control flow and a budget ledger, which is what `project_brief.md` v1 said it did and what it no longer does. (Discrepancy A2.)
 
 **What it checks at intake and at each inter-agent gate:**
 
 | Gate | Between | Checks |
 |---|---|---|
-| **I0** *(deterministic intake boundary)* | Teen → Planner | Declared age is 13–17 · required consent records exist · out-of-range requests terminate before planning |
-| ◆1 | Planner ⇄ Discovery | Plan schema valid · **no personal data in the payload** · plan non-empty |
-| ◆2 | Planner → Guardian | Plan schema valid · every listing resolvable in CKB · ledger arithmetic balances · **cost ≤ money remaining** |
-| ◆3 | Guardian → Broker | Verdict present · every listing `verified` or trusted-adult-approved · required provider/spend approval ids present |
-| ◆4 | Broker → Observer | Booking record well-formed · ledger decremented exactly once |
+| **I0** *(deterministic intake boundary)* | Intake/Setup → Planner | Declared age is 13–17 · required consent records exist · out-of-range requests terminate before planning or persistence |
+| **G1** | Planner ⇄ Discovery | Outbound `Plan` is valid, non-empty and stripped of personal data; returned `Listing` records are valid, carry source/verification fields, and contain no raw page dump |
+| **G2** | Planner → Guardian | Plan schema valid · every listing resolvable in CKB · ledger arithmetic balances · **cost ≤ money remaining** |
+| **G3** | Guardian → Broker | `GuardianVerdict` present · every listing `verified` or trusted-adult-approved · required provider, attendance and spend approval ids present |
+| **G4** | Broker → Observer | `BookingRecord` well-formed · `ledger_transaction_id` unique · ledger commitment applied exactly once |
 
 **This is one instrumentation point, not the only one.** Gate results provide schema-validation and loop data; model responses provide token usage; tool wrappers provide tool-call outcomes; attendance records and the evaluation harness provide product metrics and judge scores. [`evaluation.md`](./evaluation.md) §3 names the source for each metric. (Discrepancy B3.)
 
@@ -308,6 +318,8 @@ One state object per request thread, carried across sessions by `thread_id` in a
 MAX_REPLANS = 3
 MAX_DISCOVERY_ROUNDS = 2
 MAX_GUARDIAN_REJECTIONS = 2
+MAX_LISTINGS_PER_SCAN = 50
+MAX_FETCHES_PER_DOMAIN = 5
 
 class BudgetLedger(BaseModel):
     """Three currencies. All three are declared inputs, never assumptions."""
@@ -329,6 +341,8 @@ class HobbiState(TypedDict):
     ledger:             BudgetLedger
     candidate_plan:     Plan | None
     approved_plan:      Plan | None
+    guardian_verdict:   GuardianVerdict | None
+    booking_records:    Annotated[list[BookingRecord], operator.add]
 
     replan_count:       int                      # ≤ MAX_REPLANS
     discovery_rounds:   int                      # ≤ MAX_DISCOVERY_ROUNDS
@@ -341,7 +355,7 @@ class HobbiState(TypedDict):
                                 "no_viable_plan", "hold_this_week"] | None
 ```
 
-Four terminal outcomes, and **`hold_this_week` is a first-class success**, not a failure. Terminal state and completion class are separate: `escalated_to_adult` is a designed-checkpoint success only for provider/spend approval; a cap breach or `no_viable_plan` remains a failed completion even when a human is notified. See [`evaluation.md`](./evaluation.md) §3.2.
+Four terminal outcomes, and **`hold_this_week` is a first-class success**, not a failure. Terminal state and completion class are separate: `escalated_to_adult` after the second permitted Guardian rejection is a designed-checkpoint success; an attempted iteration beyond any configured bound (`cap_breached`) or `no_viable_plan` is a failed completion even when a human is notified. Reaching a designed escalation bound is not itself a breach. See [`evaluation.md`](./evaluation.md) §3.2.
 
 ### Core records
 
@@ -390,6 +404,25 @@ class Plan(BaseModel):
     plan_id:           str
     items:             list[PlanItem]
     total_cost_sgd:    Decimal
+    ledger_version:    int              # optimistic-concurrency token read by Planner
+
+class GuardianVerdict(BaseModel):
+    plan_id:                 str
+    approved:                bool
+    provider_approval_ids:   dict[str, str]  # listing_id → trusted-adult approval id
+    attendance_approval_id:  str | None
+    spend_approval_id:       str | None
+    reason_codes:            list[str]
+    reviewed_at:             datetime
+
+class BookingRecord(BaseModel):
+    booking_id:            str
+    plan_id:               str
+    listing_id:            str
+    status:                Literal["booked", "failed"]
+    ledger_transaction_id: str | None    # idempotency key; unique when booked
+    committed_sgd:         Decimal
+    created_at:            datetime
 
 class GateResult(BaseModel):
     gate:              Literal["I0", "G1", "G2", "G3", "G4"]
@@ -487,7 +520,7 @@ age 13–17? ──no──▶ under_13: trusted-adult guidance
 Planner ──── plan thin? ───yes──▶ Discovery ──▶ CKB ──▶ Planner   [loop 1, ≤2]
   │ no                                                      │
   │◀─────────────────────────────────────────────────────────┘
-  ▼ ◆2
+  ▼ G2
 Guardian
   ├── unverified provider in plan ──▶ vetting queue ──▶ trusted adult
   │                                        ├── approved ──▶ continue
@@ -495,13 +528,13 @@ Guardian
   ├── spend requires approval ────▶ parent ──┬── approved ──▶ continue
   │                                          └── declined ──▶ Planner [loop 2, ≤2]
   └── caps hit ─────────────────────────────────────▶ escalated_to_adult (terminal)
-  │ pass ◆3
+  │ pass G3
   ▼
-Broker ──┬── booking ok ──▶ confirmations ──▶ ledger decrement ──▶ ◆4
+Broker ──┬── booking ok ──▶ confirmations ──▶ ledger decrement ──▶ G4
          └── booking fails ──▶ actionable message ──▶ Planner, slot marked unavailable
                                                         │
-                                                        └── replacement traverses ◆2 → Guardian → ◆3 again
-  │ ◆4
+                                                        └── replacement traverses G2 → Guardian → G3 again
+  │ G4
   ▼ (time passes)
   ├── teen attends ────────▶ Observer: attendance + debrief
   └── teen does NOT attend ─▶ Observer: no-show recorded
@@ -521,10 +554,10 @@ Observer ──▶ Personal Data ──▶ next cycle Planner                  [
 | Discovery finds nothing new | Proceed thin; name the binding constraint ("nothing free within 30 min on a weekday evening — widening to Saturday would open 6 options") |
 | Planner cannot build any plan at S$0 for an eligible user | `no_viable_plan` + notify the trusted adult. **Failed completion**, treated as a CKB coverage bug and logged as such. |
 | Guardian rejects 2× | `escalated_to_adult` with both reasons; no third attempt |
-| Broker booking fails | Actionable alternative → Planner → ◆2 → Guardian → ◆3 before any replacement booking |
-| Listing dies between plan and session | Compliance flags → Planner re-plans that slot → ◆2 → Guardian → ◆3 → Broker; teen and parent notified before travel |
+| Broker booking fails | Actionable alternative → Planner → G2 → Guardian → G3 before any replacement booking |
+| Listing dies between plan and session | Compliance flags → Planner re-plans that slot → G2 → Guardian → G3 → Broker; teen and parent notified before travel |
 | Intake age outside 13–17 | Refuse before Planner. Under-13 gets trusted-adult guidance; 18+ gets general-services guidance |
-| Any cap reached | Log it, exit the loop, hand to a human. Never "try once more." |
+| Any attempted iteration beyond a configured cap | Reject the transition, log `cap_breached`, and hand to a human. Never "try once more." Each permitted cap hit follows the loop-specific terminal behaviour in §4. |
 
 Every one of these produces a message a non-technical person can act on. The deck grades error handling on exactly that: *"Going further: how can you make it actionable for business users?"*
 
@@ -539,7 +572,7 @@ Both software case studies in the deck label their human checkpoint explicitly. 
 | **Setup** | Parent / caregiver | Time, money, interest, location, parental rules, consent | Personal Data, before any request |
 | **Provider vetting** | Trusted adult (parent / SHG case worker / school counsellor) | Whether an unverified private provider is ever shown to the teen | Guardian, per listing |
 | **Spend approval** | Parent | Whether money is committed | Guardian, per plan |
-| **Escalation** | Trusted adult | Every terminal state that is not `booked` or `hold_this_week` | Guardian / cap breach |
+| **Escalation** | Trusted adult | Every terminal state that is not `booked` or `hold_this_week` | Guardian at its configured bound / failure handler on `cap_breached` |
 
 Mapped to the **IMDA Model AI Governance Framework for Agentic AI** (v1.0, 22 Jan 2026, WEF Davos; **v1.5 published 20 May 2026**, updated 5 Jun 2026). It is a *voluntary* Model Framework and a "living document", not legislation — so we say "aligned with", never "compliant with".
 
@@ -593,7 +626,7 @@ PDPC further states that children's personal data *"is generally considered to b
 | **Peer signal** | **Aggregate only — there is no identity in the payload.** Bucketed presence, k-anonymity floor of 5, resolved at planning-area or 2-digit postal-sector level and **never at school level**. Opt-in to contribute. See §9.3. |
 | **Scraping / external fetch** | Discovery respects `robots.txt` and provider ToS. Anything fetched carries `source_url` + `last_seen_at`, so provenance is always attributable. |
 | **Blast radius** | Discovery — the only component touching the open internet — never holds personal data. |
-| **The gate log is the second custodian** | The validation layer reads *every* inter-agent payload, including gate ◆3 where approval references cross from Guardian to Broker. So it sees more metadata than any single agent. **`gate_log` therefore records payload *shape* — schema id, validity, size and loop counters — never payload content.** Token usage stays in `token_usage`; content is referenced by id and stays in state. |
+| **The gate log is the second custodian** | The validation layer reads *every* inter-agent payload, including gate G3 where approval references cross from Guardian to Broker. So it sees more metadata than any single agent. **`gate_log` therefore records payload *shape* — schema id, validity, size and loop counters — never payload content.** Token usage stays in `token_usage`; content is referenced by id and stays in state. |
 | **Consent survives majority** | PDPC: consent obtained while a child *"remains valid when the individual reaches 18"*. No forced re-consent at 18, but we offer a review. The **account** is a separate question: at 18 the Guardian approval requirement is what would need to change, which is precisely the 18+ roadmap item (D7). |
 
 ---
@@ -694,10 +727,11 @@ src/
   agents/      planner.py  discovery.py  guardian.py  broker.py  observer.py  compliance.py
   validation/  orchestrator.py         # the gate checks of §3.7
   schema/      state.py  listing.py  preferences.py  plan.py  events.py  gates.py
+  intake.py                            # deterministic I0 + setup/seed writes
   graph.py                             # nodes, edges, routers, caps
   constants.py                         # MODEL_ID, all MAX_* caps
 data/          seed_ckb.json  synthetic_teen.json  discovery_replay.json
-sim/           harness.py  counterfactual.py
+sim/           harness.py  counterfactual.py  report.py
 tests/         test_caps.py  test_s0_plan.py  test_guardian_vetting.py  test_schema.py
                test_age_boundary.py  test_peer_cohort.py  test_cold_start.py
 docs/
@@ -732,7 +766,7 @@ We do **not** claim Embedded or Creative/Generative. Nothing in the system gener
 
 ## 13. Diagram synchronization checklist
 
-| # | Requirement shown in both prose and diagram | Type | Origin |
+| # | Contract item checked against the diagram | Type | Origin |
 |---|---|---|---|
 | 1 | Hard caps on both request loops; `tries_total` bound on the longitudinal cycle | **Required** | B1 |
 | 2 | `BudgetLedger` in typed state; Broker decrements; Observer reconciles | **Required** | A3 |
@@ -753,9 +787,9 @@ We do **not** claim Embedded or Creative/Generative. Nothing in the system gener
 | 17 | Age boundary 13–17 enforced at I0; both under-13 and 18+ refused with distinct guidance | **Required** (safety/consent) | D7 |
 | 18 | Observation channel: in-app form behind a channel-agnostic `DebriefSubmission` | Decision | D9 |
 | 19 | Cached Discovery replay fixture for the demo path | **Required for demo** | D8 |
-| 20 | Four inter-agent gates ◆1–◆4, including Broker → Observer | **Required** | PR #2 review |
+| 20 | Four inter-agent gates G1–G4, including Broker → Observer | **Required** | PR #2 review |
 | 21 | Guardian reads Personal Data + CKB; Compliance writes dead-listing flags to Personal Data | **Required** | PR #2 review |
-| 22 | Every booking-failure or dead-listing replacement re-enters ◆2 and ◆3 | **Required** | PR #2 review |
+| 22 | Every booking-failure or dead-listing replacement re-enters G2 and G3 | **Required** | PR #2 review |
 | 23 | Guardian escalates after two rejections, never three | **Required** | PR #2 review |
 
-The editable HTML and the exported PNG must show all structural rows above. The PNG is regenerated from the HTML; it is never maintained independently.
+The editable HTML and exported PNG must visibly show every structural flow, boundary, store, gate and bound above, and must not contradict any behavioural row. Prose-only details such as full schema fields, agent-class labels and stack rationale stay here rather than overcrowding the slide asset. The PNG is regenerated from the HTML; it is never maintained independently.

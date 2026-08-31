@@ -3,12 +3,12 @@
 *Hackathon: SimplifyNext Agentic AI Hackathon 2026 — **"Design for a World in Transformation"***
 *Version 2.2 · 31 Aug 2026 · supersedes v1 (18 Aug 2026)*
 
-**The doc set.** 
-- [`deliverables.md`](../1-requirements/deliverables.md) — what the hackathon requires · **this** — problem, user, solution, positioning · 
-- [`architecture.md`](../3-system/architecture.md) — the system spec · 
-- [`evaluation.md`](../3-system/evaluation.md) — how we prove it works · 
-- [`user_stories.md`](./user_stories.md) — stories mapped to agents · 
-- [`sources.md`](./sources.md) — every citation · 
+**The doc set.**
+- [`deliverables.md`](../1-requirements/deliverables.md) — what the hackathon requires · **this** — problem, user, solution, positioning ·
+- [`architecture.md`](../3-system/architecture.md) — the system spec ·
+- [`evaluation.md`](../3-system/evaluation.md) — how we prove it works ·
+- [`user_stories.md`](./user_stories.md) — stories mapped to agents ·
+- [`sources.md`](./sources.md) — every citation ·
 - [`discrepancies.md`](../4-decisions/discrepancies.md) — open conflicts and decisions.
 
 > **What changed in v2.2 (31 Aug).** PR #2 review corrections make the test populations satisfiable, enforce both age bounds at deterministic intake, route all replacements back through Guardian, narrow the PoC debrief to text, give B15 a 30-day window, and synchronize the diagram/export. v2.1 closed the twelve product decisions (§12).
@@ -21,9 +21,9 @@
 
 ### 1.1 The statement
 
-> **A 14-year-old in Singapore with S$0 of their own to spend needs a way to find and reach a first hobby session this month — because Singapore is expanding to 20,000 social, hobby and interest opportunities a year and 12 free youth spaces, while access still spans separate Community Club, ActiveSG, youth-space and community-group channels.**
+> **A 14-year-old in Singapore with S$0 of their own to spend needs a way to find and reach a first hobby session this month — because Singapore is expanding to 20,000 social, hobby and interest opportunities a year and 12 free youth spaces, while finding an option still requires searching separate Community Club, ActiveSG and youth-space channels.**
 
-*Evidence for the “because” clause: SG Youth Plan Report, released 25 Jul 2026, p.9 and Move 12; provider-channel review recorded in [`sources.md`](./sources.md) §B on 27 Aug 2026. The claim that a teen can complete the journey without adult search labour remains a product hypothesis until the interviews below.*
+*Evidence for the “because” clause: SG Youth Plan Report, released 25 Jul 2026, p.9 and Move 12; public-provider channel review recorded in [`sources.md`](./sources.md) §C on 27 Aug 2026. Whether fragmented search creates a material adult-coordination barrier remains a separate product hypothesis until the interviews below.*
 
 **North star, for slide 9 and not for slide 2:** *the same teenager, twelve months later, still going.*
 
@@ -53,7 +53,7 @@ The deck requires this, as a team, before writing code. Ours, honestly scored:
 | 1 | **Can we name one person?** | ✅ Aisyah, 14 (§2.1) — S$0 of their own, nobody at home free to drive them, no friend already doing the thing. Not "youths." |
 | 2 | **Can we cite the evidence?** | ⚠️ **Partial.** The statement's supply figures and channels now carry sources and dates. The adult-coordination insight remains a hypothesis until interviews; §1.3's figures alone were not enough to pass this question. |
 | 3 | **Would that person recognise themselves?** | ❌ **No. We have not spoken to a single teenager.** See below. |
-| 4 | **Does it survive a different solution?** | ✅ The statement describes fragmentation and adult time-poverty. It holds if someone builds a directory, a WhatsApp bot, or nothing at all. |
+| 4 | **Does it survive a different solution?** | ✅ The statement describes fragmented access to a growing supply. It holds if someone builds a directory, a WhatsApp bot, or nothing at all. |
 | — | **Would this problem exist if agentic AI had never been invented?** | ✅ Yes. It is a matching and follow-through problem that predates all of it. |
 
 **Question 3 is a real failure and the deck is explicit that any "no" sends us back to Empathise before we write code.** This is the deck's sixth failure mode — *"The Comfortable Guess: written from the team's imagination, with no contact with anyone who lives the problem"* — and right now we are in it. The whole brief is desk research. Until interviews occur, the statement and persona are explicitly **provisional**; implementation may test mechanics, but it cannot be cited as validation of the problem.

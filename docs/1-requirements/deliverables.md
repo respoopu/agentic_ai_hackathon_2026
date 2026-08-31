@@ -82,7 +82,7 @@ The judges will look for three things:
 | 9 | **Roadmap & Future Potential** | Scale, adoption, and next steps |
 | 10 | **Conclusion & Call to Action** | Recap the value and invite adoption |
 
-The table above transcribes the official sample flow. **Our working additions:** explain why an agent is warranted on slide 3; show planning/acting/adapting and evaluation on slide 4; show guardrails and human checkpoints on slide 5; put measured test results on slide 7. The original slide bolds slides **3, 4, 5, 7, and 9**. Testing/evaluation has no dedicated slide in the sample flow but the project-files slide says it should be covered, so we choose slide 7.
+The table above is a structured summary of the official sample flow; §9.1 preserves the closer transcription. **Our working additions:** explain why an agent is warranted on slide 3; show planning/acting/adapting and evaluation on slide 4; show guardrails and human checkpoints on slide 5; put measured test results on slide 7. The original slide bolds slides **3, 4, 5, 7, and 9**. Testing/evaluation has no dedicated slide in the sample flow but the project-files slide says it should be covered, so we choose slide 7.
 
 For every slide: use one core message, prefer evidence and visuals over generic claims, maintain consistent branding, and connect the content to a judging criterion.
 
@@ -302,7 +302,7 @@ Item 2 is the sleeper requirement. If **our presentation** says "two capped requ
 
 **Five of the ten are bolded on the original slide: 3, 4, 5, 7 and 9** — Solution Overview, Methodology, Technical Architecture, Benefits Delivered, Roadmap & Future Potential. The bolding does not survive text extraction, and it is a direct signal of where the organisers expect the weight to sit. Four of those five are the "what did you actually build, and what is it worth" slides.
 
-The flow otherwise maps almost 1:1 onto the rubric: slide 2 → Presentation, slides 3 + 6 → Originality, slide 5 → Technical Quality, slide 7 → Benefits, slides 4 + 8 → Effectiveness. **Testing/evaluation has no slide of its own** in the sample flow but is *required* to be covered (§8.4) — fold it into slide 4, 7 or 8.
+The flow otherwise maps almost 1:1 onto the rubric: slide 2 → Presentation, slides 3 + 6 → Originality, slide 5 → Technical Quality, slide 7 → Benefits, slides 4 + 8 → Effectiveness. **Testing/evaluation has no slide of its own** in the sample flow but is *required* to be covered (§8.4); our working flow assigns the reported results to slide 7, with methodology context on slide 4.
 
 ### 9.2 Content rules
 

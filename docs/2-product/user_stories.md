@@ -1,8 +1,8 @@
 # User Stories — Hobbi
 
-*Version 2.2 · 31 Aug 2026. Every story names the **agent that owns it** and whether it is in the prototype. As of 31 Aug no story is unowned.*
+*Version 2.2 · 31 Aug 2026. Every story names the **component that owns it** and whether it is in the prototype. As of 31 Aug no story is unowned.*
 
-Grouped by user. Each row: the story, what Hobbi needs to know, the feature it implies, and the owning agent from [`architecture.md`](../3-system/architecture.md) §3.
+Grouped by user. Each row: the story, what Hobbi needs to know, the feature it implies, and the owning component from [`architecture.md`](../3-system/architecture.md) §§2.1–3.
 
 **Build status — nothing is implemented yet.** These marks are *scope*, not progress: ✅ planned for the PoC · 🔶 partial / simulated in the PoC · ⬜ deferred to roadmap.
 
@@ -19,7 +19,7 @@ Grouped by user. Each row: the story, what Hobbi needs to know, the feature it i
 | **As a teen, I want to discover hobbies that suit me, because I don't know what I would enjoy.** | Preference axes, prior attendance | Experiment sequencing, not a ranked list | **Planner** | ✅ |
 | **As a teen, I want recommendations to improve when I tell Hobbi what I liked or disliked.** | Debrief content, attendance, return behaviour | Feedback-driven preference model | **Observer** → **Planner** | ✅ |
 | **As a teen, I want to not be typed or labelled before I've tried anything.** | — | No personality test, no learning style, no result screen — ever | **Planner** *(by design)* | ✅ |
-| **As a teen with no history, I want to say roughly what I'm after — or skip it — and still get a real first plan.** | 4–6 vibe chips, multi-select, skippable | Cold-start seeds at lowest confidence; *"Surprise me"* is first-class | **Planner** | ✅ |
+| **As a teen with no history, I want to say roughly what I'm after — or skip it — and still get a real first plan.** | 4–6 vibe chips, multi-select, skippable | Intake/Setup writes low-confidence seeds; *"Surprise me"* is first-class; Planner reads either state | **Intake/Setup → Planner** | ✅ |
 
 > ⚠️ **The line is seeding vs typing** ([`project_brief.md`](./project_brief.md) §6.1, decision **D10**). A short "where should we start?" screen is allowed; a "what are you like?" assessment is not. Concretely: skippable · no label ever shown back · lowest confidence, outranked by the first attended session · biases ranking but **never** filters the candidate set (invariant **A9**). Left/right-brain and MBTI-style typing remain hard-forbidden.
 >
@@ -113,7 +113,7 @@ Grouped by user. Each row: the story, what Hobbi needs to know, the feature it i
 |---|---|---|---|---|
 | **As Hobbi, we want to detect outdated groups so users aren't sent to dead Telegram/Instagram communities.** | Last activity, link validity, event recency | Automated freshness checking | **Compliance** | 🔶 |
 | **As Hobbi, we want to find supply that isn't in any directory yet.** | What CKB already holds; external sources | Gap-driven external search | **Discovery** | ✅ |
-| **As Hobbi, we want to never leak personal data to the open internet.** | — | Discovery receives the plan, not the person | **Orchestrator** *(gate ◆1)* | ✅ |
+| **As Hobbi, we want to never leak personal data to the open internet.** | — | Discovery receives the plan, not the person | **Orchestrator** *(gate G1)* | ✅ |
 | **As Hobbi, we want to know whether the agent is converging or circling.** | Loop counts vs caps | Loop discipline logging | **Orchestrator** | ✅ |
 | **As Hobbi, we want every claim on our slides to be reproducible.** | Gate log, model-response token usage, terminal/tool events | One-command evaluation report | **Orchestrator** *(gate data)* + evaluation harness → [`evaluation.md`](../3-system/evaluation.md) | ✅ |
 
@@ -127,7 +127,7 @@ A quick read on whether each agent is carrying its weight — the deck's test is
 
 | Agent | Stories | Verdict |
 |---|---|---|
-| **Planner** | 19 | The core, and by a wide margin. Owns every constraint, all sequencing, the ledger reads, the cold start and the belonging tiebreak. See the warning below. |
+| **Planner** | 19 | The core, and by a wide margin. Owns every constraint, all sequencing, the ledger reads, use of cold-start seeds and the belonging tiebreak. See the warning below. |
 | **Broker** | 6 | Two distinct audiences — the teen's anxiety artefact and the parent's reassurance artefact — plus the ledger decrement, which is the only irreversible write in the system. |
 | **Discovery** | 4 | The only component that grows the supply side. Our differentiator. |
 | **Guardian** | 4 | The only component that can say no. Two granularities: per-listing vetting, per-plan spend. |
@@ -137,6 +137,6 @@ A quick read on whether each agent is carrying its weight — the deck's test is
 
 No agent is idle, and no two agents overlap. **Every story above now has an owning agent** — the last two unowned ones (the budget ledger and belonging) both landed on Planner and needed *state*, not a new agent, which is why v1's *Reallocator* stays retired.
 
-> ⚠️ **Planner owning 19 of 34 is the number to argue about, and D1, D2 and D10 each made it worse rather than better.** It now does constraint filtering, experiment sequencing, ledger-aware reallocation, the cold start *and* two-objective scoring. The deck's own advice — *"build short, single-purpose agents that do one job and exit"* — points at a split, most plausibly **filtering + sequencing** in one agent and **allocation** in another.
+> ⚠️ **Planner owning 19 of 34 is the number to argue about, and D1, D2 and D10 each made it worse rather than better.** It now does constraint filtering, experiment sequencing, ledger-aware reallocation, cold-start seed interpretation *and* two-objective scoring. Intake/Setup owns chip capture and persistence, not planning. The deck's own advice — *"build short, single-purpose agents that do one job and exit"* — points at a split, most plausibly **filtering + sequencing** in one agent and **allocation** in another.
 >
 > Counter-argument, and the reason we have not split it: those jobs share one working set (ledger + preference model + candidate listings) and the sequencing decision *is* the allocation decision. Splitting them would mean passing the whole working set across an agent boundary on every replan, which is the payload bloat the deck warns about, for no gain in independent testability. Recorded here so the answer exists when a judge asks why one agent is doing four things.

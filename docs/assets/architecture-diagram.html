@@ -111,8 +111,8 @@
   <header>
     <p class="eyebrow">Hobbi · slide 5 asset</p>
     <h1>Multi-Agent Architecture</h1>
-    <p>Five pipeline agents, one scheduled agent off the request path, and a detached validation
-       layer. Two data stores. Two capped request loops and one ledger-bounded feedback cycle.</p>
+    <p>Five pipeline agents, one scheduled agent off the request path, a detached validation
+       layer, and deterministic Intake/Setup. Two stores, two capped request loops, one ledger-bounded feedback cycle.</p>
   </header>
 
   <div class="frame">
@@ -127,7 +127,7 @@
   <rect width="2000" height="2000" style="fill:var(--paper)"/>
 
   <text x="70" y="74" style="font-size:42px;font-weight:900;fill:var(--ink);letter-spacing:-.01em">Hobbi — Multi-Agent Architecture</text>
-  <text x="70" y="112" class="t-mut" style="font-size:18px">5 pipeline agents + Compliance (scheduled) + 1 detached validation layer · I0 intake · 4 inter-agent gates · 2 stores</text>
+  <text x="70" y="112" class="t-mut" style="font-size:18px">5 pipeline agents + Compliance + validation layer · deterministic Intake/Setup + I0 · G1–G4 · 2 stores</text>
   <text x="1930" y="74" text-anchor="end" class="t-mono">v2.2 · 31 Aug 2026</text>
   <text x="1930" y="108" text-anchor="end" class="t-lbl">synchronized with architecture.md v2.2</text>
 
@@ -137,9 +137,13 @@
   <path class="e-ext" marker-end="url(#aSlate)" marker-start="url(#aSlate)" d="M170 300 H40 V900 H170"/>
   <text x="30" y="620" class="t-lbl" transform="rotate(-90 30 620)" text-anchor="middle">external fetch</text>
 
-  <!-- teen -> gate -> planner -->
-  <path class="e-ctl" d="M830 360 V398"/>
-  <text x="852" y="384" class="t-lbl">request</text>
+  <!-- teen + parent -> deterministic intake/setup -> I0 -> planner -->
+  <path class="e-ctl" marker-end="url(#aInk)" d="M1000 270 H1090"/>
+  <text x="1045" y="256" class="t-lbl" text-anchor="middle">request</text>
+  <path class="e-ctl" marker-end="url(#aInk)" d="M1520 320 H1450"/>
+  <text x="1485" y="308" class="t-lbl" text-anchor="middle">consent</text>
+  <path class="e-ctl" d="M1090 330 H1045 V415 H847"/>
+  <text x="1032" y="402" class="t-lbl" text-anchor="end">eligible setup</text>
   <path class="e-ctl" marker-end="url(#aInk)" d="M830 432 V500"/>
   <text x="806" y="421" class="t-mono-d" text-anchor="end" style="font-size:13.5px">I0 · age 13–17?</text>
   <!-- refusal branch -->
@@ -175,7 +179,7 @@
   <text x="1112" y="474" class="t-lbl" style="font-size:13px">read: preferences · constraints · parental rules</text>
   <path class="e-read" marker-end="url(#aTeal)" d="M1130 620 H1038"/>
   <text x="1048" y="608" class="t-lbl">read</text>
-  <path class="e-read" marker-end="url(#aTeal)" d="M1200 750 V985 H578"/>
+  <path class="e-read" marker-end="url(#aTeal)" d="M1130 700 H1080 V985 H578"/>
   <text x="880" y="975" class="t-lbl">read: what already exists (avoid duplicates)</text>
   <path class="e-read" marker-end="url(#aTeal)" d="M1450 700 H1490 V1140 H1512"/>
   <text x="1498" y="688" class="t-lbl">read</text>
@@ -189,9 +193,10 @@
   <text x="1730" y="1000" class="t-lbl">read: live-plan references</text>
 
   <!-- writes -->
-  <path class="e-write" marker-end="url(#aRust)" d="M1780 360 V492"/>
-  <text x="1792" y="440" class="t-lbl">setup write + seeds</text>
-  <path class="e-write" marker-end="url(#aRust)" d="M570 890 H1290 V758"/>
+  <path class="e-write" marker-end="url(#aRust)" d="M1400 360 H1470 V470 H1650 V500"/>
+  <text x="1482" y="458" class="t-lbl">eligible inputs + seed axes</text>
+  <path class="e-write" marker-end="url(#aRust)" d="M1370 790 V758"/>
+  <path class="e-write" marker-end="url(#aRust)" d="M570 890 H1220 V758"/>
   <text x="900" y="878" class="t-lbl">write: newly discovered options</text>
   <path class="e-write" marker-end="url(#aRust)" d="M1520 1180 H1350 V758"/>
   <text x="1362" y="1168" class="t-lbl">write: refresh / retire</text>
@@ -232,6 +237,14 @@
   <text x="1546" y="314" class="t-mut">approves spend + unvetted providers</text>
   <text x="1546" y="344" class="t-it">mandatory — every user is a minor</text>
 
+  <!-- deterministic intake/setup service -->
+  <rect class="panel" x="1090" y="180" width="360" height="180" rx="14"/>
+  <text x="1116" y="224" class="t-title" style="font-size:19px">Intake / Setup</text>
+  <text x="1116" y="258" class="t-mut">deterministic app service · not an agent</text>
+  <text x="1116" y="286" class="t-mut">collects age · consent · constraints</text>
+  <text x="1116" y="314" class="t-mut">fixed vibe chips · skippable</text>
+  <text x="1116" y="344" class="t-mono" style="font-size:13.5px">I0 first · persist only if eligible</text>
+
   <!-- refusal chip -->
   <rect class="warn" x="1090" y="382" width="360" height="66" rx="12"/>
   <text x="1112" y="410" class="t-mono-d" style="font-size:14px;fill:var(--crimson)">outside 13–17 → refused at I0</text>
@@ -245,7 +258,7 @@
   <text x="196" y="592" class="t-title">Orchestrator</text>
   <text x="196" y="626" class="t-mut">on-edge validator, not a peer —</text>
   <text x="196" y="654" class="t-mut">no agent-to-agent calls of its own</text>
-  <text x="196" y="688" class="t-body">checks every payload at each ◆</text>
+  <text x="196" y="688" class="t-body">checks every payload at G1–G4</text>
   <text x="196" y="716" class="t-body">before it advances</text>
   <text x="196" y="742" class="t-mono" style="font-size:13.5px">logs: schema · payload shape · loops</text>
 
@@ -257,7 +270,7 @@
   <text x="662" y="612" class="t-body">READ-ONLY on both stores</text>
   <text x="662" y="640" class="t-body">passes plan only to Discovery</text>
   <text x="662" y="668" class="t-body">scores interest fit + belonging</text>
-  <text x="662" y="700" class="t-mut" style="font-size:14.5px">cold start: 4–6 skippable vibe chips</text>
+  <text x="662" y="700" class="t-mut" style="font-size:14.5px">reads optional low-confidence seeds</text>
   <text x="662" y="730" class="t-mono">MAX_REPLANS = 3</text>
   <text x="1006" y="730" class="t-new" text-anchor="end">NEW</text>
 
@@ -269,6 +282,11 @@
   <text x="1160" y="654" class="t-mut">· listings · activities</text>
   <text x="1160" y="682" class="t-mut">· locations · simulated cohort buckets</text>
   <text x="1160" y="710" class="t-mut">· verification &amp; freshness state</text>
+
+  <!-- build-time seed loader -->
+  <rect class="panel" x="1130" y="790" width="320" height="78" rx="12"/>
+  <text x="1152" y="820" class="t-title" style="font-size:17px">Seed loader · build time</text>
+  <text x="1152" y="850" class="t-lbl">listings + simulated cohort fixtures → CKB</text>
 
   <!-- personal data -->
   <path class="store" d="M1520 526 v198 a190 26 0 0 0 380 0 v-198"/>
@@ -416,7 +434,7 @@
     <p class="sub">The structural checks that keep the picture synchronized. Full 23-item list in <code>architecture.md</code> §13.</p>
     <ol>
       <li><span class="num">1</span><div><b>Intake and gates are distinct.</b> Deterministic <code>I0</code> enforces ages 13–17; <code>G1–G4</code> validate inter-agent payloads, including Broker → Observer.</div></li>
-      <li><span class="num">2</span><div><b>Every writer and reader is visible.</b> Guardian reads both stores; Compliance writes freshness to CKB and dead-listing flags to Personal Data.</div></li>
+      <li><span class="num">2</span><div><b>Every writer and reader is visible.</b> Intake/Setup and the build-time seed loader own initial writes; Guardian reads both stores; Compliance writes freshness and dead-listing flags.</div></li>
       <li><span class="num">3</span><div><b>No replacement bypasses safety.</b> Booking failures and dead listings wake Planner, then the replacement traverses G2 and G3 again.</div></li>
       <li><span class="num">4</span><div><b>Bounds match their semantics.</b> Two request loops have hard <code>MAX_*</code> caps; the longitudinal cycle is bounded by finite <code>tries_total</code>.</div></li>
       <li><span class="num">5</span><div><b>PoC scope is honest.</b> Text-only debrief, sandboxed Broker, simulated cohort buckets and a persistent checkpointer.</div></li>
@@ -428,3 +446,19 @@
     Regenerate from <code>docs/assets/architecture-diagram.html</code>.
   </footer>
 </div>
+<script>
+  // Deterministic PNG export: open this file with ?render=1 in a 2000×2000 viewport.
+  if (new URLSearchParams(window.location.search).has("render")) {
+    document.documentElement.dataset.theme = "light";
+    document.querySelector("header").hidden = true;
+    document.querySelector(".deltas").hidden = true;
+    document.querySelector("footer").hidden = true;
+    document.body.style.cssText = "margin:0;padding:0;background:#fff;overflow:hidden";
+    const wrap = document.querySelector(".wrap");
+    wrap.style.cssText = "margin:0;max-width:none;display:block";
+    const frame = document.querySelector(".frame");
+    frame.style.cssText = "margin:0;padding:0;border:0;border-radius:0;overflow:hidden;background:#fff";
+    const svg = document.querySelector("svg");
+    svg.style.cssText = "display:block;width:2000px;height:2000px;min-width:0";
+  }
+</script>

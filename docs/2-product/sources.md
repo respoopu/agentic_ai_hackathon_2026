@@ -263,7 +263,7 @@ Directly load-bearing because our users are 13–17. The PoC is text-only; the v
 
 ## H. Hackathon Research
 
-*Unchanged from v1 and not re-verified in this pass — none of it is load-bearing for the pitch. It informs strategy (§10 of the brief), not claims on slides.*
+*Links and descriptions are unchanged from v1 and were not source-by-source re-verified in this pass; the appendix was mechanically recounted as 14 comparable events. None of it is load-bearing for the pitch. It informs strategy (§10 of the brief), not claims on slides.*
 
 **Google Cloud Agentic AI Day 2025** (Bangalore, 27 Jul 2025) 🟢 https://blog.google/intl/en-in/company-news/seizing-our-moment-in-guinness-world-records/
 → 2,000+ developers, 700+ teams, 30 hours, Guinness record. GuruMitra (70% lesson-prep reduction, 22+ languages, offline-first); **Kovai Shines** (Memorybank persistent memory, continuous feedback loop); Blue Bird / CrowdSense; unicorn.ai (human-in-the-loop browser agent).

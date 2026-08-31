@@ -6,7 +6,7 @@
 
 **Severity:** 🔴 blocks a scoring criterion or ships a broken system · 🟠 weakens the pitch materially · 🟡 tidy-up.
 
-*Rows below cite "Brief v1" throughout. It is not lost — v1 is the committed version at `eea58dd`. Read it with `git show eea58dd:docs/project_brief.md`, or diff it against the current file with `git diff eea58dd -- docs/project_brief.md`.*
+*Rows below cite "Brief v1" throughout. It is not lost — v1 is the committed version at `eea58dd`. Read it with `git show eea58dd:docs/project_brief.md`, or compare both paths with `git diff eea58dd -- docs/project_brief.md docs/2-product/project_brief.md`.*
 
 **Status:** `RESOLVED` — decided and already reflected in the v2 docs · `OPEN` — needs a team decision · `NOTED` — no action, recorded so nobody rediscovers it.
 
@@ -22,7 +22,7 @@
 | **E** — Downstream artifacts | 0 | 1 | 0 | 1 |
 | | **11** | **11** | **11** | **33** |
 
-**All twelve decisions in §D closed on 31 Aug**, and every discrepancy in classes A, B and C with them. The source-of-truth docs no longer contradict each other, the diagram, or the deck.
+**All twelve decisions in §D closed on 31 Aug**, and every discrepancy in classes A, B and C with them. §F records the subsequent consistency reviews and their corrections; future mismatches remain defects to fix, not something this status line claims can never exist.
 
 **One row is still open: E1** — the `feat/agent-system-prompts` branch. It is not a decision; **D6** scheduled it. The prompts get re-derived from `architecture.md` §3 once this branch merges to main.
 
@@ -51,7 +51,7 @@ The brief's v1 agent table and the architecture diagram describe different syste
 | — | **Discovery Engine** | new → see **A7** |
 | — | **Compliance Agent** | new → see **A8** |
 
-**Resolution.** `architecture.md` §3 is now the canonical roster: **5 pipeline agents + Compliance (scheduled, off the request path) + the validation layer** — matching the diagram's own "5 pipeline agents + 1 detached validation layer" subtitle. The brief's v1 table is retired, and `project_brief.md` links here instead of duplicating it. Guardian's promotion from optional to mandatory is the right call: it converts the child-safety constraint from a caveat into a visible feature, which is exactly what the deck's case studies do with their human-in-the-loop lines.
+**Resolution.** `architecture.md` §3 is now the canonical roster: **5 pipeline agents + Compliance (scheduled, off the request path) + the validation layer** — matching the roster shown in the current diagram subtitle. The brief's v1 table is retired, and `project_brief.md` links here instead of duplicating it. Guardian's promotion from optional to mandatory is the right call: it converts the child-safety constraint from a caveat into a visible feature, which is exactly what the deck's case studies do with their human-in-the-loop lines.
 
 ---
 
@@ -116,7 +116,7 @@ This is not a small inconsistency. "We learn from what you actually did, not fro
 | **Attendance** — did they go, did they go back | **Primary** | Behavioural, hard to fake, available even when the teen says nothing |
 | **Debrief** — vibes, comfortability, environment | Secondary | Rich and human, but self-reported and subject to politeness bias |
 
-The debrief is worth keeping regardless: multimodal audio→structured extraction is a genuine Extraction-class showcase and it demos beautifully. It just cannot be the *only* input, and it must not outrank attendance.
+The debrief is worth keeping regardless: text→structured extraction is a genuine Extraction-class showcase and it demos clearly. It cannot be the *only* input, and it must not outrank attendance. Audio remains a roadmap adapter subject to the consent, processor and deletion controls in `architecture.md` §8.
 
 ---
 
@@ -290,7 +290,7 @@ That is closable in a demo. "Teens need hobbies that stick" is not.
 
 Final wording, now in `project_brief.md` §1.1:
 
-> *A 14-year-old in Singapore with S$0 of their own to spend needs a way to find and reach a first hobby session this month — because Singapore is expanding to 20,000 social, hobby and interest opportunities a year and 12 free youth spaces, while access still spans separate Community Club, ActiveSG, youth-space and community-group channels.*
+> *A 14-year-old in Singapore with S$0 of their own to spend needs a way to find and reach a first hobby session this month — because Singapore is expanding to 20,000 social, hobby and interest opportunities a year and 12 free youth spaces, while finding an option still requires searching separate Community Club, ActiveSG and youth-space channels.*
 
 **S$0 is the harder constraint, not the humbler one.** A system that closes it closes the funded case trivially, and it is already invariant **A3** rather than a marketing line. Curiosity Credits move to slides 7 and 9 as a funded, nationally-announced beachhead — an adoption argument instead of a ceiling.
 
@@ -444,7 +444,7 @@ Brief v1 §7 pre-empts *"don't they already have CCAs?"*, *"won't NYC just build
 
 ### E1 · `origin/feat/agent-system-prompts` predates this doc set and diverges from it 🟠 `OPEN — scheduled: re-derive once this branch merges (D6)`
 
-An unmerged branch (9 commits, 25 Aug 2026, forked after `eea58dd`) contains ~1,700 lines of real work: six agent system prompts, a normative `shared-protocol.md`, a design spec and plan, and nine test fixtures with a validator.
+An unmerged branch (10 commits, 25–28 Aug 2026, forked after `eea58dd`) contains ~1,700 lines of real work: six agent system prompts, a normative `shared-protocol.md`, a design spec and plan, and nine test fixtures with a validator.
 
 **It is downstream of these documents, not an input to them.** The source of truth is being set here; the prompts are an output of it. Nothing in this register changes the architecture because of that branch. What follows is a **re-derivation checklist** for whoever realigns it.
 
@@ -509,11 +509,17 @@ The external review on PR #2 found a second layer of cross-document defects afte
 
 | Review findings | Resolution |
 |---|---|
-| 1, 12–14 | v2.2 HTML/PNG use I0 plus ◆1–◆4; consent and approval are separate; prose no longer describes v1 |
+| 1, 12–14 | v2.2 HTML/PNG and prose use I0 plus G1–G4; consent and approval are separate; prose no longer describes v1 |
 | 2, 4, 7–9, 15–16, 24–25 | Eligible and boundary test populations split; Guardian cap fixed at two; B15 has a 30-day window; metric sources and completion classes named |
-| 3, 5–6, 26 | Replacement plans re-enter Guardian; complete store ACL added; setup owns seed writes; simulated cohort producer named |
+| 3, 5–6, 26 | Replacement plans re-enter Guardian; store ACL added; Intake/Setup and the build-time seed loader are shown as writers; simulated cohort producer named |
 | 10, 17, 20–22 | Problem evidence and official-deck attribution corrected; stale source rows and citation errors removed |
 | 11, 18, 23 | Text-only PoC debrief; pip-based judge path; comparison/share scope reduced or deferred |
 | 19 and review nits | Severity totals, schema names, persistent checkpointer, decision count, slide count and hackathon-source count corrected |
 
-The review's positive link check remains true: all 81 relative links at the PR head resolved before these edits. The v2.2 pass now checks 84 relative links, all resolving. Link integrity is rechecked after every documentation change.
+The review's positive link check remains true: every relative documentation link resolved at that review point. The follow-up audit rechecks link integrity after the latest edits without freezing a count that changes whenever documentation links are added.
+
+### Final-pass review of the fixes
+
+The second PR review found no reopened decision, but correctly identified consistency drift introduced by the first correction pass. The follow-up standardizes all gate references on **I0 + G1–G4**; adds Intake/Setup and the build-time seed loader to the prose, planned layout and diagram; distinguishes a permitted cap hit from an invariant-breaking cap breach; corrects the remaining evidence, audio, slide, branch and reproduction references; and refreshes the PR description.
+
+The subsequent audit also tightened two items not raised in that review: G1 now specifies its different outbound and return payload checks, and G3/G4 now have explicit `GuardianVerdict` and `BookingRecord` schemas with idempotent ledger fields. The separate `feat/seed-ckb` branch remains a post-merge integration task, not a defect in this documentation branch; its “nothing built yet” wording must be revisited when that code actually lands.
