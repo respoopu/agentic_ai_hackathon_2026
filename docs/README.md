@@ -19,6 +19,7 @@ The folders carry the order. Numbers are the reading sequence, not a priority ra
 | 5 | **[`2-product/user_stories.md`](./2-product/user_stories.md)** | Every story mapped to the agent that owns it | Checking a feature has a home |
 | 6 | **[`2-product/sources.md`](./2-product/sources.md)** | Every citation, with reliability marks | **Before any figure goes on a slide** |
 | 7 | **[`4-decisions/discrepancies.md`](./4-decisions/discrepancies.md)** | 33 conflicts between the brief, the diagram and the requirements, and the 12 decisions that closed them | Deciding anything |
+| 8 | **[`5-delivery/outstanding.md`](./5-delivery/outstanding.md)** | Canonical backlog: status, owner, target and acceptance test for every unfinished item | Planning the next piece of work |
 
 ### The folders
 
@@ -28,6 +29,7 @@ The folders carry the order. Numbers are the reading sequence, not a priority ra
 | **`2-product/`** | What we are building and for whom, with the evidence behind it. |
 | **`3-system/`** | How it works and how we prove it works. |
 | **`4-decisions/`** | The register of every conflict found and every decision taken. |
+| **`5-delivery/`** | What remains to validate, integrate, build and submit. [`outstanding.md`](./5-delivery/outstanding.md) is the only canonical task-status tracker. |
 | **`assets/`** | [`architecture-diagram.png`](./assets/architecture-diagram.png) for slides, and [`architecture-diagram.html`](./assets/architecture-diagram.html) — its editable SVG source. Regenerate from the HTML, never redraw by hand. |
 
 ---
@@ -52,9 +54,9 @@ The diagram is downstream of the spec, never upstream of it. It is **regenerable
 
 Every discrepancy in classes A, B and C is resolved. Cross-document consistency is checked against [`architecture.md`](./3-system/architecture.md) §13 and the audit notes in [`discrepancies.md`](./4-decisions/discrepancies.md) §F; any future mismatch is treated as a defect rather than covered by an absolute “nothing contradicts” claim.
 
-One register row stays open — **E1**, the `feat/agent-system-prompts` branch — but it is scheduled rather than undecided: D6 re-derives it from [`architecture.md`](./3-system/architecture.md) §3 once this branch merges. What remains beyond that is the build, the deck, the video, user validation and the small source-verification list.
+One register row stays open — **E1**, the `feat/agent-system-prompts` branch — but it is scheduled rather than undecided: D6 re-derives it from [`architecture.md`](./3-system/architecture.md) §3 once this branch merges. The status, owner and acceptance test for E1 and every other unfinished item now live in the canonical [`outstanding.md`](./5-delivery/outstanding.md) tracker.
 
-**The highest-priority validation task:** talk to five teenagers. It closes the pressure-test question we currently fail ([`project_brief.md`](./2-product/project_brief.md) §1.2), tests the adult-coordination hypothesis, and converts our best original insight into primary research. One afternoon. [`sources.md`](./2-product/sources.md) §J lists the remaining smaller verification tasks.
+**The highest-priority validation task:** talk to five teenagers. It closes the pressure-test question we currently fail ([`project_brief.md`](./2-product/project_brief.md) §1.2), tests the adult-coordination hypothesis, and converts our best original insight into primary research. One afternoon. Track it as **OW-01** in [`outstanding.md`](./5-delivery/outstanding.md); [`sources.md`](./2-product/sources.md) §J retains the research detail.
 
 ---
 

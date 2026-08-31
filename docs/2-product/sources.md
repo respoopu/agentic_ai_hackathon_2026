@@ -372,7 +372,7 @@ Four phases: **triggered situational interest → maintained situational interes
 
 ## J. Remaining verification tasks
 
-The v1 priority list is **closed** — all four items were chased and one was retracted. What is left:
+The v1 priority list is **closed** — all four items were chased and one was retracted. The canonical status, owner and acceptance test for what remains are tracked in [`outstanding.md`](../5-delivery/outstanding.md) **OW-01, OW-02 and OW-07–OW-11**; this table retains the research-specific rationale and effort estimate.
 
 | # | Task | Why | Effort |
 |---|---|---|---|

@@ -462,7 +462,7 @@ Where the branch and [`architecture.md`](../3-system/architecture.md) currently 
 
 **Also worth noting for whoever picks it up:** the branch's tests are PowerShell (`validate-fixtures.ps1`, `test_validate_fixtures.ps1`) while its own README invokes `python tests/agent-system-prompts/validate_fixtures.py`. The deck says **"Python is strongly recommended"** and judges will run what the README says. Whatever survives re-derivation should be Python.
 
-**Action:** once **D1**, **D2** and **D3** are decided, regenerate the system prompts from [`architecture.md`](../3-system/architecture.md) §3 — where the agent descriptions are already written to be the source text for prompts — rather than editing the branch in place.
+**Action:** after PR #2 merges, regenerate the system prompts from [`architecture.md`](../3-system/architecture.md) §3 — where the agent descriptions are already written to be the source text for prompts — rather than editing the branch in place. Status and acceptance are tracked as **OW-03** in [`outstanding.md`](../5-delivery/outstanding.md).
 
 ---
 
