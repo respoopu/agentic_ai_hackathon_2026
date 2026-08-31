@@ -257,7 +257,7 @@ Directly load-bearing, because our users are 13–17 and one input channel is a 
 - Consent obtained while a child *"remains valid when the individual reaches 18 years of age."*
 - PDPC explicitly contemplates organisations setting a **higher** bar in context, giving an education setting as its example.
 
-**Design consequence** (see [`architecture.md`](./architecture.md) §8): the teen can self-consent for preference and attendance data if our consent copy is genuinely readable by a 13-year-old — so that copy is a deliverable, not boilerplate — while voice recordings take the higher bar of teen **plus** parent, and sit in the enhanced-protection tier.
+**Design consequence** (see [`architecture.md`](../3-system/architecture.md) §8): the teen can self-consent for preference and attendance data if our consent copy is genuinely readable by a 13-year-old — so that copy is a deliverable, not boilerplate — while voice recordings take the higher bar of teen **plus** parent, and sit in the enhanced-protection tier.
 
 ---
 
@@ -381,6 +381,6 @@ The v1 priority list is **closed** — all four items were chased and one was re
 | 3 | Confirm Flying Cape still operates | 2019 source | 5 min |
 | 4 | Find a primary citation for "12 third spaces **by end-2026**" | Deadline is 🟡, the count is 🟢 | 15 min |
 | 5 | Fetch the Ostojic 2014 abstract directly | The reversal figure is from a secondary summary | 10 min |
-| 6 | Ask organisers: deadline, upload mechanism, live Q&A? | Not in the deck | One email |
+| 6 | Ask organisers: deadline, upload mechanism, live Q&A? | Not in the deck. Tracked as **D4/D5** — the team is handling it directly | One email |
 
 Everything else is solid or non-load-bearing.

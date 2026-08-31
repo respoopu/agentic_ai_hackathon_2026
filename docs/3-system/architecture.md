@@ -1,11 +1,11 @@
 # Architecture — Hobbi
 
-*Authoritative system spec. Companion to [`teen-planner-architecture.png`](./teen-planner-architecture.png).*
-*Version 2 · 27 Aug 2026 · supersedes the agent table in `project_brief.md` v1 §3.*
+*Authoritative system spec. Companion to [`architecture-diagram.png`](../assets/architecture-diagram.png).*
+*Version 2.1 · 31 Aug 2026 · supersedes the agent table in `project_brief.md` v1 §3. v2.1 folds in decisions D1–D11 (`discrepancies.md` §D).*
 
-**Reading order:** [`deliverables.md`](./deliverables.md) → [`project_brief.md`](./project_brief.md) → this → [`evaluation.md`](./evaluation.md) → [`discrepancies.md`](./discrepancies.md).
+**Reading order:** [`deliverables.md`](../1-requirements/deliverables.md) → [`project_brief.md`](../2-product/project_brief.md) → this → [`evaluation.md`](./evaluation.md) → [`discrepancies.md`](../4-decisions/discrepancies.md).
 
-The diagram is the picture. **This document is the contract.** Where they differ, this document is newer, and every difference is listed in §13 (with reasoning in §9) and cross-referenced in [`discrepancies.md`](./discrepancies.md).
+The diagram is the picture. **This document is the contract.** Where they differ, this document is newer, and every difference is listed in §13 (with reasoning in §9) and cross-referenced in [`discrepancies.md`](../4-decisions/discrepancies.md).
 
 ---
 
@@ -53,11 +53,29 @@ Two stores, and the read/write asymmetry is the point:
 
 The Parent is a **secondary user with veto power**, not an observer. See §7.
 
+**The age boundary is 13–17, both ends, and it is enforced (D7).**
+
+- **Floor — 13.** Under-13 requires parental consent under PDPC's guidance rather than the teen's own, and it is a materially different safety and design problem. A declared age below 13 is **refused at intake**: no plan is produced, and the response points to a trusted adult. Invariant **A11**.
+- **Ceiling — 17.** There is no adult mode. 18+ is a roadmap item, not a build item.
+- **A trusted adult is mandatory for every user**, because every user is a minor. There is no configuration in which the Guardian gate is skipped.
+
+**Why the ceiling matters technically, not just editorially.** An adult mode would mean a second path through Broker — the one agent that commits money — and would turn `Broker is unreachable without a Guardian pass` (invariant **A7**) from an unconditional property into a conditional one. Keeping the cohort at 13–17 keeps that a single code path with a single test.
+
+**Two different things that look alike, and must not be merged:**
+
+| | **PDPA consent** | **Guardian approval** |
+|---|---|---|
+| What it governs | Collection and use of personal data | Spend, and exposure to unvetted providers |
+| Who holds it | **The teen**, 13–17, may self-consent (§8) — parent additionally for voice | **The trusted adult**, always |
+| Why | Legal basis under PDPC guidance | Our own product and safety control |
+
+The trusted adult is not there because the law requires them to consent on the teen's behalf — for 13–17 it generally does not. They are there because money is irreversible and unvetted providers are a child-safety risk. Saying it the other way round on a slide would be wrong, and a judge with a privacy background would notice.
+
 ---
 
 ## 3. Agents
 
-Each agent below states its job, its agent class (per the deck's taxonomy — see [`deliverables.md`](./deliverables.md) §11.2), what it reads and writes, its hard limits, and what it does when it fails. **Descriptions here are the source text for the tool/sub-agent descriptions in code** — the deck is explicit that descriptions are the interface.
+Each agent below states its job, its agent class (per the deck's taxonomy — see [`deliverables.md`](../1-requirements/deliverables.md) §11.2), what it reads and writes, its hard limits, and what it does when it fails. **Descriptions here are the source text for the tool/sub-agent descriptions in code** — the deck is explicit that descriptions are the interface.
 
 ---
 
@@ -76,16 +94,25 @@ Each agent below states its job, its agent class (per the deck's taxonomy — se
 
 **What it does**
 
+0. **Cold start only** — if `seeded_at` is `None` and there is no attendance history, offers 4–6 vibe chips (multi-select, skippable). See "Cold start" below.
 1. Reads the ledger and the preference model.
 2. Retrieves candidate listings from CKB under hard filters: money remaining, hours free, travel radius, age range, parental rules.
 3. Sequences them as **experiments, cheapest first** — tasters and one-off workshops before short courses before term commitments. Explore before exploit.
-4. Scores on two objectives: **interest fit** and **belonging** (§9.3).
+4. Scores on two objectives: **interest fit** and **belonging** — the latter as a tiebreak between otherwise-equivalent options, never as a filter (§9.3).
 5. If the candidate set is thin, invokes Discovery (loop 1).
 6. If Guardian rejects, replans with the rejection reason in context (loop 2).
 
 **Why it cannot be a fixed workflow.** The sequence is state-dependent: what to try third depends on what happened at try one. Money and tries are finite and non-renewable, so every selection forecloses others. A ranked list recomputed from the same filters returns the same answer forever; this has to reason over what has already been spent.
 
-**Hard requirement.** The Planner must return a viable plan at **S$0**. If it cannot, the free/public supply in CKB is under-indexed and that is a Discovery bug, not a "no results" outcome.
+**Cold start (D10).** A teen with zero history has no behaviour to learn from — under Hidi & Renninger you cannot measure an interest in someone who has not yet had a trigger, so the cold start's job is to *produce* a trigger, not to diagnose one. Planner offers 4–6 vibe chips ("sporty", "artistic", "chill", "explorative"), multi-select. Five rules keep this a **seed** and not a **type**, and they are constraints on the build, not guidance:
+
+1. **Skippable.** *"Surprise me"* is a first-class option that produces a real plan. If it cannot be skipped it is a gate, and a gate is a quiz.
+2. **No result screen.** The chips never render a label back to the teen. *"You're an Explorer!"* is typing and is forbidden by `project_brief.md` §6.1.
+3. **Lowest confidence, and it decays.** Seeds write `Axis` with `provenance="seed"`. The **first attendance event outranks the entire cold-start screen.**
+4. **Biases, never excludes.** Seeds shape the first one or two experiments. They never filter the candidate set — a mis-tap at signup must not narrow the world permanently. Invariant **A9**.
+5. **Asks where to start, not what you are like.** The wording is the distinction §6.1 protects.
+
+**Hard requirement.** The Planner must return a viable plan at **S$0**, and must return one for a teen who skipped the cold start entirely (invariants **A3**, **A10**). If it cannot, the free/public supply in CKB is under-indexed and that is a Discovery bug, not a "no results" outcome.
 
 ---
 
@@ -175,6 +202,16 @@ These were one box on the diagram. They are separate rules with separate failure
 | **Attendance** — did they go? did they go back? | Booking record + check-in | **Primary.** Behavioural, hard to fake, available even when the teen says nothing. |
 | **Debrief** — likes & dislikes, demographic fit, vibes, environment, travel, comfortability | Audio + text, transcribed to structured prefs | Secondary. Rich and human, but self-reported and subject to politeness bias. |
 
+**The channel is in-app, and the channel is an adapter (D9, revised 31 Aug).**
+
+Observer does not know or care where a debrief came from. It takes a channel-agnostic `DebriefSubmission` (§5), so the transport is swappable and *"this moves to WhatsApp"* is an adapter, not a rewrite.
+
+For the PoC that adapter is **an in-app form**, for one reason that outranks convenience: **a third-party messaging platform would hold the voice note before we ever see it.** §8 builds our entire minors-data position on transcribe → extract → **discard the audio**, and invariant **A8** asserts no audio artefact survives. Routed through someone else's servers, A8 stays technically true and becomes misleading about the real data flow — which is worse than not claiming it. In-app, we own the whole path and the claim means what it appears to mean.
+
+**Keep the register, change the transport.** The form reads like texting a friend, not like a survey: one open question — *"how was it?"* — an optional voice note, a line of text. No star ratings, no matrices. A debrief nobody completes is worth nothing however well it is modelled, and that was the correct instinct behind the original decision.
+
+*Original decision: a Telegram bot. Reversed because it added a second live network dependency to the demo (after D8 added a cached replay precisely to remove one), and because it put a minor's voice recording on a third party's infrastructure. Telegram remains where the long-tail **supply** lives — that is Discovery reading public groups (`project_brief.md` §5.2), an unrelated path.*
+
 The diagram shows only the debrief, reachable only along the `teen attends session` edge. **A no-show therefore produces no signal at all**, which discards the most informative event in the system. The `did_not_attend` edge is a required addition (Discrepancy A4/A5).
 
 **The adaptation rule:**
@@ -183,6 +220,16 @@ The diagram shows only the debrief, reachable only along the `teen attends sessi
 - **Two no-shows → re-plan, not a nag.** Something in the plan is wrong: wrong time, wrong travel, wrong intimidation level.
 - Sustained repeat attendance → escalate that thread from **try** to **commit**, and reallocate remaining budget toward it.
 - Some weeks the correct output is **hold** — no new booking, no message. An agent that only ever escalates is not adapting, it is nagging.
+
+**Attributing a negative (D11).** When the debrief is negative, Observer's job is to decide *what* was disliked before writing anything. It emits a `DislikeSignal` with an `attribution`:
+
+| Attribution | Example | Effect |
+|---|---|---|
+| `activity` | "Pottery is boring" | Down-weights the axis — but only on a **second** corroborating signal |
+| `instance` | "Everyone there was 40 and it was 50 minutes away" | Down-ranks that provider and listing. **Leaves the axis untouched** — the activity was never the problem |
+| `unattributed` | "It was fine I guess" | Recorded, decays, moves nothing on its own |
+
+Most quits are instance-level, not activity-level. Collapsing them is how a recommender concludes a teen hates sport when what they hated was the bus ride.
 
 **Privacy.** The audio debrief is a voice recording of a minor. Transcribe, extract structured preferences, **discard the audio**. Retain the transcript only with explicit consent. See §8.
 
@@ -317,24 +364,68 @@ class Listing(BaseModel):
     guest_allowed:     bool
     commitment:        Literal["taster", "one_off", "short_course", "term"]
     next_sessions:     list[datetime]
-    peer_going:        bool           # opt-in only. See §9.3
+    peer_cohort:       PeerCohort | None   # aggregate presence, never identity. See §9.3
     source_url:        HttpUrl
     last_seen_at:      datetime
     freshness_state:   Literal["fresh", "stale", "dead"]
 
+class Axis(BaseModel):
+    """One preference dimension, with how much we trust it and where it came from."""
+    value:       float      # -1..1
+    confidence:  float      # 0..1
+    provenance:  Literal["seed", "debrief", "attendance"]
+    updated_at:  datetime
+
+class DislikeSignal(BaseModel):
+    """A negative signal that decays. Never a blocklist entry — see D11."""
+    axis:            str
+    listing_id:      str
+    attribution:     Literal["activity", "instance", "unattributed"]
+    strength:        float          # 0..1 as recorded
+    recorded_at:     datetime
+    half_life_days:  int = 90       # disliked at 14 can be liked at 16
+
+class DebriefSubmission(BaseModel):
+    """Channel-agnostic. Observer does not know where this came from.
+    PoC channel is an in-app form; WhatsApp/Telegram adapters are roadmap."""
+    booking_id:   str
+    text:         str | None
+    audio_ref:    str | None      # local handle only; discarded after transcription (A8)
+    channel:      Literal["in_app", "whatsapp", "telegram"]
+    submitted_at: datetime
+
+class PeerCohort(BaseModel):
+    """Aggregate presence. There is no identity in here to leak. See §9.3."""
+    same_age_band:  Literal["none", "few", "some", "many"]   # bucketed, never a count
+    same_area:      bool          # planning area / 2-digit postal sector. NEVER school
+    suppressed:     bool          # True when the underlying count is below k
+
 class PreferenceModel(BaseModel):
     """Preference axes only. No personality type, no learning style, no body metrics.
-    See project_brief.md §6 — these exclusions are non-negotiable."""
-    indoor_outdoor:      Axis   # -1..1 with a confidence
+    See project_brief.md §6 — these exclusions are non-negotiable.
+
+    Cold-start values are SEEDS, not a diagnosis: lowest confidence, never
+    exclusionary, outranked by the first attendance event. See §3.1."""
+    indoor_outdoor:      Axis
     team_solo:           Axis
     contact_noncontact:  Axis
     intensity:           Axis
     competitive_social:  Axis
+    dislikes:            list[DislikeSignal]     # decaying, ranking-only
     attendance:          list[AttendanceEvent]   # revealed — weighted higher
     debriefs:            list[Debrief]           # self-reported — weighted lower
+    seeded_at:           datetime | None         # None when the teen skipped the cold start
 ```
 
-`Axis` carries a confidence because a preference inferred from one attended session is not the same object as one inferred from six.
+**Confidence is ordered by provenance: `seed` < `debrief` < `attendance`.** A preference inferred from one attended session is not the same object as one inferred from six, and a chip tapped at signup is not the same object as either. This ordering is A4's revealed-over-self-reported rule applied at *t=0*, where there is no behaviour yet.
+
+**Dislike decays and never filters (D11).** Effective strength is `strength × 0.5 ** (days_elapsed / half_life_days)`; below a floor of 0.15 it stops influencing ranking at all. Three rules make this a preference signal rather than a ban:
+
+- **Ranking only, never membership.** A dislike moves an option down the list. It never removes it from the candidate set. Tested as invariant **A9** in [`evaluation.md`](./evaluation.md).
+- **Attribution matters more than valence.** *"Pottery is boring"* and *"the studio was 50 minutes away and everyone there was 40"* are different findings. Observer attributes which one it was (§3.5). An `instance` dislike down-ranks that provider and that listing; it does not touch the axis, because the activity was never the problem.
+- **One negative is n=1.** An axis only moves materially on **two** corroborating `activity`-attributed dislikes. A single bad Tuesday should not close off a category.
+
+The specific `listing_id` that was disliked is not re-surfaced. The category returns as the signal decays.
 
 ---
 
@@ -444,20 +535,20 @@ PDPC further states that children's personal data *"is generally considered to b
 
 | Concern | Position |
 |---|---|
-| **Voice recordings (debrief)** | Transcribe → extract structured preferences → **discard the audio**. Transcript retained only on explicit opt-in. Enhanced Practices tier. |
+| **Voice recordings (debrief)** | Transcribe → extract structured preferences → **discard the audio**. Transcript retained only on explicit opt-in. Enhanced Practices tier. **The debrief is collected in-app precisely so this is true end-to-end** — a third-party messaging channel would hold the recording before we saw it, and the claim would be true of our system while misleading about the data flow (D9). |
 | **Readable consent** | The consent copy is a deliverable, written for a 13-year-old and tested on one. Not boilerplate. |
 | **Withdrawal** | Explained in the same readable language, and actually implemented — required by the guidance, not optional |
-| **Peer signal** | Opt-in only, coarse-grained (postal sector or school level, never a named individual). See §9.3. |
+| **Peer signal** | **Aggregate only — there is no identity in the payload.** Bucketed presence, k-anonymity floor of 5, resolved at planning-area or 2-digit postal-sector level and **never at school level**. Opt-in to contribute. See §9.3. |
 | **Scraping / external fetch** | Discovery respects `robots.txt` and provider ToS. Anything fetched carries `source_url` + `last_seen_at`, so provenance is always attributable. |
 | **Blast radius** | Discovery — the only component touching the open internet — never holds personal data. |
 | **The gate log is the second custodian** | The validation layer reads *every* inter-agent payload, including gate ◆3 where parental rules and consent cross from Guardian to Broker. So it sees more personal data than any single agent. **`gate_log` therefore records payload *shape* — schema id, validity, size, loop counters, token usage — never payload content.** Content is referenced by id and stays in state. Without this rule the privacy story we lead with has a hole in the middle of it. |
-| **Consent survives majority** | PDPC: consent obtained while a child *"remains valid when the individual reaches 18"*. No forced re-consent at 18, but we offer a review. |
+| **Consent survives majority** | PDPC: consent obtained while a child *"remains valid when the individual reaches 18"*. No forced re-consent at 18, but we offer a review. The **account** is a separate question: at 18 the Guardian approval requirement is what would need to change, which is precisely the 18+ roadmap item (D7). |
 
 ---
 
 ## 9. Additions to the diagram
 
-Three things this spec adds that the diagram does not show. Each is here because the pitch or the rubric requires it; each is a small, concrete change. Full reasoning in [`discrepancies.md`](./discrepancies.md).
+Three things this spec adds that the diagram does not show. Each is here because the pitch or the rubric requires it; each is a small, concrete change. Full reasoning in [`discrepancies.md`](../4-decisions/discrepancies.md).
 
 ### 9.1 The budget ledger *(Discrepancy A3 — highest impact)*
 
@@ -475,7 +566,27 @@ Feedback Capture is reachable only via `teen attends session`. A teen who does n
 
 `project_brief.md` states two objectives — interest fit **and** belonging — on the evidence that 8% of youths report no close friends and that building friendships outside school is a stated aim of the Curiosity Credits scheme. A hobby found alone is much less likely to stick. Nothing in the diagram scores for it.
 
-**Scoped down to something buildable and privacy-safe:** a `peer_going` boolean on `Listing`, opt-in only, resolved at postal-sector or school level and never to a named individual, used as a **ranking tiebreak** rather than a hard filter. That keeps the pitch line honest without opening a privacy hole in a product for minors. If we are not going to build even that, the second objective should come out of the brief — half-in is the version a judge will catch.
+**Built as cohort presence, not a friend graph (D2, 31 Aug).** The obvious implementation is a friend system, and it is the wrong one for two independent reasons:
+
+1. **It reproduces the school social graph** — which is the thing Hobbi exists to get a teen out of. A recommender that preferentially sends you where your existing friends already are cannot deliver the outcome the evidence asks for.
+2. **It is empty on day one.** A friend graph needs users before it does anything, so the feature would be dead exactly when the demo runs.
+
+What we build instead is `PeerCohort` on `Listing` (§5) — **aggregate presence with no identity in it**:
+
+> Never *"Jian is going."* Always *"4 teens from your area usually come to this."*
+
+Four rules, and they are what make it privacy-safe by construction rather than by policy:
+
+| Rule | Why |
+|---|---|
+| **Bucketed, never a count** — `none / few / some / many` | An exact number plus a small area is a re-identification vector |
+| **k-anonymity floor (k = 5)** — below it, `suppressed = True` and nothing is shown | *"1 teen from your area is going"* identifies that teen. Showing nothing is the correct output |
+| **Planning area or 2-digit postal sector — never school** | School is the graph we are deliberately crossing. Resolving at school level would rebuild it |
+| **Opt-in to contribute, and a ranking tiebreak only** | A teen chooses whether their own attendance feeds the aggregate; default off. The signal moves an option up between otherwise-equivalent options, and **absence is never surfaced as a negative** — *"nobody is going"* is a discouraging screen that burns a `try` |
+
+**The slide line.** *3 in 5 youths say youth spaces would help them meet people from different backgrounds* (SG Youth Plan Report, p.56). A friend graph delivers the opposite of what that number asks for; cohort presence delivers it. This is the rare case where the privacy-preserving design is also the more effective one, and it is worth saying in exactly those terms.
+
+**In the PoC, `PeerCohort` is simulated** and labelled as such — it cannot come from a real source at this stage (D8). Tested as invariant **A12**.
 
 ---
 
@@ -487,11 +598,13 @@ The deck's "Boiling Ocean" failure mode and the Effectiveness rubric band ("**fu
 |---|---|---|
 | **Agents** | All 6 + validation layer | — |
 | **CKB** | Seeded set of real listings across CC courses, ActiveSG, third spaces, informal, and a quarantined unverified set | Live provider integrations |
-| **Discovery** | Live web search over a whitelisted domain set | Full crawl + ToS negotiation |
+| **Discovery** | Live web search over a whitelisted domain set, **plus a cached replay fixture captured from a real run** | Full crawl + ToS negotiation |
 | **Broker** | Sandboxed — real booking records and confirmations, no live transactions | Real provider APIs |
 | **Compliance** | Manually-triggered scan + a demonstrated retire→replan cascade | Deployed scheduler |
-| **Observer** | Attendance events fed by the simulation harness; real debrief transcription | Real check-in channel (Telegram) |
+| **Observer** | Attendance events fed by the simulation harness; **in-app debrief form** with real audio transcription | WhatsApp / Telegram adapters behind the same `DebriefSubmission` contract |
 | **Longitudinal loop** | **Simulation harness** replaying 9–12 months of one synthetic teen | Real users over real months |
+
+**The cached replay is not optional (D8).** Requirement 8.4.1 is that the submitted solution *"can run as demonstrated in the video."* A live search that 404s during judging — or a site that changed the week before — costs Technical Quality *and* Effectiveness. So Discovery's live path is real, one real run is captured to `data/discovery_replay.json`, and the demo path runs from the fixture. Both are reproducible; only one depends on the network being cooperative on the day.
 
 ### The simulation harness *(required build item — Discrepancy B8)*
 
@@ -531,9 +644,10 @@ src/
   schema/      state.py  listing.py  preferences.py  plan.py
   graph.py                             # nodes, edges, routers, caps
   constants.py                         # MODEL_ID, all MAX_* caps
-data/          seed_ckb.json  synthetic_teen.json
+data/          seed_ckb.json  synthetic_teen.json  discovery_replay.json
 sim/           harness.py  counterfactual.py
 tests/         test_caps.py  test_s0_plan.py  test_guardian_vetting.py  test_schema.py
+               test_age_boundary.py  test_peer_cohort.py  test_cold_start.py
 docs/
 README.md      run instructions + purpose of every file
 requirements.txt
@@ -576,11 +690,16 @@ We do **not** claim Embedded or Creative/Generative. Nothing in the system gener
 | 6 | Orchestrator recast as an on-edge validator; recommended rename to `Validator` | Clarification | A2 |
 | 7 | "Feedback Capture" renamed **Observer**, attendance weighted above debrief | Rename + rule | A4 |
 | 8 | `Reallocator` from brief v1 formally retired into Planner | Retirement | A1 |
-| 9 | `peer_going` on `Listing`, opt-in, tiebreak only | Scoped-down addition | A6 |
+| 9 | `PeerCohort` on `Listing` — bucketed, k-anonymised, planning-area level, opt-in, tiebreak only | Scoped-down addition | A6 / D2 |
 | 10 | Simulation harness as a named build item | **Required for demo** | B8 |
 | 11 | Tech stack named | **Required by rubric** | B4 |
 | 12 | Agent classes claimed | Free marks | B5 |
 | 13 | Broker declared sandboxed in PoC | Honesty | B9 |
 | 14 | Voice-recording retention policy | **Required** (minors) | B10 |
+| 15 | Cold-start seeding — 4–6 skippable vibe chips, `provenance` on `Axis` | New behaviour | D10 |
+| 16 | `DislikeSignal` — decaying, attributed, ranking-only | New behaviour | D11 |
+| 17 | Age boundary 13–17 enforced at intake, under-13 refused | **Required** (safety/consent) | D7 |
+| 18 | Observation channel: in-app form behind a channel-agnostic `DebriefSubmission` | Decision | D9 |
+| 19 | Cached Discovery replay fixture for the demo path | **Required for demo** | D8 |
 
-The diagram should be regenerated to include items 1, 2, 3 and 5 before it goes on slide 5. The other items are text.
+The diagram should be regenerated to include items **1, 2, 3, 5 and 17** before it goes on slide 5 — those are structural. The rest are text.

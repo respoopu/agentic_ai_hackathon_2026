@@ -1,6 +1,6 @@
 # Deliverables & Judging — SimplifyNext Agentic AI Hackathon 2026
 
-*Source of truth: `docs/info-judging-criteria-reqs.pdf` (official slide deck, 39 pages, © 2026 SimplifyNext). Compiled 27 Aug 2026.*
+*Source of truth: `docs/judging-criteria.pdf` (official slide deck, 39 pages, © 2026 SimplifyNext). Compiled 27 Aug 2026.*
 
 **Part I is the working brief:** the immediate submission requirements, hard limits, judging criteria, and recommended structure. **Part II is the reference section:** detailed guidance, examples, failure modes, technical notes, our scoring plan, and ambiguities.
 

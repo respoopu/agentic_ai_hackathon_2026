@@ -1,6 +1,6 @@
 # Discrepancy Register
 
-*Conflicts between the three things that currently define Hobbi: the **brief** (`project_brief.md` v1), the **architecture** (`teen-planner-architecture.png`), and the **hackathon requirements** (`deliverables.md`, from the official deck).*
+*Conflicts between the three things that currently define Hobbi: the **brief** (`project_brief.md` v1), the **architecture** (`architecture-diagram.png`), and the **hackathon requirements** (`deliverables.md`, from the official deck).*
 
 *Opened 27 Aug 2026. This is a working document — close rows as they are resolved.*
 
@@ -22,9 +22,13 @@
 | **E** — Downstream artifacts | 0 | 1 | 0 | 1 |
 | | **12** | **12** | **9** | **33** |
 
-**Twelve rows are open and need the team, not me** — A3, A6, B7, B11 and E1, the five carried-over product decisions now tracked as **D7–D11**, and the two organiser questions. All of them are in §D. Everything else is decided and already written into the v2 docs.
+**All twelve decisions in §D closed on 31 Aug**, and every discrepancy in classes A, B and C with them. The source-of-truth docs no longer contradict each other, the diagram, or the deck.
 
-**If you read one row, read B7** — and then **B11**, which is the trap inside B7's own fix.
+**One row is still open: E1** — the `feat/agent-system-prompts` branch. It is not a decision; **D6** scheduled it. The prompts get re-derived from `architecture.md` §3 once this branch merges to main.
+
+Everything else that remains is work, not argument: the build, the deck, the video, the source-verification list below, and five teenagers.
+
+**If you read one row, read B7** — and then **B11**, the trap inside B7's own fix. Both closed on 31 Aug; they are kept because the reasoning is the reasoning behind slide 2 and the headline metric.
 
 ---
 
@@ -66,7 +70,7 @@ Two problems. First, these are different components with the same name, which wi
 
 ---
 
-### A3 · The budget ledger has no owner 🔴 `OPEN — needs a decision`
+### A3 · The budget ledger has no owner 🔴 `RESOLVED — D1, 31 Aug`
 
 **This is the most consequential row in the register.**
 
@@ -91,7 +95,7 @@ The gap is narrower than "the budget is missing" — money is present as a *cons
 
 **The alternative,** if the team would rather not touch the architecture: drop the portfolio framing from the brief and re-derive "why agentic" from the three loops alone (plan-quality reflection + safety gate + longitudinal preference learning). Defensible, and materially weaker.
 
-**The v2 docs assume the recommendation.** `architecture.md` §5 and §9.1 already carry the ledger. Say the word and it comes back out.
+**Closed as D1 on 31 Aug: the recommendation was adopted.** `architecture.md` §5 and §9.1 carry the ledger, and it is no longer conditional. The alternative below is recorded only so nobody re-opens the argument.
 
 ---
 
@@ -126,7 +130,7 @@ The brief specifies it. `deliverables.md` §11 identifies the "agent correctly d
 
 ---
 
-### A6 · The belonging objective is in the brief and nowhere in the system 🟠 `OPEN — needs a decision`
+### A6 · The belonging objective is in the brief and nowhere in the system 🟠 `RESOLVED — D2, 31 Aug`
 
 Brief §3: *"Optimise for interest fit **and** belonging. Prefer options where a peer from the same school or neighbourhood is also attending."* Backed by real evidence (8% of youths report no close friends; friendships outside school is a stated aim of the Curiosity Credits scheme).
 
@@ -138,11 +142,13 @@ So we are pitching a two-objective system and have specified a one-objective sys
 
 | | Cost | Risk |
 |---|---|---|
-| **(a) Build it small** — `peer_going` boolean on `Listing`, opt-in, resolved at postal-sector or school level, never to a named individual, used as a **ranking tiebreak** not a filter | ~half a day | Low. Privacy-safe by construction. |
+| **(a) Build it small** — an opt-in field on `Listing`, resolved coarsely and never to a named individual, used as a **ranking tiebreak** not a filter | ~half a day | Low. Privacy-safe by construction. |
 | **(b) Cut it from the brief** | Free | Loses a genuine, evidenced differentiator |
 | **(c) Leave it as-is — pitched, not built** | Free | **A judge asks "show me where belonging is scored" and there is nothing to show.** Worst of the three. |
 
-**Recommendation: (a).** Cheap, honest, and it keeps a line that is genuinely differentiating. `architecture.md` §9.3 assumes it. **(c) is the default if nobody decides**, which is why this row is open.
+**Option (a), built as cohort presence (D2, 31 Aug).** The obvious implementation — a friend graph — is the wrong one twice over: it **reproduces the school social graph** Hobbi exists to get a teen out of, and it is **empty on day one**, so it would be dead exactly when the demo runs.
+
+`PeerCohort` on `Listing` instead: bucketed presence (`none/few/some/many`), suppressed below a k-anonymity floor of 5, resolved at planning-area or 2-digit postal-sector level and **never at school level**, opt-in to contribute, ranking tiebreak only, absence never surfaced. Spec in `architecture.md` §9.3 and §5, invariant **A12**.
 
 ---
 
@@ -260,7 +266,7 @@ Every case study in the deck carries an explicit *"Human-in-the-loop:"* line. Ou
 
 ---
 
-### B7 · Scope of the claim vs what the prototype resolves 🔴 `OPEN — decide before the deck is written`
+### B7 · Scope of the claim vs what the prototype resolves 🔴 `RESOLVED — D3, 31 Aug`
 
 **This is the highest-leverage decision in the register.**
 
@@ -280,7 +286,13 @@ A narrow statement that survives the deck's POV test and that we can actually cl
 
 That is closable in a demo. "Teens need hobbies that stick" is not.
 
-**This changes slide 2, slide 7, the video's opening 30 seconds and the evaluation metrics.** Decide it before anyone writes any of them.
+**Resolution (D3).** Narrowed — and widened at the same time, because two things were being conflated. The **outcome** is narrow (one first attended session, graded under Effectiveness); the **audience** is broad (every secondary student on limited discretionary money, graded under Benefits). The earlier draft leaked the audience into the outcome by leading with Curiosity Credits, which quietly made SHG members the whole market.
+
+Final wording, now in `project_brief.md` §1.1:
+
+> *A 14-year-old in Singapore with S$0 of their own to spend needs a way to get to a first hobby session this month without an adult driving the search — because the free and low-cost options are scattered across Community Clubs, ActiveSG, new third spaces and group chats that no directory indexes together, and nobody at home has the hours to go looking.*
+
+**S$0 is the harder constraint, not the humbler one.** A system that closes it closes the funded case trivially, and it is already invariant **A3** rather than a marketing line. Curiosity Credits move to slides 7 and 9 as a funded, nationally-announced beachhead — an adoption argument instead of a ceiling.
 
 ---
 
@@ -314,7 +326,7 @@ Feedback Capture records audio from 13–17-year-olds. The brief mentions PDPA o
 
 ---
 
-### B11 · The evaluation measures a wider claim than the problem statement 🔴 `OPEN — falls out of B7`
+### B11 · The evaluation measures a wider claim than the problem statement 🔴 `RESOLVED — D3b, 31 Aug`
 
 Spotted on review, and it is the trap inside **B7**'s own recommendation.
 
@@ -333,7 +345,7 @@ So narrowing the problem statement does not resolve the tension — **it relocat
 - **New headline:** *time-and-actions to a first attended session at S$0*, agent vs static baseline. It measures exactly what the narrow statement promises, and the counterfactual arm still does the work.
 - **Demoted to supporting:** B14, B11, B12 — reframed on the slide as *"and here is what the same policy does over twelve months"*, which is the roadmap argument rather than the effectiveness claim.
 
-**Do not skip this.** It is the one place where the docs, as written, would have the deck and the evaluation slide arguing for different products.
+**Resolution (D3b).** Adopted as recommended. **B15 — time-and-actions to a first attended session at S$0** is the headline; B14, B11 and B12 stay in the report as supporting evidence for the roadmap slide. `evaluation.md` §3.3, §5 and §7 all updated. Slide 2 and the headline metric now measure the same thing.
 
 ---
 
@@ -354,7 +366,7 @@ Good rhetoric, wrong artefact. It also trips two of the deck's six named failure
 
 The brief already contains everything needed to fix it: §2's persona is sharp (a 14-year-old in an SHG family, S$0 discretionary, no parent free to drive them, no idea free CC courses exist, no friend already doing the thing). It just never got compressed into one sentence.
 
-**Resolution.** `project_brief.md` v2 §1 leads with a POV statement, pressure-tested against all four of the deck's questions, with the narrative moved underneath it. Final wording depends on **B7**.
+**Resolution.** `project_brief.md` v2 §1 leads with a POV statement, pressure-tested against all four of the deck's questions, with the narrative moved underneath it. Final wording settled by **D3** on 31 Aug.
 
 ---
 
@@ -402,7 +414,7 @@ Nothing in v1 distinguishes the vision from the build. Both the Boiling Ocean fa
 
 ### C7 · The sources doc points at a file that doesn't exist 🟡 `RESOLVED`
 
-`project_brief_sources.md` opens *"Companion to `hobby-agent-project-brief.md`."* No such file. It is `project_brief.md`. Fixed.
+`sources.md` opens *"Companion to `hobby-agent-project-brief.md`."* No such file. It is `project_brief.md`. Fixed.
 
 ---
 
@@ -430,13 +442,13 @@ Brief v1 §7 pre-empts *"don't they already have CCAs?"*, *"won't NYC just build
 
 ## E. Downstream artifacts now out of sync
 
-### E1 · `origin/feat/agent-system-prompts` predates this doc set and diverges from it 🟠 `OPEN — re-derive after the docs settle`
+### E1 · `origin/feat/agent-system-prompts` predates this doc set and diverges from it 🟠 `OPEN — scheduled: re-derive once this branch merges (D6)`
 
 An unmerged branch (9 commits, 25 Aug 2026, forked after `eea58dd`) contains ~1,700 lines of real work: six agent system prompts, a normative `shared-protocol.md`, a design spec and plan, and nine test fixtures with a validator.
 
 **It is downstream of these documents, not an input to them.** The source of truth is being set here; the prompts are an output of it. Nothing in this register changes the architecture because of that branch. What follows is a **re-derivation checklist** for whoever realigns it.
 
-Where the branch and [`architecture.md`](./architecture.md) currently disagree:
+Where the branch and [`architecture.md`](../3-system/architecture.md) currently disagree:
 
 | # | Branch says | These docs say |
 |---|---|---|
@@ -446,36 +458,45 @@ Where the branch and [`architecture.md`](./architecture.md) currently disagree:
 | 4 | Store is called **Child Profile** | Store is called **Personal Data** |
 | 5 | Framed as a system for **children**, *"lifelong activity and career-exploration"* | Framed for **13–17-year-olds**, hobby discovery. This one is not cosmetic — it moves the PDPA consent basis (under-13 requires parental consent; 13–17 may self-consent) and it changes the product |
 
-Item 5 is the one to settle first: the two documents describe different users.
+**Item 5 is settled: D7, 31 Aug — the cohort is 13–17, hobby discovery.** The branch's "children / lifelong activity and career exploration" framing is superseded, and the PDPA consent basis follows from the 13–17 boundary (`architecture.md` §8). The other four rows still need re-deriving.
 
 **Also worth noting for whoever picks it up:** the branch's tests are PowerShell (`validate-fixtures.ps1`, `test_validate_fixtures.ps1`) while its own README invokes `python tests/agent-system-prompts/validate_fixtures.py`. The deck says **"Python is strongly recommended"** and judges will run what the README says. Whatever survives re-derivation should be Python.
 
-**Action:** once **D1**, **D2** and **D3** are decided, regenerate the system prompts from [`architecture.md`](./architecture.md) §3 — where the agent descriptions are already written to be the source text for prompts — rather than editing the branch in place.
+**Action:** once **D1**, **D2** and **D3** are decided, regenerate the system prompts from [`architecture.md`](../3-system/architecture.md) §3 — where the agent descriptions are already written to be the source text for prompts — rather than editing the branch in place.
 
 ---
 
-## D. Open — needs a decision or an external answer
+## D. Decisions
 
-| # | Question | Why it is blocked | Who decides |
+### All twelve closed — 31 Aug 2026
+
+| # | Question | Decision | Consequence |
 |---|---|---|---|
-| **D1** | **A3** — keep the budget-as-portfolio thesis and add the ledger, or drop it and re-derive "why agentic" from the loops? | Changes the Originality argument and the architecture diagram | Team |
-| **D2** | **A6** — build the belonging tiebreak, or cut the second objective from the brief? | Currently pitched and not built, which is the worst state | Team |
-| **D3** | **B7** — how narrow is the problem statement? | Determines the Effectiveness ceiling; gates slide 2, slide 7 and the video open | Team, **first** |
-| **D3b** | **B11** — which metric is the headline, now that B7 narrows the claim? | Falls straight out of D3. Left alone, the deck and the evaluation slide argue for different products | Team, **with D3** |
-| **D6** | **E1** — when do we re-derive the system prompts on `feat/agent-system-prompts`? | The branch predates these docs and diverges on five points, one of which (children vs 13–17) changes the product | Team, **after D1–D3** |
-| **D4** | Is there a **live pitch and Q&A**? | The Presentation rubric's wording implies one; changes how much we rehearse and whether we prep an objection sheet | Organisers |
-| **D5** | **Deadline, upload mechanism, accepted formats** | Not in the deck at all. Project files are **one submission only** — no re-uploads | Organisers |
+| **D1** | **A3** — keep the budget-as-portfolio thesis and add the ledger? | **Yes.** `BudgetLedger` in typed state; Planner reads it, Broker decrements it, Observer reconciles it after each outcome. The v1 *Reallocator* stays retired — this needs state, not an agent. | `architecture.md` §5 and §9.1 already carry it; the "assumed pending decision" hedges come out. **A3 closes.** The Originality argument now rests on something that exists in the schema. |
+| **D2** | **A6** — belonging: by what mechanism? | **Cohort presence, not a friend graph.** Aggregate `PeerCohort` on `Listing`: bucketed counts, k-anonymity floor of 5, planning-area level and never school, opt-in to contribute, ranking tiebreak only, absence never shown. | `architecture.md` §9.3 and §5; `project_brief.md` §3.7; invariant **A12**. **A6 closes.** A friend graph would have rebuilt the school social graph the product exists to cross — the privacy-preserving design is also the more effective one. |
+| **D3** | **B7** — how narrow is the problem statement? | **Narrow on outcome, broad on audience** — they are different questions, graded under different criteria. The outcome is *one first attended session*; the audience is every secondary student on limited discretionary money. Statement now leads with **S$0** instead of S$500 of Curiosity Credits, which become the wedge on slides 7 and 9. | `project_brief.md` §1.1 rewritten with the audience/outcome table; §1.2 and §2.1 realigned. **B7 and C1 close.** |
+| **D3b** | **B11** — which metric is the headline? | **B15 — time-and-actions to a first attended session at S$0**, agent vs static baseline. B14 (12-month adherence), B11 and B12 demoted to supporting evidence on the roadmap slide. | `evaluation.md` §3.3, §5, §7. **B11 closes.** Slide 2 and the headline metric now measure the same thing. |
+| **D4** | Is there a live pitch and Q&A? | **Prepare for one regardless, at second priority.** It only happens if we are promoted, so the order is: sharpen the idea → build the deck → prep Q&A *against* the deck. | Objection sheet comes from `project_brief.md` §7, which already answers the three most likely questions. Rehearsal stays item 7 in `deliverables.md` §11.5. |
+| **D5** | Deadline, upload mechanism, formats | **Team settles directly with the organisers.** No doc dependency. | Still gates the final freeze: project files are **one submission only**, no re-uploads. |
+| **D6** | When do we re-derive the system prompts on `feat/agent-system-prompts`? | **After this source-of-truth branch is reviewed and merged to main.** Team owns the merge flow. | E1's re-derivation checklist stands as written. Regenerate from `architecture.md` §3 rather than editing the branch in place. |
+| **D7** | Trusted adult — and who is the user? | **13–17, both ends, enforced.** No adult mode; 18+ is roadmap. Under-13 refused at intake. A trusted adult is mandatory for **every** user, because every user is a minor. | `architecture.md` §2 carries the boundary and the enforcement; §8 already had the consent position. New invariant **A11**. **Closes E1 item 5** — the branch's "children / career exploration" framing is now definitively wrong. |
+| **D8** | Real integrations, or seed KB + simulated booking? | **Hybrid.** Seed CKB from **real** listings, hand-transcribed, every row carrying `source_url` and a real `verified_at` · Discovery **searches live** over a whitelisted domain set · Broker **sandboxed**, stated on slide 5 · a **cached replay fixture** so the demo never depends on a live call succeeding. No real provider integrations — there is no public booking API for CC courses or ActiveSG, and the payer is a minor. | `architecture.md` §10 confirmed, plus a replay row. **Tripwire below.** |
+| **D9** | Observation channel | **In-app form, behind a channel-agnostic `DebriefSubmission`.** *Revised 31 Aug — the original decision was a Telegram bot.* The interaction still reads like texting a friend, not completing a survey; only the transport changed. | `architecture.md` §3.5, §5, §8, §10. **Reversal reasoning below.** Also removes the last open scope question from the register — the debrief channel is now a build item, not a stretch goal. |
+| **D10** | Cold start | **4–6 vibe chips, multi-select, skippable** — "sporty", "artistic", "chill", "explorative". Five binding rules: skippable with *"Surprise me"* first-class · no label ever shown back · lowest confidence, outranked by the first attended session · biases ranking but never filters · asks *where to start*, not *what you are like*. | **Reconciles the collision with §6.1.** The line is now stated in the docs rather than implied: **seeding is permitted, typing is not.** `project_brief.md` §6.1 carries the distinction table, `architecture.md` §3.1 the five rules, `user_stories.md` the reworded story. New invariants **A9** (seeds and dislikes never change candidate-set membership) and **A10** (a skipped cold start still yields a viable plan). |
+| **D11** | Model *dislike* explicitly? | **Yes, with decay.** A dislike is a signed, timestamped, confidence-weighted signal on a preference axis — **never a blocklist entry.** Something disliked at 14 can be liked at 16, and the model has to allow that. | **Specified 31 Aug.** `DislikeSignal` in `architecture.md` §5 with a 90-day half-life and a 0.15 floor; Observer attributes `activity` / `instance` / `unattributed` (§3.5); an axis moves only on **two** corroborating `activity` signals. Ranking-only, tested as invariant **A9**. |
 
-**Carried over from `project_brief.md` v1 §11.** These were six checkboxes in v1. One (peer privacy) was promoted into **A6 / D2**; the rest spent v2 as a single sentence of prose in the brief, with no IDs, no owners and no status — which is why they stopped getting decided. They are rows now.
+**D8 tripwire.** If live Discovery is not reliable by demo day, the fallback is a pure seed CKB — **but then B9 (long-tail coverage) comes off the evaluation slide, or is relabelled illustrative.** A metric computed over data we authored ourselves is not evidence, and it is the metric the Originality argument leans on. Decide that now, not at 2am on the last night.
 
-Each one gates a piece of the build, so none of them can wait for D1–D3.
+**D9 reversal, recorded rather than rewritten.** The first decision on 31 Aug was a Telegram bot, on the reasoning that a message gets answered and an app has to be opened. Three things overturned it the same day:
 
-| # | Question | Why it is blocked | Who decides |
-|---|---|---|---|
-| **D7** | Where does the trusted adult sit — **mandatory co-user, or approval-only**? | Defines Guardian's interface and every parent-facing artefact (`architecture.md` §3.3, §7). Also moves the PDPA consent basis — see `project_brief.md` §6.4 | Team |
-| **D8** | **Real integrations** (ActiveSG, CC courses), or a **curated seed KB + simulated booking**? | `architecture.md` §10 assumes the seed KB and **B9** leans on it for the "Broker is sandboxed" answer. Currently inherited by silence rather than decided | Team, **before build** |
-| **D9** | What is the **observation channel** — app check-in, SMS, Telegram bot? *(Telegram is where the teens are.)* | No channel, no attendance signal — and under **A4** attendance is the *primary* preference input, outranking the debrief (`architecture.md` §3.5) | Team, **before build** |
-| **D10** | **Cold start** — what is the very first experiment for a teen with zero history? | It is the demo's opening frame and the first behaviour a judge sees. Also the first row of every simulation profile in `evaluation.md` §6 | Team, **before the video** |
-| **D11** | Do we model **dislike** explicitly? A teen who hates their first pottery class tells us a lot. | Changes the `PreferenceModel` schema (`architecture.md` §5) and what the debrief extracts | Team |
+1. **It would have undermined invariant A8.** `architecture.md` §8 builds the minors-data position on transcribe → extract → **discard the audio**. Routed through a third-party messenger, the voice note sits on someone else's servers before our code sees it. A8 would remain technically true and become misleading about the actual data flow — worse than not claiming it at all.
+2. **It added a second live network dependency to the demo**, immediately after **D8** added a cached replay specifically to remove one. Two network paths at judging time, for a non-core feature, against requirement 8.4.1.
+3. **A third-party platform sets its own minimum age**, and **D7** fixed our cohort at 13–17. That is a compliance question, not a preference. *(Unverified — check the ToS before any future adapter ships.)*
 
-**Source verification** — the four items `project_brief_sources.md` §J flags as load-bearing, plus the CCA citation from **C9**: National Youth Survey 2025, NCSS QoL Survey 2025, MOE on CCAs/LEAPS, the IMDA framework PDF, and one sports-science citation for the maturation argument. Verification is in progress; results land in `project_brief_sources.md`.
+**What was not lost.** "Telegram is where the teens are" was about *supply* — Discovery reading public groups (`project_brief.md` §5.2) — which is a different path and unaffected. Attendance, no-shows and `hold_this_week` never depended on the debrief channel. The response-rate bet is real but unmeasurable in four days, so it belongs on the roadmap slide either way.
+
+**The good part survived:** the register. One open question, an optional voice note, no star ratings. The instinct was right; the transport was wrong.
+
+---
+
+**Source verification** — the four items `sources.md` §J flags as load-bearing, plus the CCA citation from **C9**: National Youth Survey 2025, NCSS QoL Survey 2025, MOE on CCAs/LEAPS, the IMDA framework PDF, and one sports-science citation for the maturation argument. Verification is in progress; results land in `sources.md`.

@@ -1,17 +1,19 @@
 # Project Brief — Hobbi
 
 *Hackathon: SimplifyNext Agentic AI Hackathon 2026 — **"Design for a World in Transformation"***
-*Version 2 · 27 Aug 2026 · supersedes v1 (18 Aug 2026)*
+*Version 2.1 · 31 Aug 2026 · supersedes v1 (18 Aug 2026)*
 
 **The doc set.** 
-- [`deliverables.md`](./deliverables.md) — what the hackathon requires · **this** — problem, user, solution, positioning · 
-- [`architecture.md`](./architecture.md) — the system spec · 
-- [`evaluation.md`](./evaluation.md) — how we prove it works · 
+- [`deliverables.md`](../1-requirements/deliverables.md) — what the hackathon requires · **this** — problem, user, solution, positioning · 
+- [`architecture.md`](../3-system/architecture.md) — the system spec · 
+- [`evaluation.md`](../3-system/evaluation.md) — how we prove it works · 
 - [`user_stories.md`](./user_stories.md) — stories mapped to agents · 
-- [`project_brief_sources.md`](./project_brief_sources.md) — every citation · 
-- [`discrepancies.md`](./discrepancies.md) — open conflicts and decisions.
+- [`sources.md`](./sources.md) — every citation · 
+- [`discrepancies.md`](../4-decisions/discrepancies.md) — open conflicts and decisions.
 
-> **What changed in v2.** Problem statement rewritten into the required POV format and pressure-tested. **The "42% of youths satisfied" figure is removed — it does not survive verification** (see §1.2). The agent roster now lives in [`architecture.md`](./architecture.md) and matches the diagram. Evaluation, tech stack and build scope added. Criterion references corrected to the real rubric. All headline figures re-sourced to primary documents.
+> **What changed in v2.1 (31 Aug).** All twelve open decisions closed (§12). The problem statement now leads with **S$0** rather than S$500 of Curiosity Credits — narrow on outcome, broad on audience (§1.1). Belonging is built as **cohort presence, not a friend graph** (§3.7). The cohort is fixed at **13–17 at both ends** (§2, §6.4). The budget ledger has an owner (§4). §6.1 now states where the line falls between **seeding and typing**, because the cold start asks a short question.
+>
+> **What changed in v2 (27 Aug).** Problem statement rewritten into the required POV format and pressure-tested. **The "42% of youths satisfied" figure is removed — it does not survive verification** (see §1.2). The agent roster now lives in [`architecture.md`](../3-system/architecture.md) and matches the diagram. Evaluation, tech stack and build scope added. Criterion references corrected to the real rubric. All headline figures re-sourced to primary documents.
 
 ---
 
@@ -19,11 +21,26 @@
 
 ### 1.1 The statement
 
-> **A 14-year-old holding S$500 of Curiosity Credits needs a way to find a first session they can afford, reach, and walk into alone — because the options that fit are scattered across Community Clubs, ActiveSG, new third spaces and group chats that no directory indexes together, and no adult in the house has the hours to go looking.**
+> **A 14-year-old in Singapore with S$0 of their own to spend needs a way to get to a first hobby session this month without an adult driving the search — because the free and low-cost options are scattered across Community Clubs, ActiveSG, new third spaces and group chats that no directory indexes together, and nobody at home has the hours to go looking.**
 
 **North star, for slide 9 and not for slide 2:** *the same teenager, twelve months later, still going.*
 
-The split is deliberate. The Effectiveness rubric's top band is *"fully addresses and **resolves** the problem"*, and the deck's "Boiling Ocean" failure mode says *"cut one slice we can finish and demonstrate."* A statement we can close in a demo scores 2. "Teens need hobbies that stick" scores 1 no matter how good the build is. The twelve-month version is an asset on the roadmap slide and a liability on the problem slide. *(This is [`discrepancies.md`](./discrepancies.md) **B7/D3** — still formally open. Decide it before anyone writes slide 2.)*
+*Closed as [`discrepancies.md`](../4-decisions/discrepancies.md) **D3**, 31 Aug. This wording supersedes the Curiosity-Credits-led version.*
+
+#### Why this is narrow without being small
+
+Two things were being conflated, and separating them is what let the statement get sharper *and* wider at the same time:
+
+| | Question | Where it is graded | Our answer |
+|---|---|---|---|
+| **Outcome** | What does the prototype have to close? | **Effectiveness** — top band is *"fully addresses and **resolves**"* | **One first attended session.** Bounded, demonstrable, closable in five minutes of video |
+| **Audience** | Who has this problem? | **Benefits** — top band is *"scalable or easily adopted"* | **Every secondary student on limited discretionary money.** Not a niche |
+
+The earlier draft led with S$500 of Curiosity Credits, which quietly made Self-Help Group members the whole audience. They are the **wedge**, not the market — a real, funded, nationally-announced cohort to start with, and the reason the problem is provably recognised. That is what §2.3 already said; the statement now agrees with it.
+
+**Leading with S$0 is the stronger claim, not the humbler one.** S$0 is a *harder* constraint than S$500 — a system that solves it solves the funded case trivially — and it is already a tested invariant (**A3**), not a marketing line. Curiosity Credits move to slides 7 and 9, where a funded, government-announced cohort is an adoption argument rather than a ceiling.
+
+The narrow *outcome* is what the Effectiveness rubric rewards. The deck's "Boiling Ocean" failure mode says *"cut one slice we can finish and demonstrate"*, and "teens need hobbies that stick" scores 1 no matter how good the build is. The twelve-month version is an asset on the roadmap slide and a liability on the problem slide.
 
 ### 1.2 Pressure test
 
@@ -31,7 +48,7 @@ The deck requires this, as a team, before writing code. Ours, honestly scored:
 
 | # | Question | Verdict |
 |---|---|---|
-| 1 | **Can we name one person?** | ✅ A 14-year-old in an SHG family, in the weeks after the credits land. Not "youths." |
+| 1 | **Can we name one person?** | ✅ Aisyah, 14 (§2.1) — S$0 of their own, nobody at home free to drive them, no friend already doing the thing. Not "youths." |
 | 2 | **Can we cite the evidence?** | ✅ Now. Figure, source and date for every claim in §1.3 — after one of them failed verification. |
 | 3 | **Would that person recognise themselves?** | ❌ **No. We have not spoken to a single teenager.** See below. |
 | 4 | **Does it survive a different solution?** | ✅ The statement describes fragmentation and adult time-poverty. It holds if someone builds a directory, a WhatsApp bot, or nothing at all. |
@@ -48,7 +65,7 @@ Until then, every claim about what teenagers feel is labelled as inference, not 
 
 ### 1.3 The evidence
 
-All figures verified against primary documents on 27 Aug 2026. Full provenance in [`project_brief_sources.md`](./project_brief_sources.md).
+All figures verified against primary documents on 27 Aug 2026. Full provenance in [`sources.md`](./sources.md).
 
 | Figure | Source |
 |---|---|
@@ -67,7 +84,7 @@ All figures verified against primary documents on 27 Aug 2026. Full provenance i
 >
 > NCSS does not appear anywhere in the SG Youth Plan Report's own bibliography. No NCSS publication measuring youth hobby-opportunity satisfaction could be located. The only 42% in the primary report is *"recover well from stressful events (42%)"* — a resilience statistic on a different page about a different thing. The claim traces word-for-word to a single Mothership sentence that the primary record does not support.
 >
-> **It was one of our two headline numbers.** Had it gone on slide 2 and a judge checked it, it would have taken the rest of the evidence down with it. This is precisely what the deck's *"a figure, a source, and a date"* rule exists to catch, and the general lesson is in [`project_brief_sources.md`](./project_brief_sources.md) §0: an AI summary of a source is a lead, not a citation.
+> **It was one of our two headline numbers.** Had it gone on slide 2 and a judge checked it, it would have taken the rest of the evidence down with it. This is precisely what the deck's *"a figure, a source, and a date"* rule exists to catch, and the general lesson is in [`sources.md`](./sources.md) §0: an AI summary of a source is a lead, not a citation.
 
 **Note on the surviving headline.** "Hobbies are the #3 aspiration" is *stronger* than the number we lost — it is the government's own survey, it is new in the 2025 wave, and it says the want is real and rising. We now lead with a verified figure instead of a broken one.
 
@@ -103,13 +120,13 @@ We are **not** framing this as "teens are on screens too much." That premise mor
 
 **Aisyah, 14.** *(Name is a placeholder — swap it if someone has a better one, but use the same one everywhere: slide 2, the video, the simulation harness and the evaluation profiles. A judge should meet the same person three times.)*
 
-Secondary 2. Lives in an SHG family. Has just been told about S$500 of Curiosity Credits. Has **S$0** of their own discretionary money. Nobody at home is free to drive them anywhere. Does not know that free CC courses exist. Has no friend already doing the thing. Has walked into a room full of strangers exactly zero times by choice.
+Secondary 2. Has **S$0** of their own discretionary money. Nobody at home is free to drive them anywhere. Lives in an SHG family, and has just been told about S$500 of Curiosity Credits — the occasion that makes the problem urgent, not the thing that defines them. Does not know that free CC courses exist. Has no friend already doing the thing. Has walked into a room full of strangers exactly zero times by choice.
 
 **Everyone else is a strictly easier instance of the same system** — including a teen with the full S$500 and a supportive, well-resourced parent. This is curb-cut design: build for the constrained case, serve all 13–17-year-olds. It is also why `S$0` is a first-class input rather than an edge case (§4).
 
 ### 2.2 Secondary user
 
-A **trusted adult** — parent, SHG case worker, school counsellor — holding approval authority over spend and over any unvetted provider. This is a safety requirement and a legal one, not a nice-to-have (§6.3, [`architecture.md`](./architecture.md) §7).
+A **trusted adult** — parent, SHG case worker, school counsellor — holding approval authority over spend and over any unvetted provider. This is a safety requirement and a legal one, not a nice-to-have (§6.3, [`architecture.md`](../3-system/architecture.md) §7).
 
 ### 2.3 Framing note
 
@@ -119,7 +136,7 @@ The Curiosity Credits are our **evidence that the problem is real and nationally
 
 ## 3. Solution Overview
 
-*The full system spec is [`architecture.md`](./architecture.md). This section is the argument; that document is the contract.*
+*The full system spec is [`architecture.md`](../3-system/architecture.md). This section is the argument; that document is the contract.*
 
 ### 3.1 The core reframe
 
@@ -150,13 +167,13 @@ v1 drew one six-step ring. The system has **three distinct bounded loops** — w
 | **2 · Safety** | Guardian → Planner | Reject unsafe or unapproved plans; replan with the reason | 2 rejections |
 | **3 · Feedback** | Observer → Personal Data → Planner | Learn from what actually happened and reallocate | Longitudinal; bounded by `tries` |
 
-Loop 3 is the one that makes this longitudinal instead of stateless. It is also invisible in a five-minute demo, which is why the simulation harness exists ([`architecture.md`](./architecture.md) §10).
+Loop 3 is the one that makes this longitudinal instead of stateless. It is also invisible in a five-minute demo, which is why the simulation harness exists ([`architecture.md`](../3-system/architecture.md) §10).
 
 `DECLARE` is not an agent — it is parent setup plus the teen's request.
 
 ### 3.4 The agents
 
-Five pipeline agents, one scheduled agent, and a detached validation layer. **Full contracts, caps, failure behaviour and agent-class mapping in [`architecture.md`](./architecture.md) §3.** In brief:
+Five pipeline agents, one scheduled agent, and a detached validation layer. **Full contracts, caps, failure behaviour and agent-class mapping in [`architecture.md`](../3-system/architecture.md) §3.** In brief:
 
 | Agent | Job | Why nothing else can do it |
 |---|---|---|
@@ -197,7 +214,7 @@ The user model is built from **outcomes, not from an assessment**. It changes ev
 
 ### 3.7 Two objectives, not one
 
-Optimise for **interest fit** *and* **belonging**. Prefer options where joining alone is normal, or where a peer from the same school or neighbourhood is attending.
+Optimise for **interest fit** *and* **belonging**. Prefer options where joining alone is normal, or where other teens from the same area already turn up.
 
 The evidence is unusually good here:
 
@@ -208,7 +225,13 @@ The evidence is unusually good here:
 
 A hobby found alone is much less likely to stick, and the literature says the mechanism is social, not logistical.
 
-> ⚠️ **Currently pitched, not built.** Nothing in the architecture scores for belonging. [`discrepancies.md`](./discrepancies.md) **A6/D2** proposes an opt-in `peer_going` tiebreak, resolved at postal-sector or school level and never to a named individual. **Build it or cut the claim — do not present it unbuilt.**
+> ✅ **Built as of 31 Aug — as cohort presence, not a friend graph** ([`discrepancies.md`](../4-decisions/discrepancies.md) **D2**; spec in [`architecture.md`](../3-system/architecture.md) §9.3).
+>
+> A friend system was the obvious implementation and the wrong one. It **reproduces the school social graph** — precisely what we are trying to get a teen out of — and it is empty on day one, so it would be dead exactly when the demo runs. `PeerCohort` carries **aggregate presence with no identity in it**: bucketed (`none/few/some/many`), suppressed below a k-anonymity floor of 5, resolved at planning-area level and **never at school level**, opt-in to contribute, used as a ranking tiebreak and never as a filter.
+>
+> **Absence is never shown.** *"Nobody is going"* is a discouraging screen that burns a `try`.
+>
+> The line for the slide: **3 in 5 youths say youth spaces would help them meet people from different backgrounds** (§1.3). A friend graph delivers the opposite of that; cohort presence delivers it. The privacy-preserving design is also the more effective one.
 
 ### 3.8 How long "sticks" actually takes
 
@@ -224,13 +247,13 @@ The budget is a **declared input**, never an assumption. It can be zero.
 
 | Currency | Range | Notes |
 |---|---|---|
-| **Money** | S$0 → S$500 → parental allowance | Do not assume a lump sum exists. ST/Milieu 2024 puts children's pocket money at ~S$4–14/day, but that is food and transport money, and about **1 in 3 parents** say the child should use their own savings. *(See [`project_brief_sources.md`](./project_brief_sources.md) §D — the $4–14 range is for children generally, not secondary students. Soften the wording or drop the number.)* |
+| **Money** | S$0 → S$500 → parental allowance | Do not assume a lump sum exists. ST/Milieu 2024 puts children's pocket money at ~S$4–14/day, but that is food and transport money, and about **1 in 3 parents** say the child should use their own savings. *(See [`sources.md`](./sources.md) §D — the $4–14 range is for children generally, not secondary students. Soften the wording or drop the number.)* |
 | **Time** | hours/week | Usually the **binding** constraint. School + compulsory CCA + tuition + travel. |
 | **Tries** | count of "first sessions" | The scarcest resource. How many times will a teen walk into a room alone before giving up? **Nobody models this. We should.** |
 
-**Hard requirement: the agent must produce a viable plan at S$0.** If it can't, we have built something exclusive and the whole broadening argument collapses. This is tested as an invariant, not a hope — [`evaluation.md`](./evaluation.md) A3.
+**Hard requirement: the agent must produce a viable plan at S$0.** If it can't, we have built something exclusive and the whole broadening argument collapses. This is tested as an invariant, not a hope — [`evaluation.md`](../3-system/evaluation.md) A3.
 
-> ⚠️ **The ledger currently has no owner.** The architecture carries money and time as static filters, not as a ledger that is spent down and reallocated. That is the difference between the system we pitch and the system we specified. [`discrepancies.md`](./discrepancies.md) **A3/D1** — the highest-impact open decision in the project, and the fix is small: a `BudgetLedger` in typed state.
+> ✅ **The ledger has an owner as of 31 Aug ([`discrepancies.md`](../4-decisions/discrepancies.md) **D1**).** `BudgetLedger` sits in typed state ([`architecture.md`](../3-system/architecture.md) §5): Planner reads it, Broker decrements it, Observer reconciles it after each outcome. This is what separates the system we pitch from a recommender with filters — money, time and tries are spent down and reallocated, not matched against once.
 
 ---
 
@@ -250,7 +273,7 @@ The formal, centre-based market is saturated. Scraping it produces Skoop-with-an
 
 ### 5.2 DO index the uncovered supply — where the free and cheap options live
 
-This is the **Discovery Engine**'s entire justification ([`architecture.md`](./architecture.md) §3.2), and it is measured: **long-tail coverage**, the share of our recommendations absent from the incumbent directories ([`evaluation.md`](./evaluation.md) B9).
+This is the **Discovery Engine**'s entire justification ([`architecture.md`](../3-system/architecture.md) §3.2), and it is measured: **long-tail coverage**, the share of our recommendations absent from the incumbent directories ([`evaluation.md`](../3-system/evaluation.md) B9).
 
 - **PA Community Clubs** — CC Courses across Education & Enrichment, Health & Wellness, Lifelong Learning, Lifestyle & Leisure, Sports & Fitness
 - **PA Youth Movement** — 95 Youth Networks based at CCs
@@ -288,6 +311,27 @@ Any judge with a psychology or education background will spot it, and because it
 
 **Bonus:** a fixed personality type is a *static* label. It would actively break the adaptivity argument in §3.6. Removing it is the fix, not a loss — and §3.2 gives us something better to put in its place.
 
+#### Where the line actually falls: seeding is allowed, typing is not
+
+A teen with zero history has to start somewhere, so Hobbi does ask a short question at signup. That is not a contradiction of the rule above, but the docs have to say why, or a careful reader will find one.
+
+| | **Typing** — forbidden | **Seeding** — permitted |
+|---|---|---|
+| Claims | who you *are* | where to *start* |
+| Lifespan | stable, permanent | discarded as soon as behaviour arrives |
+| Shown back to you | yes — a label, a type, a result | never |
+| Used to | explain and predict you | order the first one or two experiments |
+
+The permitted version is 4–6 vibe chips ("sporty", "artistic", "chill", "explorative"), multi-select, bound by five rules ([`architecture.md`](../3-system/architecture.md) §3.1, decision **D10**):
+
+1. **Skippable** — *"Surprise me"* produces a real plan. An unskippable screen is a gate, and a gate is a quiz.
+2. **No result screen** — the chips never produce a label. *"You're an Explorer!"* is typing.
+3. **Lowest confidence, and it decays** — the first attended session outranks the entire cold-start screen.
+4. **Biases, never excludes** — seeds order the first experiments; they never filter the candidate set. Tested as invariant **A9**.
+5. **Asks where to start, not what you are like** — the wording is the whole distinction.
+
+Under Hidi & Renninger (§3.2) this is the only defensible design anyway: you cannot measure an interest in someone who has not yet had a trigger, so the cold start's job is to *produce* a trigger, not to diagnose one.
+
 ### 6.2 ❌ No height / weight / body-composition inputs
 
 Three independent reasons:
@@ -296,7 +340,7 @@ Three independent reasons:
 2. **Harmful.** Weight stigma and weight-related commentary are robustly linked to disordered-eating cognitions and behaviours in the systematic-review literature (Levinson et al., 2024, *Body Image*), and adolescent weight-teasing predicts disordered eating up to 15 years later. *(Honest caveat: no study isolates "an app gives a teen their body-composition number" as the exposure. The mechanism is inferred by analogy from a strong adjacent literature — say it that way if pressed.)* Telling a 14-year-old they are the wrong shape for a sport is the exact opposite of "discover your passion, build confidence."
 3. **Inequitable.** It lands hardest on our primary cohort.
 
-**Use instead:** preference axes — indoor/outdoor, team/solo, contact/non-contact, high/low intensity, competitive/social. Self-reported, legitimate, non-stigmatising, and carried with a confidence value that grows from attendance rather than from a questionnaire.
+**Use instead:** preference axes — indoor/outdoor, team/solo, contact/non-contact, high/low intensity, competitive/social. Legitimate, non-stigmatising, and carried with a confidence that is **seeded low and grows from attendance**. A chip tapped at signup and a preference inferred from six attended sessions are not the same object, and the schema keeps them distinguishable (`provenance` on `Axis`).
 
 ### 6.3 ⚠️ Child safety — unvetted providers
 
@@ -308,10 +352,10 @@ We are connecting **minors** to activity providers. The Telegram/IG long tail is
 
 ### 6.4 ⚠️ Data protection is a design constraint, not a slide
 
-Our users are 13–17 and one input channel is a **voice recording**. The position is set out in [`architecture.md`](./architecture.md) §8, against PDPC's *Advisory Guidelines on the PDPA for Children's Personal Data* (28 Mar 2024). The headline, which is more interesting than "get parental consent":
+Our users are 13–17 and one input channel is a **voice recording**. The position is set out in [`architecture.md`](../3-system/architecture.md) §8, against PDPC's *Advisory Guidelines on the PDPA for Children's Personal Data* (28 Mar 2024). The headline, which is more interesting than "get parental consent":
 
 - **A 13–17-year-old may give valid consent themselves** — provided the policies are *"readily understandable by them"*, including how to withdraw it. Our consent copy is therefore a deliverable, written for a 13-year-old.
-- **Under 13 requires parental consent**, which is one reason the product starts at 13.
+- **Under 13 requires parental consent**, which is why the product starts at 13 and refuses a declared age below it (**D7**, invariant **A11**). The ceiling is 17 — there is no adult mode, so the Guardian gate has no bypass.
 - Children's data is *"generally considered to be **sensitive personal data**"* and gets the enhanced protection tier. Voice recordings sit squarely there — so: transcribe, extract, **discard the audio**.
 
 Also address on slides: platform ToS for scraping.
@@ -354,7 +398,7 @@ Say this out loud in the pitch. Pre-empting it reads as confidence.
 
 Answer with the constraint: a recommender optimises *"find a class."* We optimise *"spend a fixed, non-renewable exploration budget to maximise the probability of long-term adherence."* That is a sequential decision problem, and it is why it must be an agent.
 
-**Then show, don't argue:** the counterfactual panel ([`evaluation.md`](./evaluation.md) §5) runs a static recommender alongside the agent on the same data. Adaptation is only legible against a baseline.
+**Then show, don't argue:** the counterfactual panel ([`evaluation.md`](../3-system/evaluation.md) §5) runs a static recommender alongside the agent on the same data. Adaptation is only legible against a baseline.
 
 ### 7.4 "How do you know any of this is true — have you talked to a teenager?"
 
@@ -370,7 +414,7 @@ Answer with the constraint: a recommender optimises *"find a class."* We optimis
 
 *Get the version and the status right:* it is a **voluntary Model Framework** and a "living document", not legislation. Say "aligned with", never "compliant with". A Singaporean judge will know the difference, and v1 got both the version story and the "effective date" framing wrong.
 
-Its four dimensions and our mapping are in [`architecture.md`](./architecture.md) §7. The reason it is nearly free marks: the framework's own risk-factor table reads like a description of our system — **persistent memory**, **write access**, **irreversible actions**, **autonomy level** — and it names *"making payments"* and *"sending communications"* explicitly among the actions that require a human approval checkpoint. Our Broker does both, on behalf of a minor.
+Its four dimensions and our mapping are in [`architecture.md`](../3-system/architecture.md) §7. The reason it is nearly free marks: the framework's own risk-factor table reads like a description of our system — **persistent memory**, **write access**, **irreversible actions**, **autonomy level** — and it names *"making payments"* and *"sending communications"* explicitly among the actions that require a human approval checkpoint. Our Broker does both, on behalf of a minor.
 
 One slide. It will land hard with a Singaporean panel.
 
@@ -382,21 +426,21 @@ The SG Youth Plan launched **25 July 2026** — five weeks ago. Judges reward pr
 
 ## 9. Demo Strategy — The Hard Part
 
-The value accrues over months; the demo is five minutes, and the deck allocates two of them to the demo itself. Three tactics, all now build items in [`architecture.md`](./architecture.md) §10 rather than aspirations:
+The value accrues over months; the demo is five minutes, and the deck allocates two of them to the demo itself. Three tactics, all now build items in [`architecture.md`](../3-system/architecture.md) §10 rather than aspirations:
 
 1. **Build a time machine.** A simulation harness replaying a synthetic 9–12 month history, showing the plan and the budget mutating at each decision point. Adaptation has to be seen as a *sequence*.
 2. **Show the diff, not the output.** A "what changed and why" panel: old plan → trigger signal → reasoning → new plan. Reasoning traces were the explicitly stated differentiator for multiple 2025–26 hackathon winners.
 3. **Log the counterfactual.** Show what a static recommender would have suggested alongside what the agent did.
 
-**Include at least one moment where the agent correctly decides to do nothing this week.** It is the strongest single signal of genuine adaptivity, and no ranked-list product can produce it. It is a first-class terminal outcome (`hold_this_week`) and a reported metric ([`evaluation.md`](./evaluation.md) B12), not a demo trick.
+**Include at least one moment where the agent correctly decides to do nothing this week.** It is the strongest single signal of genuine adaptivity, and no ranked-list product can produce it. It is a first-class terminal outcome (`hold_this_week`) and a reported metric ([`evaluation.md`](../3-system/evaluation.md) B12), not a demo trick.
 
-**Quantify.** Winning projects lead with a measured figure. Ours are specified in [`evaluation.md`](./evaluation.md) §7 — and the two most valuable are zeros: *0 unverified providers reached a teen*, *0 constraint violations*. A zero with a denominator is a safety claim a judge can check.
+**Quantify.** Winning projects lead with a measured figure. Ours are specified in [`evaluation.md`](../3-system/evaluation.md) §7 — and the two most valuable are zeros: *0 unverified providers reached a teen*, *0 constraint violations*. A zero with a denominator is a safety claim a judge can check.
 
 ---
 
 ## 10. What Wins Agentic Hackathons
 
-*From 11 comparable hackathons reviewed — Google Cloud Agentic AI Day, Microsoft AI Agents, AWS AI Agent Global, IBM watsonx/Call for Code, MIT CSAIL, UC Berkeley, HackUSF, NUS–GURU, Elastic Singapore, Google Gen AI Exchange, and this one's own 2025 edition. Sources in [`project_brief_sources.md`](./project_brief_sources.md) §H.*
+*From 11 comparable hackathons reviewed — Google Cloud Agentic AI Day, Microsoft AI Agents, AWS AI Agent Global, IBM watsonx/Call for Code, MIT CSAIL, UC Berkeley, HackUSF, NUS–GURU, Elastic Singapore, Google Gen AI Exchange, and this one's own 2025 edition. Sources in [`sources.md`](./sources.md) §H.*
 
 **Five archetypes recur:** Navigator (collapse a fragmented system), Sentinel (detect → act on live signals), Researcher, Guardian (verify/explain), Coach (persistent companion).
 
@@ -416,7 +460,7 @@ The value accrues over months; the demo is five minutes, and the deck allocates 
 
 ## 11. What We Actually Build
 
-Full component-by-component scope in [`architecture.md`](./architecture.md) §10. The one-line version, and it needs to be said on a slide:
+Full component-by-component scope in [`architecture.md`](../3-system/architecture.md) §10. The one-line version, and it needs to be said on a slide:
 
 **In the prototype:** all six agents (five on the request path, plus Compliance on a schedule) and the validation layer, real bounded loops, a seeded CKB of real Singapore listings including a quarantined unverified set, live web search over a whitelisted domain set, **sandboxed** booking, a manually-triggered freshness scan, and a simulation harness driving a 9–12 month replay.
 
@@ -426,26 +470,26 @@ Two reasons to be explicit rather than vague. Technical Quality's top band is *"
 
 ---
 
-## 12. Open Decisions
+## 12. Decisions
 
-Twelve are open. [`discrepancies.md`](./discrepancies.md) §D is the register of record — the list below mirrors it and is not the place to add a new one.
+**All twelve closed on 31 Aug.** [`discrepancies.md`](../4-decisions/discrepancies.md) §D is the register of record, with the reasoning behind each.
 
-**Decide these before anything is written:**
+| | Decision |
+|---|---|
+| **D1** | The budget ledger is in typed state — Planner reads, Broker decrements, Observer reconciles (§4) |
+| **D2** | Belonging is **cohort presence, not a friend graph**: bucketed, k-anonymised, planning-area level, tiebreak only (§3.7) |
+| **D3** | The statement is **narrow on outcome, broad on audience**, leading with S$0 (§1.1) |
+| **D3b** | The headline metric is **B15** — actions to a first attended session at S$0 |
+| **D4** | Prepare a Q&A, at second priority behind the idea and the deck |
+| **D5** | Organiser questions handled directly by the team |
+| **D6** | System prompts re-derived after this branch merges to main |
+| **D7** | The cohort is **13–17 at both ends, enforced**; a trusted adult is mandatory for every user (§2, §6.4) |
+| **D8** | Seed CKB from real listings · live whitelisted Discovery · sandboxed Broker · a cached replay for the demo |
+| **D9** | The observation channel is an **in-app form** behind a channel-agnostic `DebriefSubmission` — reads like texting a friend, keeps a minor's voice note off third-party servers *(revised from Telegram, 31 Aug)* |
+| **D10** | Cold start is 4–6 skippable vibe chips — **seeding, not typing** (§6.1) |
+| **D11** | Dislike is modelled, with decay and attribution, **never as a blocklist** |
 
-1. **D3 · Problem-statement scope** — the narrow version or the twelve-month version on slide 2? *(§1.1. First. It gates slides 2 and 7, the video open, and the metrics.)*
-2. **D3b · The headline metric** — which number leads, now that D3 narrows the claim? *(With D3. Left alone, slide 2 and the evaluation slide argue for different products.)*
-3. **D1 · The budget ledger** — keep the portfolio thesis and add the ledger, or drop it and re-derive "why agentic" from the loops alone? *(§4, and the highest-impact call in the project.)*
-4. **D2 · Belonging** — build the opt-in peer tiebreak, or cut the second objective? *(§3.7. Currently pitched and unbuilt, which is the worst of the three states.)*
-
-**Decide these before the build starts** — five product questions carried over from v1 §11, now tracked as rows rather than prose:
-
-5. **D7 · The trusted adult** — mandatory co-user, or approval-only? *(Defines Guardian's interface and the parent artefacts; also moves the consent basis, §6.4.)*
-6. **D8 · Supply** — real integrations (ActiveSG, CC courses), or a curated seed KB with simulated booking? *(The architecture assumes the seed KB. Confirm it rather than inherit it.)*
-7. **D9 · The observation channel** — app check-in, SMS, or a Telegram bot? *(No channel, no attendance signal — and attendance outranks the debrief.)*
-8. **D10 · Cold start** — what is the very first experiment for a teen with zero history? *(It is the demo's opening frame.)*
-9. **D11 · Dislike** — do we model it explicitly? *(A teen who hates their first pottery class tells us a lot.)*
-
-**And two that are not ours to decide:** **D4/D5** — is there a live pitch and Q&A, and what is the deadline and upload mechanism? Neither is in the deck; both need an email. **D6** waits on D1–D3.
+What is left is not a decision. It is the build, the deck, the video — and one task below.
 
 **The one that is not a decision but a task: talk to five teenagers (§1.2).** It closes the only pressure-test question we currently fail.
 
