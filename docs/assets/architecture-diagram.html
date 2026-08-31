@@ -1,4 +1,4 @@
-<title>Hobbi Architecture v2.1</title>
+<title>Hobbi Architecture v2.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap">
@@ -112,7 +112,7 @@
     <p class="eyebrow">Hobbi · slide 5 asset</p>
     <h1>Multi-Agent Architecture</h1>
     <p>Five pipeline agents, one scheduled agent off the request path, and a detached validation
-       layer. Two data stores. Three loops, every one of them capped by a counter held in state.</p>
+       layer. Two data stores. Two capped request loops and one ledger-bounded feedback cycle.</p>
   </header>
 
   <div class="frame">
@@ -124,11 +124,12 @@
     <marker id="aSlate" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 1 L11 6 L0 11 z" class="m-slate"/></marker>
     <marker id="aCrim" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0 1 L11 6 L0 11 z" class="m-crim"/></marker>
   </defs>
+  <rect width="2000" height="2000" style="fill:var(--paper)"/>
 
   <text x="70" y="74" style="font-size:42px;font-weight:900;fill:var(--ink);letter-spacing:-.01em">Hobbi — Multi-Agent Architecture</text>
-  <text x="70" y="112" class="t-mut" style="font-size:18px">5 pipeline agents + Compliance (scheduled, off the request path) + 1 detached validation layer · 2 data stores · 3 bounded loops</text>
-  <text x="1930" y="74" text-anchor="end" class="t-mono">v2.1 · 31 Aug 2026</text>
-  <text x="1930" y="108" text-anchor="end" class="t-lbl">supersedes the v1 diagram · deltas listed below</text>
+  <text x="70" y="112" class="t-mut" style="font-size:18px">5 pipeline agents + Compliance (scheduled) + 1 detached validation layer · I0 intake · 4 inter-agent gates · 2 stores</text>
+  <text x="1930" y="74" text-anchor="end" class="t-mono">v2.2 · 31 Aug 2026</text>
+  <text x="1930" y="108" text-anchor="end" class="t-lbl">synchronized with architecture.md v2.2</text>
 
   <!-- ============ EDGES (drawn first, under the boxes) ============ -->
 
@@ -140,7 +141,7 @@
   <path class="e-ctl" d="M830 360 V398"/>
   <text x="852" y="384" class="t-lbl">request</text>
   <path class="e-ctl" marker-end="url(#aInk)" d="M830 432 V500"/>
-  <text x="806" y="421" class="t-mono-d" text-anchor="end" style="font-size:13.5px">13–17 ?</text>
+  <text x="806" y="421" class="t-mono-d" text-anchor="end" style="font-size:13.5px">I0 · age 13–17?</text>
   <!-- refusal branch -->
   <path class="e-warn" marker-end="url(#aCrim)" d="M849 415 H1082"/>
 
@@ -150,47 +151,60 @@
 
   <!-- planner <-> discovery -->
   <path class="e-ctl" marker-end="url(#aInk)" d="M700 750 V870 H578"/>
-  <text x="712" y="806" class="t-lbl">plan only</text>
+  <text x="728" y="790" class="t-lbl">plan only</text>
   <path class="e-ctl" marker-end="url(#aInk)" d="M420 790 V700 H622"/>
   <text x="432" y="690" class="t-lbl">search done</text>
 
   <!-- planner -> guardian -->
   <path class="e-ctl" marker-end="url(#aInk)" d="M830 750 V1100"/>
-  <text x="852" y="1058" class="t-lbl">candidate plan</text>
+  <text x="852" y="1018" class="t-lbl">candidate plan</text>
 
   <!-- guardian -> broker -->
   <path class="e-ctl" marker-end="url(#aInk)" d="M830 1400 V1460"/>
-  <text x="852" y="1436" class="t-lbl">if pass</text>
+  <text x="860" y="1442" class="t-lbl">if pass</text>
 
-  <!-- broker -> observer, two edges -->
-  <path class="e-ctl" d="M830 1670 V1702"/>
-  <path class="e-ctl" marker-end="url(#aInk)" d="M830 1702 H740 V1740"/>
-  <path class="e-ctl" marker-end="url(#aInk)" d="M830 1702 H930 V1740"/>
-  <text x="722" y="1694" class="t-lbl" text-anchor="end">attends</text>
-  <text x="946" y="1694" class="t-mono-d" style="font-size:13.5px">did_not_attend</text>
-  <text x="946" y="1714" class="t-new">NEW</text>
+  <!-- broker -> G4 -> observer, two outcome edges -->
+  <path class="e-ctl" d="M830 1670 V1685"/>
+  <path class="e-ctl" marker-end="url(#aInk)" d="M830 1719 H740 V1740"/>
+  <path class="e-ctl" marker-end="url(#aInk)" d="M830 1719 H930 V1740"/>
+  <text x="770" y="1734" class="t-lbl" text-anchor="end">attends</text>
+  <text x="930" y="1734" class="t-mono-d" style="font-size:13px">did_not_attend</text>
 
   <!-- reads -->
   <path class="e-read" marker-end="url(#aTeal)" d="M1660 500 V452 H1075 V530 H1038"/>
-  <text x="1090" y="442" class="t-lbl">read: preferences · constraints · parental rules</text>
+  <text x="1112" y="474" class="t-lbl" style="font-size:13px">read: preferences · constraints · parental rules</text>
   <path class="e-read" marker-end="url(#aTeal)" d="M1130 620 H1038"/>
   <text x="1048" y="608" class="t-lbl">read</text>
   <path class="e-read" marker-end="url(#aTeal)" d="M1200 750 V985 H578"/>
   <text x="880" y="975" class="t-lbl">read: what already exists (avoid duplicates)</text>
   <path class="e-read" marker-end="url(#aTeal)" d="M1450 700 H1490 V1140 H1512"/>
   <text x="1498" y="688" class="t-lbl">read</text>
+  <!-- Guardian reads both stores -->
+  <path class="e-read" marker-end="url(#aTeal)" d="M1130 660 H1070 V1180 H1038"/>
+  <text x="1048" y="1168" class="t-lbl">Guardian: verification</text>
+  <path class="e-read" marker-end="url(#aTeal)" d="M1520 700 H1470 V1320 H1038"/>
+  <text x="1110" y="1308" class="t-lbl">Guardian: rules + approval state</text>
+  <!-- Compliance reads plan-live flags -->
+  <path class="e-read" marker-end="url(#aTeal)" d="M1710 750 V1010 H1925 V1120 H1908"/>
+  <text x="1730" y="1000" class="t-lbl">read: live-plan references</text>
 
   <!-- writes -->
   <path class="e-write" marker-end="url(#aRust)" d="M1780 360 V492"/>
-  <text x="1792" y="440" class="t-lbl">write</text>
+  <text x="1792" y="440" class="t-lbl">setup write + seeds</text>
   <path class="e-write" marker-end="url(#aRust)" d="M570 890 H1290 V758"/>
   <text x="900" y="878" class="t-lbl">write: newly discovered options</text>
   <path class="e-write" marker-end="url(#aRust)" d="M1520 1180 H1350 V758"/>
   <text x="1362" y="1168" class="t-lbl">write: refresh / retire</text>
+  <path class="e-write" marker-end="url(#aRust)" d="M1900 1200 H1980 V700 H1908"/>
+  <text x="1810" y="1260" class="t-lbl">write: dead-listing plan flag</text>
   <path class="e-write" marker-end="url(#aRust)" d="M1030 1560 H1460 V940 H1512"/>
   <text x="1042" y="1548" class="t-lbl">write: spend + tries committed</text>
   <path class="e-write" marker-end="url(#aRust)" d="M1110 1920 H1950 V660 H1908"/>
   <text x="1122" y="1908" class="t-lbl">write: updated preferences · ledger reconciliation</text>
+
+  <!-- dead-listing cascade wakes Planner; every replacement traverses G2/G3 -->
+  <path class="e-warn" marker-end="url(#aCrim)" d="M1520 1210 H1100 V480 H1000 V500"/>
+  <text x="1112" y="500" class="t-lbl" style="font-size:13px">dead listing → replan → G2/G3 again</text>
 
   <!-- ============ NODES ============ -->
 
@@ -207,7 +221,7 @@
   <text x="686" y="224" class="t-title" style="font-size:19px">Teen (end user)</text>
   <text x="686" y="258" class="t-mut">session request · hobby goal</text>
   <text x="686" y="286" class="t-mut">attends, or does not</text>
-  <text x="686" y="314" class="t-mut">in-app debrief afterwards</text>
+  <text x="686" y="314" class="t-mut">in-app text debrief afterwards</text>
   <text x="686" y="344" class="t-mono" style="font-size:13.5px">ages 13–17 only</text>
 
   <!-- parent -->
@@ -220,20 +234,20 @@
 
   <!-- refusal chip -->
   <rect class="warn" x="1090" y="382" width="360" height="66" rx="12"/>
-  <text x="1112" y="410" class="t-mono-d" style="font-size:14px;fill:var(--crimson)">under 13 → refused at intake</text>
-  <text x="1112" y="434" class="t-lbl">no plan produced · referred to a trusted adult</text>
-  <text x="1414" y="372" class="t-new" text-anchor="end">NEW</text>
+  <text x="1112" y="410" class="t-mono-d" style="font-size:14px;fill:var(--crimson)">outside 13–17 → refused at I0</text>
+  <text x="1112" y="434" class="t-lbl">under 13: adult guidance · 18+: general services</text>
+  <text x="1414" y="372" class="t-new" text-anchor="end">NO PLAN</text>
 
   <!-- orchestrator -->
   <rect class="orch" x="170" y="500" width="390" height="250" rx="14"/>
   <rect x="194" y="518" width="212" height="30" rx="15" class="badge"/>
   <text x="300" y="539" text-anchor="middle" style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.14em;fill:var(--on-accent)">VALIDATION LAYER</text>
   <text x="196" y="592" class="t-title">Orchestrator</text>
-  <text x="196" y="626" class="t-mut">stands outside the pipeline —</text>
-  <text x="196" y="654" class="t-mut">calls nothing, called by nothing</text>
+  <text x="196" y="626" class="t-mut">on-edge validator, not a peer —</text>
+  <text x="196" y="654" class="t-mut">no agent-to-agent calls of its own</text>
   <text x="196" y="688" class="t-body">checks every payload at each ◆</text>
   <text x="196" y="716" class="t-body">before it advances</text>
-  <text x="196" y="742" class="t-mono" style="font-size:13.5px">logs: schema · loops · tokens</text>
+  <text x="196" y="742" class="t-mono" style="font-size:13.5px">logs: schema · payload shape · loops</text>
 
   <!-- planner -->
   <rect class="card" x="630" y="500" width="400" height="250" rx="14"/>
@@ -253,7 +267,7 @@
   <text x="1290" y="592" text-anchor="middle" class="t-title" style="font-size:19px;fill:var(--teal)">Central Knowledge Base</text>
   <text x="1290" y="618" text-anchor="middle" class="t-it">single source of truth</text>
   <text x="1160" y="654" class="t-mut">· listings · activities</text>
-  <text x="1160" y="682" class="t-mut">· locations</text>
+  <text x="1160" y="682" class="t-mut">· locations · simulated cohort buckets</text>
   <text x="1160" y="710" class="t-mut">· verification &amp; freshness state</text>
 
   <!-- personal data -->
@@ -262,7 +276,7 @@
   <text x="1710" y="592" text-anchor="middle" class="t-title" style="font-size:19px;fill:var(--teal)">Personal Data</text>
   <text x="1548" y="628" class="t-mut">· time · money · interest · location</text>
   <text x="1548" y="656" class="t-mut">· parental rules &amp; consent</text>
-  <text x="1548" y="684" class="t-mut">· learned preferences + dislikes</text>
+  <text x="1548" y="684" class="t-mut">· learned prefs · decaying dislikes · live flags</text>
   <text x="1548" y="712" class="t-mono" style="font-size:14px">· budget ledger ↓</text>
 
   <!-- budget ledger -->
@@ -308,7 +322,7 @@
   <path class="rule" d="M662 1268 H1000"/>
   <text x="662" y="1300" class="t-cap">PER-PLAN APPROVAL</text>
   <text x="662" y="1330" class="t-body">spend + attendance approval</text>
-  <text x="662" y="1358" class="t-body">fail → Planner replans</text>
+  <text x="662" y="1358" class="t-body">fail → replan; 2nd fail → escalate</text>
   <text x="662" y="1388" class="t-mono" style="font-size:13.5px">MAX_GUARDIAN_REJECTIONS = 2</text>
 
   <!-- broker -->
@@ -327,8 +341,8 @@
   <text x="662" y="1788" class="t-title">Observer (post-session)</text>
   <text x="1086" y="1782" class="t-new" text-anchor="end">RENAMED</text>
   <text x="662" y="1824" class="t-body">attendance — primary, revealed</text>
-  <text x="662" y="1852" class="t-body">debrief — secondary, in-app form</text>
-  <text x="662" y="1880" class="t-mut" style="font-size:14.5px">audio → structured prefs, then discarded</text>
+  <text x="662" y="1852" class="t-body">debrief — secondary, in-app text</text>
+  <text x="662" y="1880" class="t-mut" style="font-size:14.5px">audio + messaging adapters → roadmap</text>
   <text x="662" y="1912" class="t-mono" style="font-size:13.5px">2 no-shows → re-plan, not a nag</text>
 
   <!-- terminal outcomes -->
@@ -339,8 +353,8 @@
   <text x="1552" y="1440" class="t-mono-d">hold_this_week</text>
   <text x="1552" y="1482" class="t-mono-d">escalated_to_adult</text>
   <text x="1552" y="1524" class="t-mono-d">no_viable_plan</text>
-  <text x="1552" y="1558" class="t-lbl">every non-booked outcome names</text>
-  <text x="1552" y="1578" class="t-lbl">the binding constraint, in plain words</text>
+  <text x="1552" y="1558" class="t-lbl">replacement plans re-enter G2 + G3;</text>
+  <text x="1552" y="1578" class="t-lbl">failures name the binding constraint</text>
 
   <!-- poc scope -->
   <rect class="panel" x="1520" y="1660" width="380" height="220" rx="14"/>
@@ -348,14 +362,19 @@
   <text x="1552" y="1744" class="t-mut">· Broker sandboxed — no live spend</text>
   <text x="1552" y="1772" class="t-mut">· Discovery: live search + cached replay</text>
   <text x="1552" y="1800" class="t-mut">· Compliance: manual trigger</text>
-  <text x="1552" y="1828" class="t-mut">· Longitudinal loop via the harness</text>
-  <text x="1552" y="1860" class="t-mono" style="font-size:13.5px;fill:var(--rust)">nothing is built yet</text>
+  <text x="1552" y="1828" class="t-mut">· Simulated cohort + longitudinal harness</text>
+  <text x="1552" y="1860" class="t-mono" style="font-size:13.5px;fill:var(--rust)">· SQLite checkpoint · text-only debrief</text>
 
   <!-- gates -->
   <g class="gate"><path d="M830 398 l17 17 l-17 17 l-17 -17 z"/></g>
   <g class="gate"><path d="M700 806 l17 17 l-17 17 l-17 -17 z"/></g>
   <g class="gate"><path d="M830 1032 l17 17 l-17 17 l-17 -17 z"/></g>
   <g class="gate"><path d="M830 1412 l17 17 l-17 17 l-17 -17 z"/></g>
+  <g class="gate"><path d="M830 1685 l17 17 l-17 17 l-17 -17 z"/></g>
+  <text x="730" y="850" class="t-mono" style="font-size:13px">G1</text>
+  <text x="860" y="1074" class="t-mono" style="font-size:13px">G2</text>
+  <text x="860" y="1420" class="t-mono" style="font-size:13px">G3</text>
+  <text x="860" y="1706" class="t-mono" style="font-size:13px">G4</text>
 
   <!-- loop badges -->
   <circle class="badge" cx="588" cy="742" r="18"/><text x="588" y="748" text-anchor="middle" class="badge-t">1</text>
@@ -375,7 +394,7 @@
   <path class="e-ext" marker-end="url(#aSlate)" marker-start="url(#aSlate)" d="M204 1672 H276"/>
   <text x="296" y="1678" class="t-mut">external fetch</text>
   <g class="gate"><path d="M240 1703 l15 15 l-15 15 l-15 -15 z"/></g>
-  <text x="296" y="1724" class="t-mut">validation gate</text>
+  <text x="296" y="1724" class="t-mut">G1–G4 validation gate · I0 separate</text>
 
   <path class="rule" d="M200 1752 H540"/>
 
@@ -386,26 +405,26 @@
   <text x="248" y="1836" class="t-mut">safety loop</text>
   <text x="248" y="1858" class="t-mono" style="font-size:13px">MAX_GUARDIAN_REJECTIONS = 2</text>
   <circle class="badge" cx="218" cy="1898" r="15"/><text x="218" y="1903" text-anchor="middle" class="badge-t" style="font-size:13px">3</text>
-  <text x="248" y="1892" class="t-mut">feedback loop</text>
-  <text x="248" y="1914" class="t-lbl">closes through Personal Data —</text>
-  <text x="248" y="1934" class="t-lbl">longitudinal, not a direct edge</text>
+  <text x="248" y="1892" class="t-mut">feedback cycle</text>
+  <text x="248" y="1914" class="t-lbl">longitudinal · one turn/session</text>
+  <text x="248" y="1934" class="t-mono" style="font-size:13px">bounded by finite tries_total</text>
 </svg>
   </div>
 
   <section class="deltas">
-    <h2>What changed from the v1 diagram</h2>
-    <p class="sub">The five structural deltas. Full list of nineteen in <code>architecture.md</code> §13.</p>
+    <h2>v2.2 contract checks</h2>
+    <p class="sub">The structural checks that keep the picture synchronized. Full 23-item list in <code>architecture.md</code> §13.</p>
     <ol>
-      <li><span class="num">1</span><div><b>Every loop has a cap.</b> <code>MAX_REPLANS = 3</code>, <code>MAX_DISCOVERY_ROUNDS = 2</code>, <code>MAX_GUARDIAN_REJECTIONS = 2</code> — held in state, not left to the model's judgement. v1 said the Planner "replans until a gate passes."</div></li>
-      <li><span class="num">2</span><div><b>The budget ledger has an owner.</b> Money, hours and tries are spent down and reallocated rather than matched once. Planner reads, Broker decrements, Observer reconciles.</div></li>
-      <li><span class="num">3</span><div><b>A <code>did_not_attend</code> edge.</b> v1 only reached the Observer along "teen attends session", which discarded the most informative event in the system.</div></li>
-      <li><span class="num">4</span><div><b>Guardian's two checks are separated.</b> Per-listing vetting and per-plan spend approval have different granularities and different failure modes; collapsing them meant one silently didn't happen.</div></li>
-      <li><span class="num">5</span><div><b>The age boundary is enforced.</b> 13–17 at both ends. A declared age under 13 is refused before any planning, with a referral rather than a partial plan.</div></li>
+      <li><span class="num">1</span><div><b>Intake and gates are distinct.</b> Deterministic <code>I0</code> enforces ages 13–17; <code>G1–G4</code> validate inter-agent payloads, including Broker → Observer.</div></li>
+      <li><span class="num">2</span><div><b>Every writer and reader is visible.</b> Guardian reads both stores; Compliance writes freshness to CKB and dead-listing flags to Personal Data.</div></li>
+      <li><span class="num">3</span><div><b>No replacement bypasses safety.</b> Booking failures and dead listings wake Planner, then the replacement traverses G2 and G3 again.</div></li>
+      <li><span class="num">4</span><div><b>Bounds match their semantics.</b> Two request loops have hard <code>MAX_*</code> caps; the longitudinal cycle is bounded by finite <code>tries_total</code>.</div></li>
+      <li><span class="num">5</span><div><b>PoC scope is honest.</b> Text-only debrief, sandboxed Broker, simulated cohort buckets and a persistent checkpointer.</div></li>
     </ol>
   </section>
 
   <footer>
-    Source of truth: <code>docs/3-system/architecture.md</code> v2.1 · decisions D1–D11 in <code>docs/4-decisions/discrepancies.md</code> §D.
+    Source of truth: <code>docs/3-system/architecture.md</code> v2.2 · twelve decisions (D1–D11 + D3b) in <code>docs/4-decisions/discrepancies.md</code> §D.
     Regenerate from <code>docs/assets/architecture-diagram.html</code>.
   </footer>
 </div>

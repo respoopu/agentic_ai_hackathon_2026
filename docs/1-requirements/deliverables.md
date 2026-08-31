@@ -1,6 +1,6 @@
 # Deliverables & Judging — SimplifyNext Agentic AI Hackathon 2026
 
-*Source of truth: `docs/judging-criteria.pdf` (official slide deck, 39 pages, © 2026 SimplifyNext). Compiled 27 Aug 2026.*
+*Source of truth: [`judging-criteria.pdf`](./judging-criteria.pdf) (official slide deck, 39 pages, © 2026 SimplifyNext). Compiled 27 Aug 2026.*
 
 **Part I is the working brief:** the immediate submission requirements, hard limits, judging criteria, and recommended structure. **Part II is the reference section:** detailed guidance, examples, failure modes, technical notes, our scoring plan, and ambiguities.
 
@@ -20,11 +20,11 @@ Content stated as official comes from the deck. Anything read from a rendered di
 | 4 | `README.md` | Run instructions + overview and purpose of each script/file | | ☐ |
 | 5 | Environment setup | `requirements.txt` or Docker setup | | ☐ |
 | 6 | Secrets | Use a `.env` pattern; commit no secrets | | ☐ |
-| 7 | Testing / evaluation | Results **must be covered in the slides** | | ☐ |
+| 7 | Testing / evaluation | Results **should be covered in the slides**; we treat this as a submission requirement | | ☐ |
 | 8 | Reproducibility | Submitted solution runs as shown in the video | | ☐ |
 | 9 | Deck/code consistency | Methodology presented is reflected at code level | | ☐ |
 
-Item 3 is one five-minute artifact: either a digital solution video or, for a physical/simulated system, a recording of the simulation. Submit one, not both.
+Item 3 is one five-minute artifact: either a digital solution video or a video recording of a simulation. Submit one, not both. The deck does not restrict the simulation option to physical systems.
 
 ## 2. The brief we must answer
 
@@ -46,9 +46,9 @@ Together, the deliverables must:
 | Deliverable | Limit | Immediate requirement |
 |---|---|---|
 | **Project Files / Workflow** | Max 5 GB; **one submission only** | A simple, runnable proof of concept demonstrating the Agentic AI component. Python is strongly recommended. |
-| **Presentation Deck** | Max 10 slides | Explain the problem, solution, methodology, architecture, differentiation, evidence, benefits, and adoption potential. |
+| **Presentation Deck** | Max 10 slides | Follow the sample flow in §3.2; our recommended emphasis is labelled separately there. |
 | **Digital Solution Video** | Max 5 minutes | Show the working solution making a decision or taking an action. |
-| **OR Simulation Recording** | Max 5 minutes | Alternative video deliverable for physical/simulated systems. |
+| **OR Simulation Recording** | Max 5 minutes | Alternative video deliverable. |
 
 ### 3.1 Project files — minimum contents
 
@@ -73,16 +73,16 @@ The judges will look for three things:
 |---|---|---|
 | 1 | **Title & Team** | Names, roles, and a one-line mission statement |
 | 2 | **Problem Statement / Why It Matters** | A specific real-world issue, backed by data, and why it matters for the public good |
-| 3 | **Solution Overview** | What the Agentic AI does, why an agent is warranted, and why it is different |
-| 4 | **Methodology** | Functional flow, including planning, acting, adapting, and evaluation |
-| 5 | **Technical Architecture** | High-level system design, components, tech stack, guardrails, and human checkpoints |
+| 3 | **Solution Overview** | What the Agentic AI does and why it is different |
+| 4 | **Methodology** | Functional overview of the solution |
+| 5 | **Technical Architecture** | High-level system design, components, tech stack |
 | 6 | **Innovation & Uniqueness** | How the approach differs from existing solutions |
-| 7 | **Benefits Delivered** | Quantified improvements, test results, or other evidence |
+| 7 | **Benefits Delivered** | Quantified improvements or advantages |
 | 8 | **Demo Preview** | Screenshots or flow of the live/recorded demo or simulation |
 | 9 | **Roadmap & Future Potential** | Scale, adoption, and next steps |
 | 10 | **Conclusion & Call to Action** | Recap the value and invite adoption |
 
-The original slide bolds slides **3, 4, 5, 7, and 9**: Solution Overview, Methodology, Technical Architecture, Benefits Delivered, and Roadmap. Testing/evaluation has no dedicated slide in the sample flow but is required, so place it on slide 4, 7, or 8.
+The table above transcribes the official sample flow. **Our working additions:** explain why an agent is warranted on slide 3; show planning/acting/adapting and evaluation on slide 4; show guardrails and human checkpoints on slide 5; put measured test results on slide 7. The original slide bolds slides **3, 4, 5, 7, and 9**. Testing/evaluation has no dedicated slide in the sample flow but the project-files slide says it should be covered, so we choose slide 7.
 
 For every slide: use one core message, prefer evidence and visuals over generic claims, maintain consistent branding, and connect the content to a judging criterion.
 
@@ -144,7 +144,7 @@ This section preserves the slide deck's supporting guidance, negative examples, 
 
 ## 6. Writing the problem statement
 
-The deck spends seven slides on this. It is graded twice — under Presentation (articulating the problem) and under Effectiveness (does the solution resolve *that* problem).
+The deck spends six slides on this. It is graded twice — under Presentation (articulating the problem) and under Effectiveness (does the solution resolve *that* problem).
 
 ### 6.1 Required format
 
@@ -249,7 +249,7 @@ A narrower problem statement is strategically stronger than a broad one because 
 
 ## 8. Project files — detailed requirements
 
-Verbatim requirements from the "Project Files – Key Points" slide.
+Close transcription of the "Project Files – Key Points" slide. Capitalization and sentence grammar are normalized; normative words such as **should** are preserved.
 
 **Build a simple proof-of-concept to demonstrate your Agentic AI component.**
 
@@ -272,7 +272,7 @@ Keep it concise. **A good README will suffice**, covering:
 > 2. Whether the **presentation methodology is reflected at code level**. In-line documentation where relevant would be helpful.
 > 3. **Testing/Evaluation should be covered in your slides.**
 
-Item 2 is the sleeper requirement. If the deck says "three loops with a hard iteration cap" then a judge opening the repo expects to find a named iteration cap in the state, not a `while True`. **The deck and the code have to describe the same system.** *(That sentence is the deck's requirement. The next one is ours: this strikes us as the easiest place for an otherwise strong pitch to lose Technical Quality points, because the deck and the repo are usually written by different people on different nights.)*
+Item 2 is the sleeper requirement. If **our presentation** says "two capped request loops plus a ledger-bounded longitudinal cycle," then a judge opening the repo expects to find those bounds in state, not a `while True`. **Our interpretation:** the deck and the code have to describe the same system. This strikes us as the easiest place for an otherwise strong pitch to lose Technical Quality points, because the deck and the repo are usually written by different people on different nights.
 
 ### 8.5 Development best practices (graded indirectly via Technical Quality)
 
@@ -464,7 +464,7 @@ Cross-cutting notes worth reusing verbatim in our architecture slide:
 - Token usage returns on every response
 - The `@app.entrypoint` handler is the seam a UI calls
 
-Our architecture has parallel-ish writes to a shared knowledge base and three loops, which is exactly the "typed state with reducers" and "bounded loop" shape LangGraph is being recommended for.
+Our architecture has concurrent writes to a shared knowledge base, two capped request loops and a ledger-bounded longitudinal cycle, which is exactly the "typed state with reducers" and controlled-cycle shape LangGraph is being recommended for. The production-facing thread uses a persistent SQLite checkpointer; `InMemorySaver` remains test-only.
 
 ### 11.5 Priority order if we run out of time
 

@@ -1,6 +1,6 @@
 # User Stories — Hobbi
 
-*Version 2.1 · 31 Aug 2026. Every story names the **agent that owns it** and whether it is in the prototype. As of 31 Aug no story is unowned.*
+*Version 2.2 · 31 Aug 2026. Every story names the **agent that owns it** and whether it is in the prototype. As of 31 Aug no story is unowned.*
 
 Grouped by user. Each row: the story, what Hobbi needs to know, the feature it implies, and the owning agent from [`architecture.md`](../3-system/architecture.md) §3.
 
@@ -54,8 +54,8 @@ Grouped by user. Each row: the story, what Hobbi needs to know, the feature it i
 | **As someone joining alone, I want to know how welcoming a group is to newcomers.** | Whether people usually join alone; newcomer process | `join_alone_ok` — "good for first-timers" | **Planner** / **Discovery** | ✅ |
 | **As a shy teen, I want to know what will happen before I arrive so I feel less anxious.** | Meeting format, group size, meeting point, activities | "What to expect" preview | **Broker** | ✅ |
 | **As a teen, I want to know exactly what I need before joining.** | Equipment, clothing, prerequisites | Preparation checklist | **Broker** | ✅ |
-| **As a teen, I want to bring a friend if I'm uncomfortable attending alone.** | Whether groups allow guests | `guest_allowed` + a share link — not a social graph | **Planner** / **Broker** | 🔶 |
-| **As a teen, I want to go where other people my age from my area already go, so I'm not the only new face.** | Aggregate presence, bucketed, k-anonymity floor | `PeerCohort` ranking tiebreak — never identity, never a filter, absence never shown | **Planner** | ✅ |
+| **As a teen, I want to bring a friend if I'm uncomfortable attending alone.** | Whether groups allow guests | `guest_allowed` shown in Broker's preparation preview; share link deferred — not a social graph | **Planner** / **Broker** | 🔶 |
+| **As a teen, I want to go where other people my age from my area already go, so I'm not the only new face.** | Aggregate presence, bucketed, k-anonymity floor | Simulated `PeerCohort` ranking tiebreak — never identity, never a filter, absence never shown | **Planner** | 🔶 |
 
 > The Broker's teen-facing output is not a confirmation email. It is an **anxiety-reduction artefact** — where exactly to meet, what happens in the first ten minutes, whether people usually come alone. It exists because a burnt `try` cannot be recovered.
 
@@ -70,7 +70,7 @@ Grouped by user. Each row: the story, what Hobbi needs to know, the feature it i
 | **As a teen, I want something I disliked once to be able to come back later.** | Which negative it was — the activity or that instance | Decaying `DislikeSignal`, ranking-only, never a blocklist | **Observer** → **Planner** | ✅ |
 | **As a teen, I want to see actual upcoming sessions rather than just reading about a hobby.** | Group calendars, `next_sessions` | Upcoming events feed | **Discovery** → **Planner** | ✅ |
 | **As a teen, I want to save interesting hobbies and come back later.** | Favourites | Saved hobbies | **Planner** *(reads a favourites list in Personal Data)* | ⬜ |
-| **As a teen, I want to compare different activities before deciding.** | Cost, distance, time, social level, equipment | Comparison view | **Planner** | 🔶 |
+| **As a teen, I want to compare different activities before deciding.** | Cost, distance, time, social level, equipment | Comparison view | **Planner** | ⬜ |
 | **As a teen, I want to be left alone when there's nothing worth telling me.** | Whether anything actually changed | `hold_this_week` | **Observer** → **Planner** | ✅ |
 
 > "Try it first" is the product surface for the loop's **explore** phase — cheapest experiments before term-long commitments ([`project_brief.md`](./project_brief.md) §3.1).
@@ -115,7 +115,7 @@ Grouped by user. Each row: the story, what Hobbi needs to know, the feature it i
 | **As Hobbi, we want to find supply that isn't in any directory yet.** | What CKB already holds; external sources | Gap-driven external search | **Discovery** | ✅ |
 | **As Hobbi, we want to never leak personal data to the open internet.** | — | Discovery receives the plan, not the person | **Orchestrator** *(gate ◆1)* | ✅ |
 | **As Hobbi, we want to know whether the agent is converging or circling.** | Loop counts vs caps | Loop discipline logging | **Orchestrator** | ✅ |
-| **As Hobbi, we want every claim on our slides to be reproducible.** | Gate log, token usage | One-command evaluation report | **Orchestrator** → [`evaluation.md`](../3-system/evaluation.md) | ✅ |
+| **As Hobbi, we want every claim on our slides to be reproducible.** | Gate log, model-response token usage, terminal/tool events | One-command evaluation report | **Orchestrator** *(gate data)* + evaluation harness → [`evaluation.md`](../3-system/evaluation.md) | ✅ |
 
 > Compliance is 🔶 because the PoC runs a **manually-triggered** scan plus a demonstrated retire→replan cascade, not a deployed scheduler ([`architecture.md`](../3-system/architecture.md) §10). Say so on the slide.
 

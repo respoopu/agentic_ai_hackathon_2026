@@ -1,7 +1,7 @@
 # Project Brief — Hobbi
 
 *Hackathon: SimplifyNext Agentic AI Hackathon 2026 — **"Design for a World in Transformation"***
-*Version 2.1 · 31 Aug 2026 · supersedes v1 (18 Aug 2026)*
+*Version 2.2 · 31 Aug 2026 · supersedes v1 (18 Aug 2026)*
 
 **The doc set.** 
 - [`deliverables.md`](../1-requirements/deliverables.md) — what the hackathon requires · **this** — problem, user, solution, positioning · 
@@ -11,7 +11,7 @@
 - [`sources.md`](./sources.md) — every citation · 
 - [`discrepancies.md`](../4-decisions/discrepancies.md) — open conflicts and decisions.
 
-> **What changed in v2.1 (31 Aug).** All twelve open decisions closed (§12). The problem statement now leads with **S$0** rather than S$500 of Curiosity Credits — narrow on outcome, broad on audience (§1.1). Belonging is built as **cohort presence, not a friend graph** (§3.7). The cohort is fixed at **13–17 at both ends** (§2, §6.4). The budget ledger has an owner (§4). §6.1 now states where the line falls between **seeding and typing**, because the cold start asks a short question.
+> **What changed in v2.2 (31 Aug).** PR #2 review corrections make the test populations satisfiable, enforce both age bounds at deterministic intake, route all replacements back through Guardian, narrow the PoC debrief to text, give B15 a 30-day window, and synchronize the diagram/export. v2.1 closed the twelve product decisions (§12).
 >
 > **What changed in v2 (27 Aug).** Problem statement rewritten into the required POV format and pressure-tested. **The "42% of youths satisfied" figure is removed — it does not survive verification** (see §1.2). The agent roster now lives in [`architecture.md`](../3-system/architecture.md) and matches the diagram. Evaluation, tech stack and build scope added. Criterion references corrected to the real rubric. All headline figures re-sourced to primary documents.
 
@@ -21,7 +21,9 @@
 
 ### 1.1 The statement
 
-> **A 14-year-old in Singapore with S$0 of their own to spend needs a way to get to a first hobby session this month without an adult driving the search — because the free and low-cost options are scattered across Community Clubs, ActiveSG, new third spaces and group chats that no directory indexes together, and nobody at home has the hours to go looking.**
+> **A 14-year-old in Singapore with S$0 of their own to spend needs a way to find and reach a first hobby session this month — because Singapore is expanding to 20,000 social, hobby and interest opportunities a year and 12 free youth spaces, while access still spans separate Community Club, ActiveSG, youth-space and community-group channels.**
+
+*Evidence for the “because” clause: SG Youth Plan Report, released 25 Jul 2026, p.9 and Move 12; provider-channel review recorded in [`sources.md`](./sources.md) §B on 27 Aug 2026. The claim that a teen can complete the journey without adult search labour remains a product hypothesis until the interviews below.*
 
 **North star, for slide 9 and not for slide 2:** *the same teenager, twelve months later, still going.*
 
@@ -49,12 +51,12 @@ The deck requires this, as a team, before writing code. Ours, honestly scored:
 | # | Question | Verdict |
 |---|---|---|
 | 1 | **Can we name one person?** | ✅ Aisyah, 14 (§2.1) — S$0 of their own, nobody at home free to drive them, no friend already doing the thing. Not "youths." |
-| 2 | **Can we cite the evidence?** | ✅ Now. Figure, source and date for every claim in §1.3 — after one of them failed verification. |
+| 2 | **Can we cite the evidence?** | ⚠️ **Partial.** The statement's supply figures and channels now carry sources and dates. The adult-coordination insight remains a hypothesis until interviews; §1.3's figures alone were not enough to pass this question. |
 | 3 | **Would that person recognise themselves?** | ❌ **No. We have not spoken to a single teenager.** See below. |
 | 4 | **Does it survive a different solution?** | ✅ The statement describes fragmentation and adult time-poverty. It holds if someone builds a directory, a WhatsApp bot, or nothing at all. |
 | — | **Would this problem exist if agentic AI had never been invented?** | ✅ Yes. It is a matching and follow-through problem that predates all of it. |
 
-**Question 3 is a real failure and the deck is explicit that any "no" sends us back to Empathise before we write code.** This is the deck's sixth failure mode — *"The Comfortable Guess: written from the team's imagination, with no contact with anyone who lives the problem"* — and right now we are in it. The whole brief is desk research.
+**Question 3 is a real failure and the deck is explicit that any "no" sends us back to Empathise before we write code.** This is the deck's sixth failure mode — *"The Comfortable Guess: written from the team's imagination, with no contact with anyone who lives the problem"* — and right now we are in it. The whole brief is desk research. Until interviews occur, the statement and persona are explicitly **provisional**; implementation may test mechanics, but it cannot be cited as validation of the problem.
 
 **The fix is cheap and it is the highest-value hour available to us: talk to five teenagers this week.** Ask what they tried, what they quit, and what stopped them walking in. Two things follow:
 
@@ -76,7 +78,7 @@ All figures verified against primary documents on 27 Aug 2026. Full provenance i
 | **20,000 social, hobby and interest-based opportunities annually by 2030** | SG Youth Plan Report, p.9 🟢 |
 | **12 new third spaces**, free for youths to use | SG Youth Plan Report, Move 12 🟢 |
 | **Somerset Belt youth precinct by 2028** | SG Youth Plan Report, Move 11, p.58 🟢 |
-| **Discover** named as the sign-up channel | SG Youth Plan Report, Enablers 🟢 |
+| **Discover** announced as *"a trusted digital compass for every youth"*; no primary quote yet ties it to sign-up for the 20,000 opportunities | SG Youth Plan Report, Enablers 🟡 |
 
 > ### ⚠️ One figure was removed
 >
@@ -126,7 +128,7 @@ Secondary 2. Has **S$0** of their own discretionary money. Nobody at home is fre
 
 ### 2.2 Secondary user
 
-A **trusted adult** — parent, SHG case worker, school counsellor — holding approval authority over spend and over any unvetted provider. This is a safety requirement and a legal one, not a nice-to-have (§6.3, [`architecture.md`](../3-system/architecture.md) §7).
+A **trusted adult** — parent, SHG case worker, school counsellor — holding approval authority over spend and over any unvetted provider. This is a product and safety control, separate from the teen's PDPA consent basis (§6.3, [`architecture.md`](../3-system/architecture.md) §7).
 
 ### 2.3 Framing note
 
@@ -157,17 +159,17 @@ The refusal to run an assessment is not squeamishness. It is the finding.
 
 *"Interest gets developed, not diagnosed"* was an assertion in v1. It is now a citation.
 
-### 3.3 The three loops
+### 3.3 Two request loops and one longitudinal cycle
 
-v1 drew one six-step ring. The system has **three distinct bounded loops** — which is both truer and better for the deck, because bounded control flow is exactly what the deck's "Bound every loop" slide primed judges to look for.
+v1 drew one six-step ring. The system instead has **two capped within-request loops and one longitudinal feedback cycle bounded by the finite tries ledger**. This is both truer and better for the deck, because controlled flow is exactly what the deck's "Bound every loop" slide primed judges to look for.
 
-| # | Loop | What it does | Cap |
+| # | Control cycle | What it does | Bound |
 |---|---|---|---|
 | **1 · Plan-quality** | Planner ⇄ Discovery Engine | When the plan is thin, go and find supply that isn't indexed yet | 2 rounds |
 | **2 · Safety** | Guardian → Planner | Reject unsafe or unapproved plans; replan with the reason | 2 rejections |
 | **3 · Feedback** | Observer → Personal Data → Planner | Learn from what actually happened and reallocate | Longitudinal; bounded by `tries` |
 
-Loop 3 is the one that makes this longitudinal instead of stateless. It is also invisible in a five-minute demo, which is why the simulation harness exists ([`architecture.md`](../3-system/architecture.md) §10).
+Cycle 3 is the one that makes this longitudinal instead of stateless. It is also invisible in a five-minute demo, which is why the simulation harness exists ([`architecture.md`](../3-system/architecture.md) §10).
 
 `DECLARE` is not an agent — it is parent setup plus the teen's request.
 
@@ -227,7 +229,7 @@ A hobby found alone is much less likely to stick, and the literature says the me
 
 > ✅ **Built as of 31 Aug — as cohort presence, not a friend graph** ([`discrepancies.md`](../4-decisions/discrepancies.md) **D2**; spec in [`architecture.md`](../3-system/architecture.md) §9.3).
 >
-> A friend system was the obvious implementation and the wrong one. It **reproduces the school social graph** — precisely what we are trying to get a teen out of — and it is empty on day one, so it would be dead exactly when the demo runs. `PeerCohort` carries **aggregate presence with no identity in it**: bucketed (`none/few/some/many`), suppressed below a k-anonymity floor of 5, resolved at planning-area level and **never at school level**, opt-in to contribute, used as a ranking tiebreak and never as a filter.
+> A friend system was the obvious implementation and the wrong one. It **reproduces the school social graph** — precisely what we are trying to get a teen out of — and it is empty on day one, so it would be dead exactly when the demo runs. `PeerCohort` carries **aggregate presence with no identity in it**: bucketed (`none/few/some/many`), suppressed below a k-anonymity floor of 5, resolved at planning-area level and **never at school level**, opt-in to contribute, used as a ranking tiebreak and never as a filter. In the PoC the seed loader supplies clearly labelled simulated buckets; a privacy-reviewed aggregator is roadmap.
 >
 > **Absence is never shown.** *"Nobody is going"* is a discouraging screen that burns a `try`.
 >
@@ -269,7 +271,7 @@ The formal, centre-based market is saturated. Scraping it produces Skoop-with-an
 | **Serious About School** | 8,000+ listings with parent reviews (children 0–12) |
 | **Flying Cape** | Booking platform, 18 months to 18 years |
 | **LessonPlan, BYKidO, POSB Education Marketplace** | Aggregation + booking |
-| **Discover (NYC/GovTech)** | Career portal, ages 15–35, static personalisation quiz. **Named as the sign-up channel for the 20,000 opportunities.** |
+| **Discover (NYC/GovTech)** | Career portal, ages 15–35, static personalisation quiz. Adjacent government channel, but **not yet verified as the sign-up channel for the 20,000 opportunities.** |
 
 ### 5.2 DO index the uncovered supply — where the free and cheap options live
 
@@ -352,11 +354,11 @@ We are connecting **minors** to activity providers. The Telegram/IG long tail is
 
 ### 6.4 ⚠️ Data protection is a design constraint, not a slide
 
-Our users are 13–17 and one input channel is a **voice recording**. The position is set out in [`architecture.md`](../3-system/architecture.md) §8, against PDPC's *Advisory Guidelines on the PDPA for Children's Personal Data* (28 Mar 2024). The headline, which is more interesting than "get parental consent":
+Our users are 13–17. The PoC debrief is text-only; voice is roadmap because it requires an explicit STT processor, higher consent bar and deletion path. The position is set out in [`architecture.md`](../3-system/architecture.md) §8, against PDPC's *Advisory Guidelines on the PDPA for Children's Personal Data* (28 Mar 2024). The headline, which is more interesting than "get parental consent":
 
 - **A 13–17-year-old may give valid consent themselves** — provided the policies are *"readily understandable by them"*, including how to withdraw it. Our consent copy is therefore a deliverable, written for a 13-year-old.
 - **Under 13 requires parental consent**, which is why the product starts at 13 and refuses a declared age below it (**D7**, invariant **A11**). The ceiling is 17 — there is no adult mode, so the Guardian gate has no bypass.
-- Children's data is *"generally considered to be **sensitive personal data**"* and gets the enhanced protection tier. Voice recordings sit squarely there — so: transcribe, extract, **discard the audio**.
+- Children's data is *"generally considered to be **sensitive personal data**"* and gets the enhanced protection tier. A future voice adapter would sit squarely there — so it cannot ship without a named processor and transcribe → extract → **discard audio** path.
 
 Also address on slides: platform ToS for scraping.
 
@@ -387,7 +389,7 @@ We handle the outside-school half the CCA system cannot, by design rather than b
 
 ### 7.2 "Won't NYC just build this into Discover?"
 
-Real risk — Discover is the named sign-up channel in the government's own plan. Two honest counters:
+Real risk — Discover is a government-backed digital compass adjacent to this space. Two honest counters:
 
 - Discover today is **career-framed, starts at 15, and personalises via a static quiz**. Our cohort — 13–17, hobbies, adaptive — falls in the gap.
 - Our defensibility is **the budget-optimisation loop and the long-tail supply**, not the directory. If someone builds the directory better, we sit on top of it.
@@ -440,7 +442,7 @@ The value accrues over months; the demo is five minutes, and the deck allocates 
 
 ## 10. What Wins Agentic Hackathons
 
-*From 11 comparable hackathons reviewed — Google Cloud Agentic AI Day, Microsoft AI Agents, AWS AI Agent Global, IBM watsonx/Call for Code, MIT CSAIL, UC Berkeley, HackUSF, NUS–GURU, Elastic Singapore, Google Gen AI Exchange, and this one's own 2025 edition. Sources in [`sources.md`](./sources.md) §H.*
+*From 14 hackathons and winner sources reviewed — including Google Cloud Agentic AI Day, Microsoft AI Agents, AWS AI Agent Global, IBM watsonx/Call for Code, MIT CSAIL, GitLab, UC Berkeley, HackUSF, NUS–GURU, Elastic Singapore, Google Gen AI Exchange, AI Singapore NAISC, the separate Google Cloud reasoning-trace source, and this event's prior edition. Sources in [`sources.md`](./sources.md) §H.*
 
 **Five archetypes recur:** Navigator (collapse a fragmented system), Sentinel (detect → act on live signals), Researcher, Guardian (verify/explain), Coach (persistent companion).
 
@@ -454,7 +456,7 @@ The value accrues over months; the demo is five minutes, and the deck allocates 
 
 **Avoid the Sentinel archetype.** Most-attempted, and reactive: it responds to events, but its policy never changes.
 
-> Both the archetype taxonomy and the "fewer than five" count are **our analysis of a real sample**, not published statistics. Present them as *"we reviewed 11 hackathons and ~40 winning projects and found…"* — which is honest, and actually more impressive than citing someone else.
+> Both the archetype taxonomy and the "fewer than five" count are **our analysis of a real sample**, not published statistics. Present them as *"we reviewed 14 hackathon and winner sources and ~40 winning projects and found…"* — which is honest, and actually more impressive than citing someone else.
 
 ---
 
@@ -479,13 +481,13 @@ Two reasons to be explicit rather than vague. Technical Quality's top band is *"
 | **D1** | The budget ledger is in typed state — Planner reads, Broker decrements, Observer reconciles (§4) |
 | **D2** | Belonging is **cohort presence, not a friend graph**: bucketed, k-anonymised, planning-area level, tiebreak only (§3.7) |
 | **D3** | The statement is **narrow on outcome, broad on audience**, leading with S$0 (§1.1) |
-| **D3b** | The headline metric is **B15** — actions to a first attended session at S$0 |
+| **D3b** | The headline metric is **B15** — attendance within 30 days at S$0, including elapsed time and teen-side actions |
 | **D4** | Prepare a Q&A, at second priority behind the idea and the deck |
 | **D5** | Organiser questions handled directly by the team |
 | **D6** | System prompts re-derived after this branch merges to main |
-| **D7** | The cohort is **13–17 at both ends, enforced**; a trusted adult is mandatory for every user (§2, §6.4) |
+| **D7** | The cohort is **13–17 at both ends, enforced at I0**; a trusted adult is mandatory for every eligible user (§2, §6.4) |
 | **D8** | Seed CKB from real listings · live whitelisted Discovery · sandboxed Broker · a cached replay for the demo |
-| **D9** | The observation channel is an **in-app form** behind a channel-agnostic `DebriefSubmission` — reads like texting a friend, keeps a minor's voice note off third-party servers *(revised from Telegram, 31 Aug)* |
+| **D9** | The PoC observation channel is an **in-app text form** behind a channel-agnostic `DebriefSubmission`; audio and messaging adapters are roadmap until an STT processor, consent path and deletion test are specified *(revised from Telegram, 31 Aug; narrowed after PR review)* |
 | **D10** | Cold start is 4–6 skippable vibe chips — **seeding, not typing** (§6.1) |
 | **D11** | Dislike is modelled, with decay and attribution, **never as a blocklist** |
 

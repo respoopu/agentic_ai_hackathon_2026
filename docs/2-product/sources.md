@@ -55,7 +55,7 @@ Verified directly in the PDF, with page numbers, so anything below can be cited 
 | **20,000 opportunities/year by 2030** | p.9 | *"Provide 20,000 social, hobby, and interest-based opportunities for youths annually by 2030."* |
 | **12 third spaces** | Move 12 | *"a network of 12 new, smaller third spaces for youths, across the island… Each space is free for youths to use."* |
 | **Somerset Belt by 2028** | Move 11, p.58 | *"By 2028, we target to complete the development of Somerset Belt…"* |
-| **Discover as the channel** | Enablers | *"Launch Discover, a trusted digital compass for every youth in Singapore."* |
+| **Discover as a digital compass** | Enablers | *"Launch Discover, a trusted digital compass for every youth in Singapore."* **This does not establish that Discover is the sign-up channel for the 20,000 opportunities.** |
 
 **Three cautions when quoting these:**
 
@@ -248,7 +248,7 @@ The APA-native secondary summary of Nielsen et al. *(Existence and framing confi
 🟢 **PDPC, *Advisory Guidelines on the PDPA for Children's Personal Data in the Digital Environment*, issued 28 March 2024.**
 https://www.pdpc.gov.sg/-/media/files/pdpc/pdf-files/advisory-guidelines/advisory-guidelines-on-the-pdpa-for-children's-personal-data-in-the-digital-environment_mar24.pdf
 
-Directly load-bearing, because our users are 13–17 and one input channel is a voice recording.
+Directly load-bearing because our users are 13–17. The PoC is text-only; the voice-recording guidance governs any future audio adapter.
 
 - *"'child' or 'children' refers to an individual or individuals who is or are **below 18 years of age**."*
 - > *"The PDPC considers that a **child between 13 and 17 may give valid consent**, when the policies on the collection, use and disclosure of the child's personal data, as well as the withdrawal of consent, are **readily understandable by them**. This includes ensuring that the child understand the consequences of providing and withdrawing consent. However, where an organisation has reason to believe that a child does not have sufficient understanding… the organisation should obtain consent from the child's parent or guardian."*
@@ -257,7 +257,7 @@ Directly load-bearing, because our users are 13–17 and one input channel is a 
 - Consent obtained while a child *"remains valid when the individual reaches 18 years of age."*
 - PDPC explicitly contemplates organisations setting a **higher** bar in context, giving an education setting as its example.
 
-**Design consequence** (see [`architecture.md`](../3-system/architecture.md) §8): the teen can self-consent for preference and attendance data if our consent copy is genuinely readable by a 13-year-old — so that copy is a deliverable, not boilerplate — while voice recordings take the higher bar of teen **plus** parent, and sit in the enhanced-protection tier.
+**Design consequence** (see [`architecture.md`](../3-system/architecture.md) §8): the teen can self-consent for preference and attendance data if our consent copy is genuinely readable by a 13-year-old — so that copy is a deliverable, not boilerplate. A future voice adapter additionally requires teen **plus** parent consent, a named processor and a deletion test.
 
 ---
 
@@ -360,7 +360,7 @@ Four phases: **triggered situational interest → maintained situational interes
 
 ### 🏷️ Still our analysis — label it as such
 
-**I.5 — "Of ~40 winners reviewed, fewer than five are genuinely longitudinal."** Our own count across §H. Present as *"we reviewed 11 hackathons and ~40 winning projects and found…"* — honest, and more impressive than borrowing someone else's statistic.
+**I.5 — "Of ~40 winners reviewed, fewer than five are genuinely longitudinal."** Our own count across §H. Present as *"we reviewed 14 hackathon and winner sources and ~40 winning projects and found…"* — honest, and more impressive than borrowing someone else's statistic.
 
 **I.6 — The five-archetype taxonomy** (Navigator / Sentinel / Researcher / Guardian / Coach). Ours. Not an established framework. Fine to use; do not imply it is standard.
 
@@ -382,5 +382,7 @@ The v1 priority list is **closed** — all four items were chased and one was re
 | 4 | Find a primary citation for "12 third spaces **by end-2026**" | Deadline is 🟡, the count is 🟢 | 15 min |
 | 5 | Fetch the Ostojic 2014 abstract directly | The reversal figure is from a secondary summary | 10 min |
 | 6 | Ask organisers: deadline, upload mechanism, live Q&A? | Not in the deck. Tracked as **D4/D5** — the team is handling it directly | One email |
+| 7 | Verify whether Discover is actually the sign-up channel for the 20,000 opportunities | The current primary quote only calls it a digital compass | 15 min |
+| 8 | Validate the adult-coordination insight in teen/caregiver interviews | The supply fragmentation is observable; the household-time claim was not sourced | Fold into task 1 |
 
-Everything else is solid or non-load-bearing.
+Everything else is solid or explicitly labelled as analysis rather than a sourced claim.

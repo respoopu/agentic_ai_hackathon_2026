@@ -18,9 +18,9 @@
 |---|---|---|---|---|
 | **A** — Brief ↔ Architecture | 4 | 4 | 3 | 11 |
 | **B** — Architecture ↔ Hackathon requirements | 5 | 4 | 2 | 11 |
-| **C** — Brief ↔ Hackathon requirements | 3 | 3 | 4 | 10 |
+| **C** — Brief ↔ Hackathon requirements | 2 | 2 | 6 | 10 |
 | **E** — Downstream artifacts | 0 | 1 | 0 | 1 |
-| | **12** | **12** | **9** | **33** |
+| | **11** | **11** | **11** | **33** |
 
 **All twelve decisions in §D closed on 31 Aug**, and every discrepancy in classes A, B and C with them. The source-of-truth docs no longer contradict each other, the diagram, or the deck.
 
@@ -93,7 +93,7 @@ The gap is narrower than "the budget is missing" — money is present as a *cons
 2. Planner reads it. Broker decrements it. Observer reconciles it after each outcome.
 3. Reallocation becomes a Planner responsibility, so the v1 *Reallocator* stays retired.
 
-**The alternative,** if the team would rather not touch the architecture: drop the portfolio framing from the brief and re-derive "why agentic" from the three loops alone (plan-quality reflection + safety gate + longitudinal preference learning). Defensible, and materially weaker.
+**The alternative,** if the team would rather not touch the architecture: drop the portfolio framing from the brief and re-derive "why agentic" from the two request loops plus longitudinal preference cycle alone. Defensible, and materially weaker.
 
 **Closed as D1 on 31 Aug: the recommendation was adopted.** `architecture.md` §5 and §9.1 carry the ledger, and it is no longer conditional. The alternative below is recorded only so nobody re-opens the argument.
 
@@ -124,7 +124,7 @@ The debrief is worth keeping regardless: multimodal audio→structured extractio
 
 Follows from **A4**, but listed separately because it is the flagship adaptivity behaviour and the best beat in the demo.
 
-The brief specifies it. `deliverables.md` §11 identifies the "agent correctly decides to do nothing" moment as the strongest single signal of genuine adaptivity. The diagram has **no non-attendance edge, no timer, and no do-nothing outcome** — so as drawn, the behaviour cannot happen.
+The brief §9 and `architecture.md` §10 identify the "agent correctly decides to do nothing" moment as the strongest single signal of genuine adaptivity. The v1 diagram had **no non-attendance edge, no timer, and no do-nothing outcome** — so as drawn, the behaviour could not happen.
 
 **Resolution.** `architecture.md` §6 adds the `did_not_attend` edge and a `hold_this_week` terminal outcome, with the rule: one no-show → note it; two → re-plan; sustained attendance → escalate try→commit and reallocate.
 
@@ -186,11 +186,11 @@ Those are different checks at different granularities with different failure mod
 
 ### A10 · The brief's six-step loop doesn't exist in the build 🟡 `RESOLVED`
 
-Brief v1 draws `DECLARE → PLAN → BROKER → OBSERVE → UPDATE → RE-PLAN` as one ring. The system has **three distinct loops** with different triggers, different participants and different caps.
+Brief v1 draws `DECLARE → PLAN → BROKER → OBSERVE → UPDATE → RE-PLAN` as one ring. The system has **two capped request loops and one longitudinal feedback cycle** with different triggers, participants and bounds.
 
-The three-loop version is better for the deck as well as truer: it shows bounded control flow, which is what the deck's "Bound every loop" slide primed judges to look for. One big ring shows nothing about where the system can get stuck.
+The three-cycle version is better for the deck as well as truer: it distinguishes request retries from post-session learning and shows where the system can get stuck. One big ring does not.
 
-**Resolution.** `project_brief.md` v2 adopts the three-loop framing. `DECLARE` is not an agent — it is Parent setup + Teen request, recorded as such.
+**Resolution.** `project_brief.md` adopts the two-request-loops-plus-longitudinal-cycle framing. `DECLARE` is not an agent — it is Parent setup + Teen request, recorded as such.
 
 ---
 
@@ -236,7 +236,7 @@ The "going further" answer is worth making explicit in the pitch: **our error me
 
 The deck **requires** testing/evaluation on the slides and offers six ready-made metrics. The architecture had no instrumentation point.
 
-**Resolution.** The validation layer already inspects every inter-agent payload, so schema-validation pass rate, loop counts and token usage fall out of it for free. `evaluation.md` takes its numbers from `gate_log` and `token_usage` in state.
+**Resolution.** The validation layer inspects every inter-agent payload, so schema-validation and loop data come from `gate_log`. Token usage comes from model-response metadata; tool outcomes come from the tool wrapper; terminal and attendance metrics come from their own events. `evaluation.md` names the source for every measure.
 
 Most teams will skip evaluation entirely. This is the cheapest available separation on **Effectiveness (20%)**, and for us it costs almost nothing because the gate log already exists for other reasons.
 
@@ -246,7 +246,7 @@ Most teams will skip evaluation entirely. This is the cheapest available separat
 
 Slide 5 of the required deck structure is *"Technical Architecture — high-level system design, components, **tech stack**."* The diagram names no framework, model or library.
 
-**Resolution.** `architecture.md` §11. LangGraph (3 bounded loops and typed state with reducers is exactly its shape), Pydantic, `ChatBedrockConverse`, Claude Haiku 4.5 by default with Sonnet 4.5 where reasoning quality demands it, `InMemorySaver` + `thread_id` for the longitudinal thread, local-first with an AgentCore-ready entrypoint. Staying on the taught stack also makes the code legible to judges who sat through the same sessions.
+**Resolution.** `architecture.md` §11. LangGraph for two capped request loops, one ledger-bounded longitudinal cycle and typed state with reducers; Pydantic; `ChatBedrockConverse`; Claude Haiku 4.5 by default with Sonnet 4.5 where reasoning quality demands it; a SQLite-backed checkpointer + `thread_id` for the longitudinal thread (`InMemorySaver` is test-only); and a local-first, AgentCore-ready entrypoint. Staying on the taught stack also makes the code legible to judges who sat through the same sessions.
 
 ---
 
@@ -290,7 +290,7 @@ That is closable in a demo. "Teens need hobbies that stick" is not.
 
 Final wording, now in `project_brief.md` §1.1:
 
-> *A 14-year-old in Singapore with S$0 of their own to spend needs a way to get to a first hobby session this month without an adult driving the search — because the free and low-cost options are scattered across Community Clubs, ActiveSG, new third spaces and group chats that no directory indexes together, and nobody at home has the hours to go looking.*
+> *A 14-year-old in Singapore with S$0 of their own to spend needs a way to find and reach a first hobby session this month — because Singapore is expanding to 20,000 social, hobby and interest opportunities a year and 12 free youth spaces, while access still spans separate Community Club, ActiveSG, youth-space and community-group channels.*
 
 **S$0 is the harder constraint, not the humbler one.** A system that closes it closes the funded case trivially, and it is already invariant **A3** rather than a marketing line. Curiosity Credits move to slides 7 and 9 as a funded, nationally-announced beachhead — an adoption argument instead of a ceiling.
 
@@ -322,7 +322,7 @@ The value accrues over months. The video is five minutes and the deck allocates 
 
 Feedback Capture records audio from 13–17-year-olds. The brief mentions PDPA once, in passing, as something to *"also address in slides."* That is not a position.
 
-**Resolution.** `architecture.md` §8: transcribe → extract structured preferences → **discard the audio**; retain the transcript only on explicit opt-in; parental consent established at setup as a precondition for any collection. Pending confirmation of PDPC guidance on minors' consent (see §D).
+**Resolution.** PDPC guidance is fetched and quoted in `sources.md` §G2. The PoC is now text-only. A future audio adapter must name its STT processor, obtain teen + parent consent, transcribe → extract structured preferences → **discard the audio**, retain the transcript only on explicit opt-in, and pass a deletion test.
 
 ---
 
@@ -342,10 +342,10 @@ So narrowing the problem statement does not resolve the tension — **it relocat
 
 **Recommended resolution — one metric moves, nothing is lost.** Promote a metric that measures the *narrow* claim to headline, and keep the longitudinal set as supporting evidence for the roadmap:
 
-- **New headline:** *time-and-actions to a first attended session at S$0*, agent vs static baseline. It measures exactly what the narrow statement promises, and the counterfactual arm still does the work.
+- **New headline:** *first attendance within 30 days at S$0*, including calendar time and teen-side actions, agent vs static baseline. It measures exactly what the narrow statement promises, and the counterfactual arm still does the work.
 - **Demoted to supporting:** B14, B11, B12 — reframed on the slide as *"and here is what the same policy does over twelve months"*, which is the roadmap argument rather than the effectiveness claim.
 
-**Resolution (D3b).** Adopted as recommended. **B15 — time-and-actions to a first attended session at S$0** is the headline; B14, B11 and B12 stay in the report as supporting evidence for the roadmap slide. `evaluation.md` §3.3, §5 and §7 all updated. Slide 2 and the headline metric now measure the same thing.
+**Resolution (D3b).** Adopted and made calendar-bound after PR review. **B15 — first attendance within 30 days at S$0, including time and teen-side actions** is the headline; B14, B11 and B12 stay in the report as supporting evidence for the roadmap slide. `evaluation.md` §3.3, §5 and §7 all updated. Slide 2 and the headline metric now measure the same thing.
 
 ---
 
@@ -475,13 +475,13 @@ Where the branch and [`architecture.md`](../3-system/architecture.md) currently 
 | **D1** | **A3** — keep the budget-as-portfolio thesis and add the ledger? | **Yes.** `BudgetLedger` in typed state; Planner reads it, Broker decrements it, Observer reconciles it after each outcome. The v1 *Reallocator* stays retired — this needs state, not an agent. | `architecture.md` §5 and §9.1 already carry it; the "assumed pending decision" hedges come out. **A3 closes.** The Originality argument now rests on something that exists in the schema. |
 | **D2** | **A6** — belonging: by what mechanism? | **Cohort presence, not a friend graph.** Aggregate `PeerCohort` on `Listing`: bucketed counts, k-anonymity floor of 5, planning-area level and never school, opt-in to contribute, ranking tiebreak only, absence never shown. | `architecture.md` §9.3 and §5; `project_brief.md` §3.7; invariant **A12**. **A6 closes.** A friend graph would have rebuilt the school social graph the product exists to cross — the privacy-preserving design is also the more effective one. |
 | **D3** | **B7** — how narrow is the problem statement? | **Narrow on outcome, broad on audience** — they are different questions, graded under different criteria. The outcome is *one first attended session*; the audience is every secondary student on limited discretionary money. Statement now leads with **S$0** instead of S$500 of Curiosity Credits, which become the wedge on slides 7 and 9. | `project_brief.md` §1.1 rewritten with the audience/outcome table; §1.2 and §2.1 realigned. **B7 and C1 close.** |
-| **D3b** | **B11** — which metric is the headline? | **B15 — time-and-actions to a first attended session at S$0**, agent vs static baseline. B14 (12-month adherence), B11 and B12 demoted to supporting evidence on the roadmap slide. | `evaluation.md` §3.3, §5, §7. **B11 closes.** Slide 2 and the headline metric now measure the same thing. |
+| **D3b** | **B11** — which metric is the headline? | **B15 — first attendance within 30 days at S$0**, including calendar time and teen-side actions, agent vs static baseline. B14 (12-month adherence), B11 and B12 demoted to supporting evidence on the roadmap slide. | `evaluation.md` §3.3, §5, §7. **B11 closes.** Slide 2 and the headline metric now measure the same thing. |
 | **D4** | Is there a live pitch and Q&A? | **Prepare for one regardless, at second priority.** It only happens if we are promoted, so the order is: sharpen the idea → build the deck → prep Q&A *against* the deck. | Objection sheet comes from `project_brief.md` §7, which already answers the three most likely questions. Rehearsal stays item 7 in `deliverables.md` §11.5. |
 | **D5** | Deadline, upload mechanism, formats | **Team settles directly with the organisers.** No doc dependency. | Still gates the final freeze: project files are **one submission only**, no re-uploads. |
 | **D6** | When do we re-derive the system prompts on `feat/agent-system-prompts`? | **After this source-of-truth branch is reviewed and merged to main.** Team owns the merge flow. | E1's re-derivation checklist stands as written. Regenerate from `architecture.md` §3 rather than editing the branch in place. |
-| **D7** | Trusted adult — and who is the user? | **13–17, both ends, enforced.** No adult mode; 18+ is roadmap. Under-13 refused at intake. A trusted adult is mandatory for **every** user, because every user is a minor. | `architecture.md` §2 carries the boundary and the enforcement; §8 already had the consent position. New invariant **A11**. **Closes E1 item 5** — the branch's "children / career exploration" framing is now definitively wrong. |
+| **D7** | Trusted adult — and who is the user? | **13–17, both ends, enforced at I0.** No adult mode; 18+ is roadmap. Under-13 gets trusted-adult guidance; 18+ gets general-services guidance. A trusted adult is mandatory for every eligible user, because every eligible user is a minor. | `architecture.md` §2 carries the boundary and enforcement; §8 carries consent. Invariant **A11** tests both bounds. **Closes E1 item 5** — the branch's "children / career exploration" framing is definitively wrong. |
 | **D8** | Real integrations, or seed KB + simulated booking? | **Hybrid.** Seed CKB from **real** listings, hand-transcribed, every row carrying `source_url` and a real `verified_at` · Discovery **searches live** over a whitelisted domain set · Broker **sandboxed**, stated on slide 5 · a **cached replay fixture** so the demo never depends on a live call succeeding. No real provider integrations — there is no public booking API for CC courses or ActiveSG, and the payer is a minor. | `architecture.md` §10 confirmed, plus a replay row. **Tripwire below.** |
-| **D9** | Observation channel | **In-app form, behind a channel-agnostic `DebriefSubmission`.** *Revised 31 Aug — the original decision was a Telegram bot.* The interaction still reads like texting a friend, not completing a survey; only the transport changed. | `architecture.md` §3.5, §5, §8, §10. **Reversal reasoning below.** Also removes the last open scope question from the register — the debrief channel is now a build item, not a stretch goal. |
+| **D9** | Observation channel | **In-app text form, behind a channel-agnostic `DebriefSubmission`.** *Revised 31 Aug — the original decision was a Telegram bot; narrowed after PR review.* The interaction still reads like texting a friend. Audio is roadmap until an STT processor, consent path and deletion test are specified. | `architecture.md` §3.5, §5, §8, §10. **Reversal reasoning below.** The text debrief is a build item; audio is not. |
 | **D10** | Cold start | **4–6 vibe chips, multi-select, skippable** — "sporty", "artistic", "chill", "explorative". Five binding rules: skippable with *"Surprise me"* first-class · no label ever shown back · lowest confidence, outranked by the first attended session · biases ranking but never filters · asks *where to start*, not *what you are like*. | **Reconciles the collision with §6.1.** The line is now stated in the docs rather than implied: **seeding is permitted, typing is not.** `project_brief.md` §6.1 carries the distinction table, `architecture.md` §3.1 the five rules, `user_stories.md` the reworded story. New invariants **A9** (seeds and dislikes never change candidate-set membership) and **A10** (a skipped cold start still yields a viable plan). |
 | **D11** | Model *dislike* explicitly? | **Yes, with decay.** A dislike is a signed, timestamped, confidence-weighted signal on a preference axis — **never a blocklist entry.** Something disliked at 14 can be liked at 16, and the model has to allow that. | **Specified 31 Aug.** `DislikeSignal` in `architecture.md` §5 with a 90-day half-life and a 0.15 floor; Observer attributes `activity` / `instance` / `unattributed` (§3.5); an axis moves only on **two** corroborating `activity` signals. Ranking-only, tested as invariant **A9**. |
 
@@ -489,14 +489,31 @@ Where the branch and [`architecture.md`](../3-system/architecture.md) currently 
 
 **D9 reversal, recorded rather than rewritten.** The first decision on 31 Aug was a Telegram bot, on the reasoning that a message gets answered and an app has to be opened. Three things overturned it the same day:
 
-1. **It would have undermined invariant A8.** `architecture.md` §8 builds the minors-data position on transcribe → extract → **discard the audio**. Routed through a third-party messenger, the voice note sits on someone else's servers before our code sees it. A8 would remain technically true and become misleading about the actual data flow — worse than not claiming it at all.
+1. **It would have undermined invariant A8.** A third-party messenger would hold a minor's submission before our code sees it. The review then exposed a second problem: the PoC stack named no STT component at all. A8 now enforces a text-only PoC; audio remains roadmap until its full processor and deletion path exists.
 2. **It added a second live network dependency to the demo**, immediately after **D8** added a cached replay specifically to remove one. Two network paths at judging time, for a non-core feature, against requirement 8.4.1.
 3. **A third-party platform sets its own minimum age**, and **D7** fixed our cohort at 13–17. That is a compliance question, not a preference. *(Unverified — check the ToS before any future adapter ships.)*
 
 **What was not lost.** "Telegram is where the teens are" was about *supply* — Discovery reading public groups (`project_brief.md` §5.2) — which is a different path and unaffected. Attendance, no-shows and `hold_this_week` never depended on the debrief channel. The response-rate bet is real but unmeasurable in four days, so it belongs on the roadmap slide either way.
 
-**The good part survived:** the register. One open question, an optional voice note, no star ratings. The instinct was right; the transport was wrong.
+**The good part survived:** the register. One open text question, no star ratings. The instinct was right; the transport and audio scope were wrong.
 
 ---
 
-**Source verification** — the four items `sources.md` §J flags as load-bearing, plus the CCA citation from **C9**: National Youth Survey 2025, NCSS QoL Survey 2025, MOE on CCAs/LEAPS, the IMDA framework PDF, and one sports-science citation for the maturation argument. Verification is in progress; results land in `sources.md`.
+**Source verification** — the original priority list is closed; `sources.md` §J records the remaining tasks. The two review-triggered items are verifying whether Discover is actually the sign-up channel for the 20,000 opportunities and validating the adult-coordination insight in interviews.
+
+---
+
+## F. PR #2 review follow-up
+
+The external review on PR #2 found a second layer of cross-document defects after the original 33-row register closed. These are corrections to the chosen design, not new product decisions.
+
+| Review findings | Resolution |
+|---|---|
+| 1, 12–14 | v2.2 HTML/PNG use I0 plus ◆1–◆4; consent and approval are separate; prose no longer describes v1 |
+| 2, 4, 7–9, 15–16, 24–25 | Eligible and boundary test populations split; Guardian cap fixed at two; B15 has a 30-day window; metric sources and completion classes named |
+| 3, 5–6, 26 | Replacement plans re-enter Guardian; complete store ACL added; setup owns seed writes; simulated cohort producer named |
+| 10, 17, 20–22 | Problem evidence and official-deck attribution corrected; stale source rows and citation errors removed |
+| 11, 18, 23 | Text-only PoC debrief; pip-based judge path; comparison/share scope reduced or deferred |
+| 19 and review nits | Severity totals, schema names, persistent checkpointer, decision count, slide count and hackathon-source count corrected |
+
+The review's positive link check remains true: all 81 relative links at the PR head resolved before these edits. The v2.2 pass now checks 84 relative links, all resolving. Link integrity is rechecked after every documentation change.
