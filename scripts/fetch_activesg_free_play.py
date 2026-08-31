@@ -163,6 +163,7 @@ def main() -> int:
     ap.add_argument("--out", type=Path, default=ROOT / "data" / "draft_free_play.csv")
     ap.add_argument("--delay", type=float, default=1.0, help="seconds between detail fetches")
     args = ap.parse_args()
+    args.out = args.out.resolve()
 
     zones = [z.strip() for z in args.zone.split(",")] if args.zone else ZONES
 
@@ -197,7 +198,7 @@ def main() -> int:
     with_hours = sum(1 for r in rows if r["open_hours_note"] != "not stated on page")
     with_postal = sum(1 for r in rows if r["postal_code"])
     schools = sum(1 for r in rows if r["provider_type"] == "school")
-    print(f"\n  wrote {args.out.relative_to(ROOT)} — {len(rows)} draft rows")
+    print(f"\n  wrote {args.out.relative_to(ROOT) if args.out.is_relative_to(ROOT) else args.out} — {len(rows)} draft rows")
     print(f"    {with_hours}/{len(rows)} have opening hours")
     print(f"    {with_postal}/{len(rows)} have a postal code")
     print(f"    {schools} school fields (provider_type=school), "

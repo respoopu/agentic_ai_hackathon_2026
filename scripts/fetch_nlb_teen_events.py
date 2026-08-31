@@ -176,6 +176,7 @@ def main() -> int:
     ap.add_argument("--out", type=Path, default=ROOT / "data" / "draft_nlb.csv")
     ap.add_argument("--include-past", action="store_true")
     args = ap.parse_args()
+    args.out = args.out.resolve()
 
     print("  fetching nlb.libcal.com, audience = Teenagers (13-17 yo)...")
     events = [e for e in fetch_all() if is_teen_tagged(e)]
@@ -215,7 +216,7 @@ def main() -> int:
     for e in events:
         by_campus[e.get("campus") or "?"] = by_campus.get(e.get("campus") or "?", 0) + 1
 
-    print(f"\n  wrote {args.out.relative_to(ROOT)} — {len(rows)} draft rows\n")
+    print(f"\n  wrote {args.out.relative_to(ROOT) if args.out.is_relative_to(ROOT) else args.out} — {len(rows)} draft rows\n")
     for campus, n in sorted(by_campus.items(), key=lambda kv: -kv[1]):
         print(f"    {n:3}  {campus}")
 
