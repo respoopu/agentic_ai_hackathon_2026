@@ -487,11 +487,18 @@ def main() -> int:
         if n > 1:
             errors.append(f"  duplicate listing_id {lid!r} appears {n} times")
 
-    print(f"\n  {len(records)} rows read from {args.sheet.name}")
+    n_quarantine = sum(1 for r in records if r.get("is_fictional"))
+    n_ok = len(records) - n_quarantine
+    print(
+        f"\n  {args.sheet.name}: {n_ok} rows accepted, {len(errors)} rejected"
+        f"  (+{n_quarantine} quarantine)"
+    )
 
     if errors:
-        print(f"\n  {len(errors)} rows rejected\n")
-        print("\n".join(errors))
+        print()
+        print("\n".join(errors[:25]))
+        if len(errors) > 25:
+            print(f"  ... and {len(errors) - 25} more")
 
     print("\n  coverage\n  " + "-" * 62)
     passed = 0
