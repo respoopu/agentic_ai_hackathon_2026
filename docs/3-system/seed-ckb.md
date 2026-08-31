@@ -99,7 +99,7 @@ copied straight off the page.
 |---|---|
 | `venue_name` | Where you'd physically turn up. |
 | `postal_code` | Six digits. The first two become the postal sector. |
-| `planning_area` | URA planning area: `Toa Payoh`, `Jurong West`, `Hougang`. |
+| `planning_area` | URA planning area: `Jurong West`, `Punggol`, `Bishan`. See §5. |
 | `nearest_mrt` | Optional but useful. |
 
 **There is no travel-time column, on purpose.** See §6.
@@ -179,12 +179,36 @@ This is also what a real product does. *"We seeded one town properly"* is a
 better answer to *"how would you scale this?"* than thin islandwide coverage —
 you point at the area you did and say it took four people one evening.
 
-**Sequencing note.** Check supply *before* pinning the persona. Look at two or
-three candidate areas, see which genuinely has six free Saturday things for
-teens, and only then decide where the primary persona lives. Her address is
-currently unwritten in [`project_brief.md`](../2-product/project_brief.md) §2.1,
-which is lucky — pick the area from the data rather than picking it first and
-hoping the data cooperates.
+### Which area — this has now been checked
+
+Three candidate areas were swept before pinning anything. **Jurong West /
+Jurong East / Clementi wins, and not narrowly.** It is the only candidate where
+all four supply tiers were verified present:
+
+| | **Jurong (west)** | Punggol / Hougang (NE) | Toa Payoh / Bishan (central) |
+|---|---|---|---|
+| NLB teen-tagged events | **19** | 24, but nearly all in Punggol | **3** |
+| NParks free programming | **Yes** — one of ~4 sites islandwide | **Zero** | Zero |
+| Free school fields | 9 | 10 | 9 |
+| Free CC interest groups | **5 verified** | unknown (source blocked) | unknown |
+| Youth drop-in centre | **Yes** | AMK only, Tue/Fri | No |
+| Major closures | — | AMK Library relocating | **Sport centre + town park, both to 2030** |
+
+Jurong Lake Gardens is the single strongest free asset found anywhere in the
+sweep: a 17,000 m² skatepark with a learn-to-skate pod, parkour park and
+bouldering wall, free, open Tue–Sun 8am–10pm, plus free monthly guided walks
+with published dates and four recurring volunteer slots.
+
+Punggol has more library events but **zero** NParks programming and an
+unreadable CC tier. Toa Payoh is disqualified: it has lost its main sports
+centre *and* its main park until 2030, and has one teen-tagged library event.
+
+So: **deep area Jurong West, second Punggol, third Bishan.** And the primary
+persona lives in Jurong West — her address is still unwritten in
+[`project_brief.md`](../2-product/project_brief.md) §2.1, so pin it there.
+
+**This is the sequencing point, done properly.** The area was picked from the
+supply data rather than picked first and hoped over.
 
 **Split by provider family, not by row count.** One person learns
 pa.gov.sg, one learns ActiveSG, one learns NLB and NParks — each learns one
@@ -263,12 +287,13 @@ search result.
 | Domain | Status | What to do |
 |---|---|---|
 | **`nlb.libcal.com`** | **Open JSON API** | Automated. `scripts/fetch_nlb_teen_events.py` already pulls it. |
-| `activesgcircle.gov.sg` | 200, fetchable HTML | Facilities, rates, and a `free-to-play` category. Semi-automatable. |
+| **`activesgcircle.gov.sg`** | **Server-rendered, zone-filterable** | Automated. `scripts/fetch_activesg_free_play.py` pulls the free-to-play tier. |
+| `nparks.gov.sg/visit/events/EventList/` | POST form, returns HTML cards | Scriptable. 135 events, 99 free — but see the geography warning below. |
 | `activesg.gov.sg` | **403 to everything** | Human with a browser. No workaround found. |
 | `onepa.gov.sg` | **Bot-protected** | Human with a browser. See the warning below. |
 | `pa.gov.sg` | Renders, but it is a nav hub | Not a listings source. Follow through to onePA. |
 | `nlb.gov.sg` | JS shell, zero content | Ignore it entirely — use libcal. |
-| `nparks.gov.sg` | Park pages fetch; event listings are JS | Static pages by script, events by hand. |
+| `members.myactivesg.com` | 403 | Human with a browser. |
 
 ### The NLB unlock
 
@@ -337,3 +362,35 @@ Two real closures turned up that beat a staged one for adversarial scenario 4:
   centre and its main park for the rest of the decade.
 
 A real listing that really died is a better demo than one we killed on purpose.
+
+### The free-to-play tier, and the demo moment
+
+`scripts/fetch_activesg_free_play.py` pulls ActiveSG's free-to-play directory,
+zone by zone, and follows each detail page for opening hours. **28 free
+facilities across west, north-east and central — every one with a postal code
+and real hours.** They are school fields opened to the public under the Dual
+Use Scheme, which is also the `school` provider type that looked hardest to
+fill.
+
+Then the finding that matters:
+
+> **All 28 are weekend-only.** Twenty-five are Sat 3–7pm and Sun 9am–7pm, two
+> are Saturday only, one is Sat and Sun 3–7pm. **Not one opens on a weekday.**
+
+So adversarial scenario 2 — *"nothing free within 15 minutes on a weekday
+evening; widening to Saturday opens 6 options"* — is **not a scenario we
+constructed to make the demo work.** It is the actual shape of free supply in
+Singapore, confirmed at n=28. Demo it as a finding, not as a feature.
+
+### Two data-quality warnings for whoever verifies
+
+**NLB's own audience tag is not always right.** One event tagged
+*Teenagers (13-17 yo)* in the calendar has a body stating the programme serves
+ages 18–60. So the 129 drafted rows need their age confirmed by a human, not
+trusted from the tag — which is why the script leaves them unverified.
+
+**NParks programming is geographically concentrated.** All 135 upcoming events
+were pulled and filtered against the north-east towns: **zero hits.** Free
+NParks events happen at the Botanic Gardens, Fort Canning, Sungei Buloh and
+Jurong Lake Gardens, and essentially nowhere else. That is a point in Jurong's
+favour and a reason not to assume park programming exists near any given teen.
