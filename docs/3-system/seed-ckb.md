@@ -1,10 +1,19 @@
 # Seed CKB — the transcription contract
 
-*Version 1.0 · 31 Aug 2026 · owner: unassigned*
+*Version 1.1 · 1 Sep 2026 · owner: unassigned*
 
 Hobbi is a very good librarian standing in an empty library. Every agent in
-[`architecture.md`](./architecture.md) reasons *about* activities, and there are
-currently zero activities in the system. This document is how that gets fixed.
+[`architecture.md`](./architecture.md) reasons *about* activities. The schema,
+builder, loader boundary, quarantine fixtures and 157 sourced drafts now exist;
+the committed build artifact still has zero real rows until selected drafts are
+completed and promoted into `data/seed_ckb.csv`.
+
+> **Integration assumption (1 Sep).** For PR #3 reconciliation, the factual
+> content already present in the draft files is accepted as provisionally
+> accurate. This avoids blocking schema and loader work on another research
+> pass. It does **not** invent missing fields or relabel an unsigned row as
+> `verified`; slide-facing claims and final rows still follow the vetting tasks
+> in [`outstanding.md`](../5-delivery/outstanding.md).
 
 **The job:** about 45 real activities for 13–17 year olds, transcribed by hand
 from pages someone actually opened, plus 10 invented ones for the vetting demo.
@@ -50,11 +59,15 @@ then:
 python3 scripts/build_ckb.py                 # validate + build data/seed_ckb.json
 python3 scripts/build_ckb.py --coverage-only # just the gap report
 python3 scripts/build_ckb.py --check-urls    # HEAD every source_url
+python3 scripts/build_ckb.py --allow-incomplete # local development only
 ```
 
 Stdlib only — it runs on a clean laptop with nothing installed. It refuses
 badly-sourced rows and then prints which coverage cells are still empty, named
-against the test that needs them.
+against the test that needs them. By default it does not write an incomplete
+artifact; `--allow-incomplete` is an explicit local-development escape hatch.
+When Pydantic is installed it also validates the full executable schema before
+writing, and a failure never leaves a malformed artifact behind.
 
 `--check-urls` distinguishes a **dead** link (404/410 — fix or drop the row)
 from an **unchecked** one (403, timeout — several government sites block
@@ -69,7 +82,7 @@ in front of the id so the validator skips them; delete them when you start.
 
 ## 3. The columns
 
-Thirty-two of them, which sounds worse than it is — most rows are `0`, `yes` or
+Thirty-four of them, which sounds worse than it is — most rows are `0`, `yes` or
 copied straight off the page.
 
 ### Identity and provenance
@@ -122,7 +135,7 @@ Three shapes. Fill only the columns your shape needs:
 |---|---|---|
 | `weekly` | `weekday`, `start_time` (24h), `duration_min`, `first_session`, `num_sessions` | A course. **Don't type eight separate Tuesdays** — the loader expands them. |
 | `fixed_dates` | `fixed_dates`, pipe-separated `2026-09-13T14:00\|2026-09-27T14:00` | One-off workshops. |
-| `drop_in` | `open_hours_note`, free text | A court, a park, a fitness corner. Opening hours are written a hundred ways and none of them need parsing. |
+| `drop_in` | `open_hours_note`, free text; `weekday_evening_available` and `weekend_available`, yes/no | A court, a park, a fitness corner. The exact booleans prevent scenario 2 from being inferred unreliably from free text. |
 
 ### Two columns that exist for the evaluation
 
@@ -237,7 +250,7 @@ That works with one persona. It breaks with twelve across three regions
 ([`evaluation.md`](./evaluation.md) §6.1), because a stored row cannot carry a
 travel time that differs per reader.
 
-`src/schema/listing.py` splits them:
+`src/schema/listing.py` and [`architecture.md`](./architecture.md) §5 split them:
 
 - **`ListingRecord`** — what you transcribe, what lives in `seed_ckb.json`.
   Location only, no distance.
@@ -248,11 +261,17 @@ Two smaller consequences: `Schedule` replaces `next_sessions: list[datetime]`
 as the stored form, and **`in_incumbent_directory` is new** — B9 was previously
 unmeasurable because no field recorded it.
 
-> **This is an edit to `architecture.md` §5 that has not been made yet.** PR #2
-> is open and under review by three people; dropping a schema change into a
-> review already in progress is worse than landing it here, where the CKB that
-> proves the field wrong sits next to the fix. Fold §5 and the §13 delta table
-> into this branch once #2 merges.
+The boundary is executable in two places:
+
+- `scripts/build_ckb.py` validates the CSV plus quarantine fixtures and emits
+  the immutable `data/seed_ckb.json` artifact.
+- `src/ckb/seed_loader.py` atomically validates that artifact, expands structured
+  schedules, and hydrates teen-relative travel/cohort fields without granting
+  Planner write access.
+
+The v2.2 architecture §5 and §13 checklist now carry the same contract. No
+structural diagram change is needed because it already shows the build-time
+seed writer; stored-versus-hydrated schema detail belongs in prose.
 
 ---
 

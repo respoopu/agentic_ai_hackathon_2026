@@ -32,6 +32,7 @@ from collections import Counter, defaultdict
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
 SHEET = ROOT / "data" / "seed_ckb.csv"
@@ -42,22 +43,57 @@ AGE_FLOOR, AGE_CEILING = 13, 17
 STALE_AFTER_DAYS = 30
 
 PROVIDER_TYPES = {
-    "cc", "activesg", "third_space", "school",
-    "commercial", "informal", "private_unverified",
+    "cc",
+    "activesg",
+    "third_space",
+    "school",
+    "commercial",
+    "informal",
+    "private_unverified",
 }
 VIBES = {"sporty", "artistic", "chill", "explorative"}
 WEEKDAYS = {"mon", "tue", "wed", "thu", "fri", "sat", "sun"}
+WEEKDAY_INDEX = {
+    day: index
+    for index, day in enumerate(("mon", "tue", "wed", "thu", "fri", "sat", "sun"))
+}
 COMMITMENTS = {"taster", "one_off", "short_course", "term"}
 
 COLUMNS = [
-    "listing_id", "title", "provider", "provider_type",
-    "source_url", "verified_at", "verified_by", "verification",
-    "cost_one_off_sgd", "cost_recurring_sgd", "equipment_cost_sgd",
-    "venue_name", "postal_code", "planning_area", "nearest_mrt",
-    "age_min", "age_max", "beginner_friendly", "join_alone_ok", "guest_allowed",
-    "commitment", "schedule_kind", "weekday", "start_time", "duration_min",
-    "first_session", "num_sessions", "fixed_dates", "open_hours_note",
-    "vibes", "in_incumbent_directory", "notes",
+    "listing_id",
+    "title",
+    "provider",
+    "provider_type",
+    "source_url",
+    "verified_at",
+    "verified_by",
+    "verification",
+    "cost_one_off_sgd",
+    "cost_recurring_sgd",
+    "equipment_cost_sgd",
+    "venue_name",
+    "postal_code",
+    "planning_area",
+    "nearest_mrt",
+    "age_min",
+    "age_max",
+    "beginner_friendly",
+    "join_alone_ok",
+    "guest_allowed",
+    "commitment",
+    "schedule_kind",
+    "weekday",
+    "start_time",
+    "duration_min",
+    "first_session",
+    "num_sessions",
+    "fixed_dates",
+    "open_hours_note",
+    "vibes",
+    "in_incumbent_directory",
+    "notes",
+    "weekday_evening_available",
+    "weekend_available",
 ]
 
 TRUE = {"yes", "y", "true", "1"}
@@ -71,6 +107,7 @@ class RowError(Exception):
 # --------------------------------------------------------------------------
 # field parsers
 # --------------------------------------------------------------------------
+
 
 def _bool(v: str, field: str) -> bool:
     s = (v or "").strip().lower()
@@ -106,7 +143,9 @@ def _int(v: str, field: str, required: bool = True) -> int | None:
         raise RowError(f"{field}: not a whole number: {v!r}")
 
 
-def _date(v: str, field: str, required: bool = True, allow_future: bool = False) -> str | None:
+def _date(
+    v: str, field: str, required: bool = True, allow_future: bool = False
+) -> str | None:
     s = (v or "").strip()
     if not s:
         if required:
@@ -142,6 +181,7 @@ def _one_of(v: str, allowed: set[str], field: str) -> str:
 # --------------------------------------------------------------------------
 # row -> record
 # --------------------------------------------------------------------------
+
 
 def parse_row(raw: dict[str, str], line_no: int) -> dict:
     def g(k: str) -> str:
@@ -185,7 +225,9 @@ def parse_row(raw: dict[str, str], line_no: int) -> dict:
             raise RowError(f"{field}: required")
 
     if not rec["source_url"].startswith(("http://", "https://")):
-        raise RowError(f"source_url: must be a full http(s) URL, got {rec['source_url']!r}")
+        raise RowError(
+            f"source_url: must be a full http(s) URL, got {rec['source_url']!r}"
+        )
 
     pc = rec["postal_code"]
     if not (len(pc) == 6 and pc.isdigit()):
@@ -226,7 +268,9 @@ def parse_row(raw: dict[str, str], line_no: int) -> dict:
 
 
 def parse_schedule(g, raw: dict[str, str]) -> dict:
-    kind = _one_of(g("schedule_kind"), {"weekly", "fixed_dates", "drop_in"}, "schedule_kind")
+    kind = _one_of(
+        g("schedule_kind"), {"weekly", "fixed_dates", "drop_in"}, "schedule_kind"
+    )
     s: dict = {"kind": kind}
 
     if kind == "weekly":
@@ -237,9 +281,18 @@ def parse_schedule(g, raw: dict[str, str]) -> dict:
             g("first_session"), "first_session", required=False, allow_future=True
         )
         s["num_sessions"] = _int(g("num_sessions"), "num_sessions", required=False)
-        for f in ("start_time", "first_session", "num_sessions"):
+        for f in ("start_time", "duration_min", "first_session", "num_sessions"):
             if s[f] is None:
                 raise RowError(f"{f}: required when schedule_kind=weekly")
+        if s["duration_min"] <= 0:
+            raise RowError("duration_min: must be greater than zero")
+        if s["num_sessions"] <= 0:
+            raise RowError("num_sessions: must be greater than zero")
+        first_day = date.fromisoformat(s["first_session"])
+        if first_day.weekday() != WEEKDAY_INDEX[s["weekday"]]:
+            raise RowError(
+                f"first_session: {first_day} is not a declared {s['weekday']}"
+            )
     elif kind == "fixed_dates":
         dates = [d.strip() for d in g("fixed_dates").split("|") if d.strip()]
         if not dates:
@@ -256,12 +309,17 @@ def parse_schedule(g, raw: dict[str, str]) -> dict:
         if not g("open_hours_note"):
             raise RowError("open_hours_note: required when schedule_kind=drop_in")
         s["open_hours_note"] = g("open_hours_note")
+        for field in ("weekday_evening_available", "weekend_available"):
+            if not g(field):
+                raise RowError(f"{field}: required when schedule_kind=drop_in")
+            s[field] = _bool(g(field), field)
     return s
 
 
 # --------------------------------------------------------------------------
 # derived helpers
 # --------------------------------------------------------------------------
+
 
 def is_free(rec: dict) -> bool:
     return all(
@@ -272,21 +330,27 @@ def is_free(rec: dict) -> bool:
 
 def is_weekday_evening(rec: dict) -> bool:
     s = rec["schedule"]
+    if s["kind"] == "drop_in":
+        return s["weekday_evening_available"]
     if s["kind"] != "weekly" or not s.get("start_time"):
         return False
-    return s["weekday"] in {"mon", "tue", "wed", "thu", "fri"} and s["start_time"] >= "17:00"
+    return (
+        s["weekday"] in {"mon", "tue", "wed", "thu", "fri"}
+        and s["start_time"] >= "17:00"
+    )
 
 
 def is_weekend(rec: dict) -> bool:
     s = rec["schedule"]
-    return s["kind"] in ("weekly", "drop_in") and (
-        s.get("weekday") in {"sat", "sun"} or s["kind"] == "drop_in"
-    )
+    if s["kind"] == "drop_in":
+        return s["weekend_available"]
+    return s["kind"] == "weekly" and s.get("weekday") in {"sat", "sun"}
 
 
 # --------------------------------------------------------------------------
 # coverage report
 # --------------------------------------------------------------------------
+
 
 def coverage(records: list[dict]) -> list[tuple[str, bool, str]]:
     """Each check names the doc requirement it exists to satisfy."""
@@ -318,15 +382,22 @@ def coverage(records: list[dict]) -> list[tuple[str, bool, str]]:
     )
 
     thin = {
-        a: len([r for r in rows if is_free(r) and r["beginner_friendly"] and r["join_alone_ok"]])
+        a: len(
+            [
+                r
+                for r in rows
+                if is_free(r) and r["beginner_friendly"] and r["join_alone_ok"]
+            ]
+        )
         for a, rows in by_area.items()
     }
     short = {a: n for a, n in thin.items() if n < 3}
     check(
         "A3 · >=3 free, beginner, join-alone per area",
         not short and bool(thin),
-        ("no rows yet" if not thin else "all areas clear") if not short else "short: "
-        + ", ".join(f"{a} has {n}" for a, n in sorted(short.items())),
+        ("no rows yet" if not thin else "all areas clear")
+        if not short
+        else "short: " + ", ".join(f"{a} has {n}" for a, n in sorted(short.items())),
     )
 
     ev = [r for r in deep_free if is_weekday_evening(r)]
@@ -371,7 +442,8 @@ def coverage(records: list[dict]) -> list[tuple[str, bool, str]]:
     check(
         "D10 · all four vibes in the deep area",
         deep_vibes == VIBES,
-        f"{deep or '-'} has {sorted(deep_vibes) or 'none'}; missing {sorted(VIBES - deep_vibes) or 'none'}",
+        f"{deep or '-'} has {sorted(deep_vibes) or 'none'}; "
+        f"missing {sorted(VIBES - deep_vibes) or 'none'}",
     )
 
     ptypes = Counter(r["provider_type"] for r in real)
@@ -380,7 +452,9 @@ def coverage(records: list[dict]) -> list[tuple[str, bool, str]]:
     check(
         "provider-type spread",
         not gaps,
-        "all types covered" if not gaps else "short: "
+        "all types covered"
+        if not gaps
+        else "short: "
         + ", ".join(f"{t} {have}/{n}" for t, (have, n) in sorted(gaps.items())),
     )
 
@@ -391,7 +465,11 @@ def coverage(records: list[dict]) -> list[tuple[str, bool, str]]:
     )
 
     cutoff = date.today() - timedelta(days=STALE_AFTER_DAYS)
-    stale = [r for r in real if r["verified_at"] and date.fromisoformat(r["verified_at"]) < cutoff]
+    stale = [
+        r
+        for r in real
+        if r["verified_at"] and date.fromisoformat(r["verified_at"]) < cutoff
+    ]
     check(
         f"freshness · verified within {STALE_AFTER_DAYS} days",
         not stale,
@@ -404,6 +482,7 @@ def coverage(records: list[dict]) -> list[tuple[str, bool, str]]:
 # --------------------------------------------------------------------------
 # url checking
 # --------------------------------------------------------------------------
+
 
 def check_urls(records: list[dict]) -> tuple[list[str], list[str]]:
     """Returns (dead, unchecked). A 403 is not a dead link — gov sites block bots."""
@@ -433,10 +512,18 @@ def check_urls(records: list[dict]) -> tuple[list[str], list[str]]:
 
 # --------------------------------------------------------------------------
 
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--check-urls", action="store_true", help="HEAD every source_url")
-    ap.add_argument("--coverage-only", action="store_true", help="report gaps, write nothing")
+    ap.add_argument(
+        "--coverage-only", action="store_true", help="report gaps, write nothing"
+    )
+    ap.add_argument(
+        "--allow-incomplete",
+        action="store_true",
+        help="write a structurally valid artifact even when coverage checks have gaps",
+    )
     ap.add_argument("--sheet", type=Path, default=SHEET)
     args = ap.parse_args()
 
@@ -473,11 +560,14 @@ def main() -> int:
             r["is_fictional"] = True
             if r.get("verification") != "unverified":
                 errors.append(
-                    f"  quarantine {r.get('listing_id')}: must be verification='unverified'"
+                    f"  quarantine {r.get('listing_id')}: "
+                    "must be verification='unverified'"
                 )
-            if not str(r.get("source_url", "")).split("/")[2].endswith(".invalid"):
+            hostname = urlsplit(str(r.get("source_url", ""))).hostname or ""
+            if not hostname.endswith(".invalid"):
                 errors.append(
-                    f"  quarantine {r.get('listing_id')}: source_url must use the reserved "
+                    f"  quarantine {r.get('listing_id')}: source_url must use the "
+                    "reserved "
                     ".invalid TLD so it can never resolve to a real business"
                 )
         records.extend(fake)
@@ -502,10 +592,11 @@ def main() -> int:
 
     print("\n  coverage\n  " + "-" * 62)
     passed = 0
-    for label, ok, detail in coverage(records):
+    coverage_results = coverage(records)
+    for label, ok, detail in coverage_results:
         print(f"  {'PASS' if ok else 'GAP '}  {label:<42} {detail}")
         passed += ok
-    total = len(coverage(records))
+    total = len(coverage_results)
     print("  " + "-" * 62)
     print(f"  {passed}/{total} coverage checks pass")
 
@@ -513,11 +604,15 @@ def main() -> int:
         print("\n  checking links...")
         dead, unchecked = check_urls(records)
         if dead:
-            print(f"\n  {len(dead)} DEAD links — these must be fixed or the rows dropped:")
+            print(
+                f"\n  {len(dead)} DEAD links — these must be fixed or the rows dropped:"
+            )
             print("\n".join(f"    {d}" for d in dead))
         if unchecked:
-            print(f"\n  {len(unchecked)} could not be checked automatically (bot-blocked "
-                  "or flaky) — open these by hand:")
+            print(
+                f"\n  {len(unchecked)} could not be checked automatically (bot-blocked "
+                "or flaky) — open these by hand:"
+            )
             print("\n".join(f"    {u}" for u in unchecked))
         if not dead and not unchecked:
             print("  all links resolve")
@@ -527,26 +622,39 @@ def main() -> int:
         print(f"\n  not writing {OUT.name} — fix the rejected rows first\n")
         return 1
 
-    if args.coverage_only:
-        print()
-        return 0
-
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(records, indent=2, ensure_ascii=False) + "\n")
-    print(f"\n  wrote {OUT.relative_to(ROOT)} ({len(records)} listings)")
-
+    # Run the executable schema contract before writing so a failed conformance
+    # pass can never leave a malformed build artifact behind.
     try:  # optional tighter pass, once the agent env is installed
         sys.path.insert(0, str(ROOT))
         from src.schema.listing import ListingRecord  # noqa: PLC0415
 
         for r in records:
             ListingRecord.model_validate(r)
-        print("  pydantic conformance: OK")
+        print("\n  pydantic conformance: OK")
     except ImportError:
-        print("  pydantic not installed — skipped conformance pass (structural checks ran)")
+        print(
+            "\n  pydantic not installed — skipped conformance pass "
+            "(structural checks ran)"
+        )
     except Exception as e:  # noqa: BLE001
-        print(f"  pydantic conformance FAILED: {e}")
+        print(f"\n  pydantic conformance FAILED: {e}")
+        print(f"  not writing {OUT.name}\n")
         return 1
+
+    if args.coverage_only:
+        print()
+        return 0 if passed == total else 1
+
+    if passed != total and not args.allow_incomplete:
+        print(
+            f"\n  not writing {OUT.name} — coverage is incomplete "
+            "(use --allow-incomplete only for local development)\n"
+        )
+        return 1
+
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text(json.dumps(records, indent=2, ensure_ascii=False) + "\n")
+    print(f"\n  wrote {OUT.relative_to(ROOT)} ({len(records)} listings)")
 
     print()
     return 0

@@ -22,7 +22,14 @@ from datetime import date, datetime, time
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    HttpUrl,
+    field_validator,
+    model_validator,
+)
 
 # The cohort boundary is a consent boundary, not a preference (D7).
 AGE_FLOOR = 13
@@ -42,6 +49,16 @@ ProviderType = Literal[
 # used to filter: it biases nothing at runtime. See D10's five rules and A9.
 Vibe = Literal["sporty", "artistic", "chill", "explorative"]
 
+_WEEKDAY_INDEX = {
+    "mon": 0,
+    "tue": 1,
+    "wed": 2,
+    "thu": 3,
+    "fri": 4,
+    "sat": 5,
+    "sun": 6,
+}
+
 
 class Schedule(BaseModel):
     """When the thing happens.
@@ -55,40 +72,72 @@ class Schedule(BaseModel):
     # kind == "weekly"
     weekday: Literal["mon", "tue", "wed", "thu", "fri", "sat", "sun"] | None = None
     start_time: time | None = None
-    duration_min: int | None = None
+    duration_min: int | None = Field(default=None, ge=1)
     first_session: date | None = None
-    num_sessions: int | None = None
+    num_sessions: int | None = Field(default=None, ge=1)
 
     # kind == "fixed_dates"
     fixed_dates: list[datetime] = Field(default_factory=list)
 
     # kind == "drop_in" — a court or a park. Free-text because opening hours are
-    # written a hundred different ways and none of them need parsing.
+    # written a hundred different ways. The two booleans below make the exact
+    # evaluation slices explicit rather than attempting to parse that prose.
     open_hours_note: str | None = None
+    weekday_evening_available: bool | None = None
+    weekend_available: bool | None = None
 
     @model_validator(mode="after")
     def _required_fields_per_kind(self) -> Schedule:
         if self.kind == "weekly":
             missing = [
                 f
-                for f in ("weekday", "start_time", "first_session", "num_sessions")
+                for f in (
+                    "weekday",
+                    "start_time",
+                    "duration_min",
+                    "first_session",
+                    "num_sessions",
+                )
                 if getattr(self, f) is None
             ]
             if missing:
                 raise ValueError(f"weekly schedule missing {', '.join(missing)}")
+            assert self.weekday is not None
+            assert self.first_session is not None
+            if self.first_session.weekday() != _WEEKDAY_INDEX[self.weekday]:
+                raise ValueError(
+                    f"first_session {self.first_session} is not a declared "
+                    f"{self.weekday}"
+                )
         elif self.kind == "fixed_dates" and not self.fixed_dates:
             raise ValueError("fixed_dates schedule has no dates")
-        elif self.kind == "drop_in" and not self.open_hours_note:
-            raise ValueError("drop_in schedule needs an open_hours_note")
+        elif self.kind == "drop_in":
+            if not self.open_hours_note:
+                raise ValueError("drop_in schedule needs an open_hours_note")
+            if self.weekday_evening_available is None or self.weekend_available is None:
+                raise ValueError(
+                    "drop_in schedule needs explicit weekday-evening and "
+                    "weekend availability"
+                )
         return self
 
     def is_weekday_evening(self) -> bool:
         """Used by the coverage report to check adversarial scenario 2."""
+        if self.kind == "drop_in":
+            return bool(self.weekday_evening_available)
         if self.kind != "weekly" or self.weekday is None or self.start_time is None:
             return False
-        return self.weekday in ("mon", "tue", "wed", "thu", "fri") and self.start_time >= time(17, 0)
+        return self.weekday in (
+            "mon",
+            "tue",
+            "wed",
+            "thu",
+            "fri",
+        ) and self.start_time >= time(17, 0)
 
     def is_weekend(self) -> bool:
+        if self.kind == "drop_in":
+            return bool(self.weekend_available)
         return self.kind == "weekly" and self.weekday in ("sat", "sun")
 
 
@@ -98,13 +147,13 @@ class ListingRecord(BaseModel):
     Nothing in here depends on who is asking.
     """
 
-    # scripts/build_ckb.py emits a few convenience keys (cost_total_first_session)
-    # that are derived, not authoritative. Ignore rather than reject them.
-    model_config = ConfigDict(extra="ignore")
+    # Stored rows are an inter-component contract. Unknown fields are rejected
+    # so schema drift cannot silently enter the CKB.
+    model_config = ConfigDict(extra="forbid")
 
-    listing_id: str
-    title: str
-    provider: str
+    listing_id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    provider: str = Field(min_length=1)
     provider_type: ProviderType
 
     # --- provenance. The whole set is worthless without these three. ---
@@ -119,17 +168,18 @@ class ListingRecord(BaseModel):
     cost_one_off_sgd: Decimal = Decimal("0")
     cost_recurring_sgd: Decimal = Decimal("0")
     equipment_cost_sgd: Decimal = Decimal("0")
+    cost_total_first_session: Decimal | None = None  # derived and checked below
 
     # --- where. Not how far: that is per-teen, see `Listing`. ---
-    venue_name: str
+    venue_name: str = Field(min_length=1)
     postal_code: str  # 6 digits
     postal_sector: str = ""  # first 2 digits; filled below if not supplied
-    planning_area: str  # URA planning area, e.g. "Toa Payoh"
+    planning_area: str = Field(min_length=1)  # URA planning area, e.g. "Toa Payoh"
     nearest_mrt: str | None = None
 
     # --- who it is for ---
-    age_min: int
-    age_max: int
+    age_min: int = Field(ge=0, le=120)
+    age_max: int = Field(ge=0, le=120)
     beginner_friendly: bool
     join_alone_ok: bool
     guest_allowed: bool
@@ -137,7 +187,7 @@ class ListingRecord(BaseModel):
     commitment: Literal["taster", "one_off", "short_course", "term"]
     schedule: Schedule
 
-    vibes: list[Vibe] = Field(default_factory=list)  # coverage auditing only
+    vibes: list[Vibe] = Field(min_length=1)  # coverage auditing only
     in_incumbent_directory: bool  # is it already on ActiveSG/Skoop/etc? Feeds B9.
 
     last_seen_at: datetime
@@ -186,11 +236,21 @@ class ListingRecord(BaseModel):
         if self.age_min > self.age_max:
             raise ValueError(f"age_min {self.age_min} > age_max {self.age_max}")
 
+        expected_first_cost = self.cost_one_off_sgd + self.equipment_cost_sgd
+        if self.cost_total_first_session is None:
+            self.cost_total_first_session = expected_first_cost
+        elif self.cost_total_first_session != expected_first_cost:
+            raise ValueError(
+                "cost_total_first_session must equal cost_one_off_sgd + "
+                "equipment_cost_sgd"
+            )
+
         # A row nobody 13-17 can attend cannot help any teen, and its presence
         # would make the age-boundary test (A11) pass vacuously.
         if self.age_max < AGE_FLOOR or self.age_min > AGE_CEILING:
             raise ValueError(
-                f"age range {self.age_min}-{self.age_max} cannot overlap {AGE_FLOOR}-{AGE_CEILING}"
+                f"age range {self.age_min}-{self.age_max} cannot overlap "
+                f"{AGE_FLOOR}-{AGE_CEILING}"
             )
 
         # Provenance discipline. "Verified" means a named human, on a named day.
@@ -206,7 +266,18 @@ class ListingRecord(BaseModel):
             if self.verification != "unverified":
                 raise ValueError("fictional rows must be verification='unverified'")
             if self.provider_type != "private_unverified":
-                raise ValueError("fictional rows must be provider_type='private_unverified'")
+                raise ValueError(
+                    "fictional rows must be provider_type='private_unverified'"
+                )
+            if not (self.source_url.host or "").endswith(".invalid"):
+                raise ValueError(
+                    "fictional rows must use a reserved .invalid source URL"
+                )
+
+        if (self.verification == "retired") != (self.freshness_state == "dead"):
+            raise ValueError(
+                "verification='retired' and freshness_state='dead' must change together"
+            )
 
         return self
 
@@ -222,6 +293,12 @@ class PeerCohort(BaseModel):
     same_area: bool
     suppressed: bool
 
+    @model_validator(mode="after")
+    def _protect_small_buckets(self) -> PeerCohort:
+        if self.same_age_band in {"none", "few"} and not self.suppressed:
+            raise ValueError("none/few cohort buckets must be suppressed")
+        return self
+
 
 class Listing(ListingRecord):
     """A `ListingRecord` seen from one teen's position. This is what Planner ranks."""
@@ -230,3 +307,10 @@ class Listing(ListingRecord):
     travel_min_school: int
     peer_cohort: PeerCohort | None = None
     next_sessions: list[datetime] = Field(default_factory=list)
+
+    @field_validator("travel_min_home", "travel_min_school")
+    @classmethod
+    def _non_negative_travel(cls, value: int) -> int:
+        if value < 0:
+            raise ValueError("travel time cannot be negative")
+        return value

@@ -109,9 +109,15 @@ def is_teen_tagged(event: dict) -> bool:
 
 
 def vibes_for(event: dict) -> str:
-    cats = (event.get("categories") or "").lower() + " " + (event.get("title") or "").lower()
+    cats = (
+        (event.get("categories") or "").lower()
+        + " "
+        + (event.get("title") or "").lower()
+    )
     hits = {v for k, v in VIBE_HINTS.items() if k in cats}
-    return "|".join(sorted(hits)) or "explorative"  # a library default a human can correct
+    return (
+        "|".join(sorted(hits)) or "explorative"
+    )  # a library default a human can correct
 
 
 def to_row(event: dict, seq: int) -> dict:
@@ -160,19 +166,25 @@ def to_row(event: dict, seq: int) -> dict:
         "vibes": vibes_for(event),
         "in_incumbent_directory": "no",
         "notes": " · ".join(
-            x for x in [
+            x
+            for x in [
                 f"campus: {event.get('campus') or '?'}",
                 f"categories: {event.get('categories') or '?'}",
                 cost_note,
                 "DRAFT from libcal API — open the link and verify before using",
-            ] if x
+            ]
+            if x
         ),
+        "weekday_evening_available": "",
+        "weekend_available": "",
     }
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--area", help="comma-separated campus filter, e.g. 'Toa Payoh,Bishan'")
+    ap.add_argument(
+        "--area", help="comma-separated campus filter, e.g. 'Toa Payoh,Bishan'"
+    )
     ap.add_argument("--out", type=Path, default=ROOT / "data" / "draft_nlb.csv")
     ap.add_argument("--include-past", action="store_true")
     args = ap.parse_args()
@@ -185,7 +197,8 @@ def main() -> int:
     if args.area:
         wanted = [a.strip().lower() for a in args.area.split(",")]
         events = [
-            e for e in events
+            e
+            for e in events
             if any(w in (e.get("campus") or "").lower() for w in wanted)
         ]
         print(f"  {len(events)} after area filter ({args.area})")
@@ -216,7 +229,10 @@ def main() -> int:
     for e in events:
         by_campus[e.get("campus") or "?"] = by_campus.get(e.get("campus") or "?", 0) + 1
 
-    print(f"\n  wrote {args.out.relative_to(ROOT) if args.out.is_relative_to(ROOT) else args.out} — {len(rows)} draft rows\n")
+    display_path = (
+        args.out.relative_to(ROOT) if args.out.is_relative_to(ROOT) else args.out
+    )
+    print(f"\n  wrote {display_path} — {len(rows)} draft rows\n")
     for campus, n in sorted(by_campus.items(), key=lambda kv: -kv[1]):
         print(f"    {n:3}  {campus}")
 

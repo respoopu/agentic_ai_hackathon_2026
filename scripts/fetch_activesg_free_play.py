@@ -47,8 +47,13 @@ UA = (
 )
 SKIP_SLUGS = {"free-to-play", "individual-rates", "swimming-pools", "search"}
 DAYS = {
-    "mon": "mon", "tue": "tue", "wed": "wed", "thu": "thu",
-    "fri": "fri", "sat": "sat", "sun": "sun",
+    "mon": "mon",
+    "tue": "tue",
+    "wed": "wed",
+    "thu": "thu",
+    "fri": "fri",
+    "sat": "sat",
+    "sun": "sun",
 }
 
 
@@ -66,21 +71,25 @@ def parse_listing(page: str, zone: str) -> list[dict]:
     """Each facility is a `cst-con-grp` block: link, <h2> name, address."""
     out = []
     for block in page.split('<div class="cst-con-grp">')[1:]:
-        m = re.search(r'href="(' + re.escape(BASE) + r'/facilities/([a-z0-9\-]+))"', block)
+        m = re.search(
+            r'href="(' + re.escape(BASE) + r'/facilities/([a-z0-9\-]+))"', block
+        )
         if not m or m.group(2) in SKIP_SLUGS:
             continue
         name = re.search(r"<h2>(.*?)</h2>", block, re.S)
         addr = re.search(r'<div class="cst-address">(.*?)</div>', block, re.S)
         address = strip_tags(addr.group(1)) if addr else ""
         postal = re.search(r"Singapore\s+(\d{6})", address)
-        out.append({
-            "url": m.group(1),
-            "slug": m.group(2),
-            "name": strip_tags(name.group(1)) if name else m.group(2),
-            "address": address,
-            "postal": postal.group(1) if postal else "",
-            "zone": zone,
-        })
+        out.append(
+            {
+                "url": m.group(1),
+                "slug": m.group(2),
+                "name": strip_tags(name.group(1)) if name else m.group(2),
+                "address": address,
+                "postal": postal.group(1) if postal else "",
+                "zone": zone,
+            }
+        )
     # the listing repeats cards in some layouts; keep first occurrence of each slug
     seen, unique = set(), []
     for f in out:
@@ -93,12 +102,15 @@ def parse_listing(page: str, zone: str) -> list[dict]:
 def parse_hours(detail: str) -> str:
     """Free-text hours note. These pages write hours a dozen ways; don't parse,
     transcribe. The schema takes drop_in hours as a note for exactly this reason."""
-    txt = strip_tags(re.sub(r"<script.*?</script>|<style.*?</style>", " ", detail, flags=re.S))
+    txt = strip_tags(
+        re.sub(r"<script.*?</script>|<style.*?</style>", " ", detail, flags=re.S)
+    )
     windows = re.findall(
         r"((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*(?:\s*(?:-|–|to|&|and)\s*"
         r"(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*)?\s*:?\s*"
         r"\d{1,2}(?:[:.]\d{2})?\s*(?:am|pm)\s*(?:-|–|to)\s*\d{1,2}(?:[:.]\d{2})?\s*(?:am|pm))",
-        txt, re.I,
+        txt,
+        re.I,
     )
     seen, kept = set(), []
     for w in windows:
@@ -154,6 +166,8 @@ def to_row(f: dict, hours: str, seq: int) -> dict:
         "vibes": "sporty",
         "in_incumbent_directory": "no",  # this is precisely the unindexed layer
         "notes": f"zone: {f['zone']} · {f['address']} · " + " · ".join(flags),
+        "weekday_evening_available": "no",
+        "weekend_available": "yes",
     }
 
 
@@ -161,7 +175,9 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--zone", help=f"comma-separated, from {ZONES}")
     ap.add_argument("--out", type=Path, default=ROOT / "data" / "draft_free_play.csv")
-    ap.add_argument("--delay", type=float, default=1.0, help="seconds between detail fetches")
+    ap.add_argument(
+        "--delay", type=float, default=1.0, help="seconds between detail fetches"
+    )
     args = ap.parse_args()
     args.out = args.out.resolve()
 
@@ -198,11 +214,16 @@ def main() -> int:
     with_hours = sum(1 for r in rows if r["open_hours_note"] != "not stated on page")
     with_postal = sum(1 for r in rows if r["postal_code"])
     schools = sum(1 for r in rows if r["provider_type"] == "school")
-    print(f"\n  wrote {args.out.relative_to(ROOT) if args.out.is_relative_to(ROOT) else args.out} — {len(rows)} draft rows")
+    display_path = (
+        args.out.relative_to(ROOT) if args.out.is_relative_to(ROOT) else args.out
+    )
+    print(f"\n  wrote {display_path} — {len(rows)} draft rows")
     print(f"    {with_hours}/{len(rows)} have opening hours")
     print(f"    {with_postal}/{len(rows)} have a postal code")
-    print(f"    {schools} school fields (provider_type=school), "
-          f"{len(rows) - schools} other free facilities")
+    print(
+        f"    {schools} school fields (provider_type=school), "
+        f"{len(rows) - schools} other free facilities"
+    )
     print(
         "\n  DRAFTS. age_min/age_max are deliberately blank — these pages do not\n"
         "  state an age and guessing one is what this whole task is trying to\n"

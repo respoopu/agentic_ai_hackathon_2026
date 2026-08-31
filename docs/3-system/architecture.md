@@ -1,7 +1,7 @@
 # Architecture — Hobbi
 
 *Authoritative system spec. Companion to [`architecture-diagram.png`](../assets/architecture-diagram.png).*
-*Version 2.2 · 31 Aug 2026 · supersedes the agent table in `project_brief.md` v1 §3. v2.2 folds in all twelve decisions — D1–D11 plus D3b — and the PR #2 review corrections (`discrepancies.md` §D).*
+*Version 2.2 · updated 1 Sep 2026 · supersedes the agent table in `project_brief.md` v1 §3. v2.2 folds in all twelve decisions — D1–D11 plus D3b — the PR #2 review corrections (`discrepancies.md` §D), and the seed-CKB schema reconciliation from PR #3.*
 
 **Reading order:** [`deliverables.md`](../1-requirements/deliverables.md) → [`project_brief.md`](../2-product/project_brief.md) → this → [`evaluation.md`](./evaluation.md) → [`discrepancies.md`](../4-decisions/discrepancies.md).
 
@@ -360,7 +360,20 @@ Four terminal outcomes, and **`hold_this_week` is a first-class success**, not a
 ### Core records
 
 ```python
-class Listing(BaseModel):
+class Schedule(BaseModel):
+    kind:              Literal["weekly", "fixed_dates", "drop_in"]
+    weekday:           Literal["mon", "tue", "wed", "thu", "fri", "sat", "sun"] | None
+    start_time:        time | None
+    duration_min:      int | None
+    first_session:     date | None
+    num_sessions:      int | None
+    fixed_dates:       list[datetime]
+    open_hours_note:   str | None
+    weekday_evening_available: bool | None  # explicit for drop-ins
+    weekend_available: bool | None          # explicit for drop-ins
+
+class ListingRecord(BaseModel):
+    # Shared CKB record: only facts about the activity itself.
     listing_id:        str
     title:             str
     provider:          str
@@ -371,20 +384,37 @@ class Listing(BaseModel):
     cost_one_off_sgd:  Decimal        # 0 is common and is the point
     cost_recurring_sgd:Decimal
     equipment_cost_sgd:Decimal
+    cost_total_first_session: Decimal  # derived: one-off + equipment
+    venue_name:        str
+    postal_code:       str             # six digits
     postal_sector:     str
-    travel_min_home:   int
-    travel_min_school: int            # a teen goes straight from school more often than from home
+    planning_area:     str
+    nearest_mrt:       str | None
     age_min:           int
     age_max:           int
     beginner_friendly: bool
     join_alone_ok:     bool
     guest_allowed:     bool
     commitment:        Literal["taster", "one_off", "short_course", "term"]
-    next_sessions:     list[datetime]
-    peer_cohort:       PeerCohort | None   # aggregate presence, never identity. See §9.3
+    schedule:          Schedule             # stored recurrence/opening-hours form
+    vibes:             list[Literal["sporty", "artistic", "chill", "explorative"]]
+    in_incumbent_directory: bool            # evaluation-only B9 input
     source_url:        HttpUrl
     last_seen_at:      datetime
     freshness_state:   Literal["fresh", "stale", "dead"]
+
+class PeerCohort(BaseModel):
+    same_age_band:     Literal["none", "few", "some", "many"]
+    same_area:         bool
+    suppressed:        bool
+
+class Listing(ListingRecord):
+    # Request-scoped Planner view. These fields depend on the teen/request and
+    # must never be persisted back onto the shared ListingRecord.
+    travel_min_home:   int
+    travel_min_school: int             # often different when travelling after school
+    peer_cohort:       PeerCohort | None   # aggregate presence, never identity. See §9.3
+    next_sessions:     list[datetime]   # expanded deterministically from Schedule
 
 class SessionRequest(BaseModel):
     goal:              str
@@ -720,20 +750,22 @@ Staying on the taught stack (deck: *"so what you learn from the technical sessio
 
 ### Repo layout
 
-*Target structure. **None of this exists yet** — there is no Hobbi code in the repository at the time of writing; `lab/` is unrelated workshop material. This is the shape to build into, chosen so the deck's structure suggestion (`src/`, `docs/`, `data/`, `tests/`) is satisfied and every agent on the architecture slide is findable as a module.*
+*Target structure. Seed-CKB implementation now exists in `src/schema/`, `src/ckb/`, `scripts/`, `data/` and `tests/`; the agent pipeline remains to be built. `lab/` is unrelated workshop material. New work continues into this shape so every component on the architecture slide is findable as a module.*
 
 ```
 src/
   agents/      planner.py  discovery.py  guardian.py  broker.py  observer.py  compliance.py
+  ckb/         seed_loader.py            # validates built artifact + request hydration
   validation/  orchestrator.py         # the gate checks of §3.7
   schema/      state.py  listing.py  preferences.py  plan.py  events.py  gates.py
   intake.py                            # deterministic I0 + setup/seed writes
   graph.py                             # nodes, edges, routers, caps
   constants.py                         # MODEL_ID, all MAX_* caps
 data/          seed_ckb.json  synthetic_teen.json  discovery_replay.json
+scripts/       build_ckb.py              # CSV + quarantine → immutable seed artifact
 sim/           harness.py  counterfactual.py  report.py
 tests/         test_caps.py  test_s0_plan.py  test_guardian_vetting.py  test_schema.py
-               test_age_boundary.py  test_peer_cohort.py  test_cold_start.py
+               test_age_boundary.py  test_peer_cohort.py  test_cold_start.py  test_seed_ckb.py
 docs/
 README.md      run instructions + purpose of every file
 requirements.txt
@@ -791,5 +823,6 @@ We do **not** claim Embedded or Creative/Generative. Nothing in the system gener
 | 21 | Guardian reads Personal Data + CKB; Compliance writes dead-listing flags to Personal Data | **Required** | PR #2 review |
 | 22 | Every booking-failure or dead-listing replacement re-enters G2 and G3 | **Required** | PR #2 review |
 | 23 | Guardian escalates after two rejections, never three | **Required** | PR #2 review |
+| 24 | Stored `ListingRecord` is separated from teen-relative `Listing`; deterministic seed build/load boundary is executable | **Required** | PR #3 reconciliation |
 
-The editable HTML and exported PNG must visibly show every structural flow, boundary, store, gate and bound above, and must not contradict any behavioural row. Prose-only details such as full schema fields, agent-class labels and stack rationale stay here rather than overcrowding the slide asset. The PNG is regenerated from the HTML; it is never maintained independently.
+The editable HTML and exported PNG must visibly show every structural flow, boundary, store, gate and bound above, and must not contradict any behavioural row. Prose-only details such as full schema fields, stored-versus-hydrated record types, agent-class labels and stack rationale stay here rather than overcrowding the slide asset. The PNG is regenerated from the HTML; it is never maintained independently.
