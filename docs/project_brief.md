@@ -428,16 +428,26 @@ Two reasons to be explicit rather than vague. Technical Quality's top band is *"
 
 ## 12. Open Decisions
 
-Tracked in [`discrepancies.md`](./discrepancies.md) §D. The five that need the team:
+Twelve are open. [`discrepancies.md`](./discrepancies.md) §D is the register of record — the list below mirrors it and is not the place to add a new one.
 
-1. **D1 · The budget ledger** — keep the portfolio thesis and add the ledger, or drop it and re-derive "why agentic" from the loops alone? *(§4, and the highest-impact call in the project.)*
-2. **D2 · Belonging** — build the opt-in peer tiebreak, or cut the second objective? *(§3.7. Currently pitched and unbuilt, which is the worst of the three states.)*
-3. **D3 · Problem-statement scope** — the narrow version or the twelve-month version on slide 2? *(§1.1. Decide first; it gates slides 2, 7, the video open and the metrics.)*
-4. **D4/D5 · Organisers** — is there a live pitch and Q&A? What is the deadline and upload mechanism? *(Neither is in the deck.)*
+**Decide these before anything is written:**
 
-Carried over and still open: where the trusted adult sits (mandatory co-user or approval-only) · the observation channel (Telegram is where the teens are) · cold start for a user with zero history · whether we model *dislike* explicitly.
+1. **D3 · Problem-statement scope** — the narrow version or the twelve-month version on slide 2? *(§1.1. First. It gates slides 2 and 7, the video open, and the metrics.)*
+2. **D3b · The headline metric** — which number leads, now that D3 narrows the claim? *(With D3. Left alone, slide 2 and the evaluation slide argue for different products.)*
+3. **D1 · The budget ledger** — keep the portfolio thesis and add the ledger, or drop it and re-derive "why agentic" from the loops alone? *(§4, and the highest-impact call in the project.)*
+4. **D2 · Belonging** — build the opt-in peer tiebreak, or cut the second objective? *(§3.7. Currently pitched and unbuilt, which is the worst of the three states.)*
 
-**And the one that is not a decision but a task: talk to five teenagers (§1.2).** It closes the only pressure-test question we currently fail.
+**Decide these before the build starts** — five product questions carried over from v1 §11, now tracked as rows rather than prose:
+
+5. **D7 · The trusted adult** — mandatory co-user, or approval-only? *(Defines Guardian's interface and the parent artefacts; also moves the consent basis, §6.4.)*
+6. **D8 · Supply** — real integrations (ActiveSG, CC courses), or a curated seed KB with simulated booking? *(The architecture assumes the seed KB. Confirm it rather than inherit it.)*
+7. **D9 · The observation channel** — app check-in, SMS, or a Telegram bot? *(No channel, no attendance signal — and attendance outranks the debrief.)*
+8. **D10 · Cold start** — what is the very first experiment for a teen with zero history? *(It is the demo's opening frame.)*
+9. **D11 · Dislike** — do we model it explicitly? *(A teen who hates their first pottery class tells us a lot.)*
+
+**And two that are not ours to decide:** **D4/D5** — is there a live pitch and Q&A, and what is the deadline and upload mechanism? Neither is in the deck; both need an email. **D6** waits on D1–D3.
+
+**The one that is not a decision but a task: talk to five teenagers (§1.2).** It closes the only pressure-test question we currently fail.
 
 ---
 

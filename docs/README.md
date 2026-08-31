@@ -49,6 +49,16 @@ The diagram is a picture and lags the spec. `architecture.md` §13 lists every p
 | **D6** | When do we re-derive the system prompts on `feat/agent-system-prompts`? | That branch predates these docs and diverges on five points — including whether the user is a child or a 13–17-year-old. |
 | **D4/D5** | Ask organisers: live Q&A? deadline and upload mechanism? | Neither appears in the deck. Project files are **one submission only**. |
 
+**And five product decisions that gate the build, not the deck.** Carried over from brief v1, tracked as rows since 31 Aug because as prose they stopped getting decided:
+
+| | Decision | Gates |
+|---|---|---|
+| **D7** | Trusted adult — mandatory co-user, or approval-only? | Guardian's interface, the parent artefacts, the consent basis |
+| **D8** | Real integrations, or a curated seed KB with simulated booking? | The architecture already assumes the seed KB — confirm it rather than inherit it |
+| **D9** | Observation channel — app check-in, SMS, Telegram? | Attendance is the primary preference signal. No channel, no signal |
+| **D10** | Cold start for a teen with zero history | The demo's opening frame |
+| **D11** | Do we model *dislike* explicitly? | The `PreferenceModel` schema and what the debrief extracts |
+
 **The one task that is not a decision:** talk to five teenagers. It closes the only pressure-test question we currently fail ([`project_brief.md`](./project_brief.md) §1.2), and it converts our best original insight into primary research. One afternoon.
 
 ---

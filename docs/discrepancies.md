@@ -22,7 +22,7 @@
 | **E** — Downstream artifacts | 0 | 1 | 0 | 1 |
 | | **12** | **12** | **9** | **33** |
 
-**Six things are open and need the team, not me** — A3, A6, B7, B11, E1, and the organiser questions under §D. Everything else is decided and already written into the v2 docs.
+**Twelve rows are open and need the team, not me** — A3, A6, B7, B11 and E1, the five carried-over product decisions now tracked as **D7–D11**, and the two organiser questions. All of them are in §D. Everything else is decided and already written into the v2 docs.
 
 **If you read one row, read B7** — and then **B11**, which is the trap inside B7's own fix.
 
@@ -130,7 +130,7 @@ The brief specifies it. `deliverables.md` §11 identifies the "agent correctly d
 
 Brief §3: *"Optimise for interest fit **and** belonging. Prefer options where a peer from the same school or neighbourhood is also attending."* Backed by real evidence (8% of youths report no close friends; friendships outside school is a stated aim of the Curiosity Credits scheme).
 
-The diagram has no peer data in Personal Data, no peer field on a listing, and no second scoring dimension in the Planner. The brief also flags (v1 §11, now v2 §12) that the privacy mechanism is unsolved — *"How do we detect 'a peer is going' without creating a privacy problem?"*
+The diagram has no peer data in Personal Data, no peer field on a listing, and no second scoring dimension in the Planner. Brief v1 §11 also flagged the privacy mechanism as unsolved — *"How do we detect 'a peer is going' without creating a privacy problem?"* — a question this row now carries, and which option (a) below is the answer to.
 
 So we are pitching a two-objective system and have specified a one-objective system, with a known-unsolved privacy question underneath the missing half.
 
@@ -466,12 +466,16 @@ Item 5 is the one to settle first: the two documents describe different users.
 | **D4** | Is there a **live pitch and Q&A**? | The Presentation rubric's wording implies one; changes how much we rehearse and whether we prep an objection sheet | Organisers |
 | **D5** | **Deadline, upload mechanism, accepted formats** | Not in the deck at all. Project files are **one submission only** — no re-uploads | Organisers |
 
-**Carried over from `project_brief.md` v1 §11** — still open, all product decisions:
+**Carried over from `project_brief.md` v1 §11.** These were six checkboxes in v1. One (peer privacy) was promoted into **A6 / D2**; the rest spent v2 as a single sentence of prose in the brief, with no IDs, no owners and no status — which is why they stopped getting decided. They are rows now.
 
-- Where does the trusted adult sit — mandatory co-user, or approval-only?
-- Real integrations (ActiveSG, CC courses) or a curated seed KB + simulated booking? *(architecture.md §10 assumes the latter — confirm.)*
-- What is the observation channel — app check-in, SMS, Telegram bot? *(Telegram is where the teens are.)*
-- Cold start: what is the very first experiment for a user with zero history?
-- Do we model **dislike** explicitly? A teen who hates their first pottery class tells us a lot.
+Each one gates a piece of the build, so none of them can wait for D1–D3.
+
+| # | Question | Why it is blocked | Who decides |
+|---|---|---|---|
+| **D7** | Where does the trusted adult sit — **mandatory co-user, or approval-only**? | Defines Guardian's interface and every parent-facing artefact (`architecture.md` §3.3, §7). Also moves the PDPA consent basis — see `project_brief.md` §6.4 | Team |
+| **D8** | **Real integrations** (ActiveSG, CC courses), or a **curated seed KB + simulated booking**? | `architecture.md` §10 assumes the seed KB and **B9** leans on it for the "Broker is sandboxed" answer. Currently inherited by silence rather than decided | Team, **before build** |
+| **D9** | What is the **observation channel** — app check-in, SMS, Telegram bot? *(Telegram is where the teens are.)* | No channel, no attendance signal — and under **A4** attendance is the *primary* preference input, outranking the debrief (`architecture.md` §3.5) | Team, **before build** |
+| **D10** | **Cold start** — what is the very first experiment for a teen with zero history? | It is the demo's opening frame and the first behaviour a judge sees. Also the first row of every simulation profile in `evaluation.md` §6 | Team, **before the video** |
+| **D11** | Do we model **dislike** explicitly? A teen who hates their first pottery class tells us a lot. | Changes the `PreferenceModel` schema (`architecture.md` §5) and what the debrief extracts | Team |
 
 **Source verification** — the four items `project_brief_sources.md` §J flags as load-bearing, plus the CCA citation from **C9**: National Youth Survey 2025, NCSS QoL Survey 2025, MOE on CCAs/LEAPS, the IMDA framework PDF, and one sports-science citation for the maturation argument. Verification is in progress; results land in `project_brief_sources.md`.
