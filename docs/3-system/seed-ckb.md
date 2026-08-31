@@ -251,3 +251,89 @@ on every ranking signal the system has. That is deliberate. A vetting queue that
 only catches obviously bad listings is not a vetting queue, and the borderline
 case exists so the demo can also show the *trusted adult approves it* branch
 rather than only the rejection.
+
+---
+
+## 8. Where the data actually is
+
+`sources.md` §C points at the right *organisations* and the wrong *domains*.
+Every status below was verified by direct request on 31 Aug 2026, not from a
+search result.
+
+| Domain | Status | What to do |
+|---|---|---|
+| **`nlb.libcal.com`** | **Open JSON API** | Automated. `scripts/fetch_nlb_teen_events.py` already pulls it. |
+| `activesgcircle.gov.sg` | 200, fetchable HTML | Facilities, rates, and a `free-to-play` category. Semi-automatable. |
+| `activesg.gov.sg` | **403 to everything** | Human with a browser. No workaround found. |
+| `onepa.gov.sg` | **Bot-protected** | Human with a browser. See the warning below. |
+| `pa.gov.sg` | Renders, but it is a nav hub | Not a listings source. Follow through to onePA. |
+| `nlb.gov.sg` | JS shell, zero content | Ignore it entirely — use libcal. |
+| `nparks.gov.sg` | Park pages fetch; event listings are JS | Static pages by script, events by hand. |
+
+### The NLB unlock
+
+NLB's own site is opaque, but its events live on **`nlb.libcal.com`**, which
+serves structured JSON and filters on **audience 2280 — "Teenagers (13-17 yo)"**.
+That is the exact D7 cohort, tagged by the provider rather than inferred by us.
+
+**134 teen-tagged events islandwide, 129 upcoming.** Every one carries a real
+event URL, a precise venue, a start time and a cost field.
+`scripts/fetch_nlb_teen_events.py` drafts them straight into sheet format. They
+still need a human to open the link, add a postal code, and sign for them — the
+script saves the typing, not the verifying.
+
+### ⚠️ Do not script onePA
+
+`onepa.gov.sg` sits behind Imperva bot protection that allows a handful of
+serial requests and then blocks the source IP for an extended period. This was
+reproduced directly: an interest-group page returned 200, and the *same URL*
+returned 403 twenty minutes later after further requests.
+
+CC courses and interest groups — the largest single source — are therefore a
+**human-with-a-browser job**. Trying to automate it will lock the team out of
+the source on the day they need it most.
+
+### The finding that matters more than the listings
+
+**Search-engine snippets for onePA are actively misleading.** Several URLs
+appeared in results with confident, specific details — *"meets alternate Sundays
+1pm–3:30pm"* — and then 404'd or rendered blank when actually fetched. So the
+plausible-but-wrong row does not only come from a model's memory; it comes from
+search results too. This is the empirical case for the §1 rule.
+
+### What the supply actually looks like
+
+Two things showed up independently in every area sweep:
+
+**Free structured programmes for teens barely exist.** Across the full upcoming
+calendar for two libraries, 27 events, of which **4 were tagged for teenagers** —
+the rest skewed to seniors (50+) or children (7–12). Across roughly 107 onePA
+events in one area, exactly **one** was a genuinely teen-targeted free drop-in.
+Free CC interest groups do exist and are genuinely free, but **most publish
+neither a schedule nor an age range**, so a 14-year-old reading the page cannot
+tell whether they may turn up or when.
+
+That last point is not a data-collection annoyance. It is the problem statement,
+evidenced, and it belongs on a slide.
+
+**The real free supply is infrastructure, not programmes** — skateparks, park
+grounds, courts, fitness corners, school fields opened to the public under the
+Dual Use Scheme, and near-free ActiveSG access at S$0.50–0.80 to swim and
+S$1.50 for the gym on a student rate. None of that is in an activity directory,
+which is also why it carries most of the **B9** long-tail number.
+
+So the seed set should be weighted toward the informal and `school` tiers rather
+than toward courses, and the pitch should say so: Hobbi surfaces the layer that
+exists but is unindexed, plus the rare teen-targeted programme.
+
+### Live examples worth keeping
+
+Two real closures turned up that beat a staged one for adversarial scenario 4:
+
+- **Clementi Stadium** — closed for redevelopment, 1 Jul 2026 to Q2 2029, stated
+  on its own ActiveSG page.
+- **Toa Payoh Sport Centre** — closed 31 Oct 2023 to 2030, and Toa Payoh Town
+  Park closed since 1 Feb 2024. That planning area has lost its main sports
+  centre and its main park for the rest of the decade.
+
+A real listing that really died is a better demo than one we killed on purpose.
