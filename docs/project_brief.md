@@ -3,7 +3,13 @@
 *Hackathon: SimplifyNext Agentic AI Hackathon 2026 — **"Design for a World in Transformation"***
 *Version 2 · 27 Aug 2026 · supersedes v1 (18 Aug 2026)*
 
-**The doc set.** [`deliverables.md`](./deliverables.md) — what the hackathon requires · **this** — problem, user, solution, positioning · [`architecture.md`](./architecture.md) — the system spec · [`evaluation.md`](./evaluation.md) — how we prove it works · [`user_stories.md`](./user_stories.md) — stories mapped to agents · [`project_brief_sources.md`](./project_brief_sources.md) — every citation · [`discrepancies.md`](./discrepancies.md) — open conflicts and decisions.
+**The doc set.** 
+- [`deliverables.md`](./deliverables.md) — what the hackathon requires · **this** — problem, user, solution, positioning · 
+- [`architecture.md`](./architecture.md) — the system spec · 
+- [`evaluation.md`](./evaluation.md) — how we prove it works · 
+- [`user_stories.md`](./user_stories.md) — stories mapped to agents · 
+- [`project_brief_sources.md`](./project_brief_sources.md) — every citation · 
+- [`discrepancies.md`](./discrepancies.md) — open conflicts and decisions.
 
 > **What changed in v2.** Problem statement rewritten into the required POV format and pressure-tested. **The "42% of youths satisfied" figure is removed — it does not survive verification** (see §1.2). The agent roster now lives in [`architecture.md`](./architecture.md) and matches the diagram. Evaluation, tech stack and build scope added. Criterion references corrected to the real rubric. All headline figures re-sourced to primary documents.
 
