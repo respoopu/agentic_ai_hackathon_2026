@@ -16,9 +16,10 @@ The folders carry the order. Numbers are the reading sequence, not a priority ra
 | 2 | **[`2-product/project_brief.md`](./2-product/project_brief.md)** | The problem, the person, the solution argument, the positioning | Writing slides 1–3, 6, 7, 9, 10 |
 | 3 | **[`3-system/architecture.md`](./3-system/architecture.md)** | The system: 5 pipeline agents + Compliance + validation layer, 2 stores, 3 bounded loops, state, stack, scope | Writing code, or slide 5 |
 | 4 | **[`3-system/evaluation.md`](./3-system/evaluation.md)** | Metrics, invariants, test data, the counterfactual baseline | Writing tests, or the evaluation slide |
-| 5 | **[`2-product/user_stories.md`](./2-product/user_stories.md)** | Every story mapped to the agent that owns it | Checking a feature has a home |
-| 6 | **[`2-product/sources.md`](./2-product/sources.md)** | Every citation, with reliability marks | **Before any figure goes on a slide** |
-| 7 | **[`4-decisions/discrepancies.md`](./4-decisions/discrepancies.md)** | 33 conflicts between the brief, the diagram and the requirements, and the 12 decisions that closed them | Deciding anything |
+| 5 | **[`3-system/seed-ckb.md`](./3-system/seed-ckb.md)** | The transcription contract for the seed listing set, and what "done" means | Filling the CKB — the one build task with no code dependency |
+| 6 | **[`2-product/user_stories.md`](./2-product/user_stories.md)** | Every story mapped to the agent that owns it | Checking a feature has a home |
+| 7 | **[`2-product/sources.md`](./2-product/sources.md)** | Every citation, with reliability marks | **Before any figure goes on a slide** |
+| 8 | **[`4-decisions/discrepancies.md`](./4-decisions/discrepancies.md)** | 33 conflicts between the brief, the diagram and the requirements, and the 12 decisions that closed them | Deciding anything |
 
 ### The folders
 

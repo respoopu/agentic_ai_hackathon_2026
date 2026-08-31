@@ -1,0 +1,232 @@
+"""Listing records and their per-request hydration.
+
+There are two types here and the distinction matters.
+
+`ListingRecord` is what a human transcribes from a real page and what lives in
+`data/seed_ckb.json`. Every field on it is a property *of the activity*.
+
+`Listing` is what the Planner reasons over. It is a `ListingRecord` plus three
+things that only exist relative to a particular teen: how far it is from their
+home, how far from their school, and who else their age is going.
+
+v2.1 of architecture.md put `travel_min_home`, `travel_min_school` and
+`peer_cohort` directly on `Listing` and treated `Listing` as the stored record.
+That works with one persona and breaks with twelve across three regions, since
+a stored row cannot carry a travel time that differs per reader. The split
+below is the fix; §5 of architecture.md is updated to match.
+"""
+
+from __future__ import annotations
+
+from datetime import date, datetime, time
+from decimal import Decimal
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
+
+# The cohort boundary is a consent boundary, not a preference (D7).
+AGE_FLOOR = 13
+AGE_CEILING = 17
+
+ProviderType = Literal[
+    "cc",  # Community Club course
+    "activesg",  # ActiveSG programme, academy or club
+    "third_space",  # youth hub, community art space, drop-in space
+    "school",  # school facility open beyond its own students
+    "commercial",  # a business, vetted
+    "informal",  # basketball court, skate park, fitness corner
+    "private_unverified",  # quarantine only. Never reaches a teen unapproved.
+]
+
+# Used to audit coverage of the seed set. NEVER shown back to a teen, and never
+# used to filter: it biases nothing at runtime. See D10's five rules and A9.
+Vibe = Literal["sporty", "artistic", "chill", "explorative"]
+
+
+class Schedule(BaseModel):
+    """When the thing happens.
+
+    Transcribe the *recurrence*, not eight individual Tuesdays. `next_sessions`
+    on the hydrated `Listing` is expanded from this at load time.
+    """
+
+    kind: Literal["weekly", "fixed_dates", "drop_in"]
+
+    # kind == "weekly"
+    weekday: Literal["mon", "tue", "wed", "thu", "fri", "sat", "sun"] | None = None
+    start_time: time | None = None
+    duration_min: int | None = None
+    first_session: date | None = None
+    num_sessions: int | None = None
+
+    # kind == "fixed_dates"
+    fixed_dates: list[datetime] = Field(default_factory=list)
+
+    # kind == "drop_in" — a court or a park. Free-text because opening hours are
+    # written a hundred different ways and none of them need parsing.
+    open_hours_note: str | None = None
+
+    @model_validator(mode="after")
+    def _required_fields_per_kind(self) -> Schedule:
+        if self.kind == "weekly":
+            missing = [
+                f
+                for f in ("weekday", "start_time", "first_session", "num_sessions")
+                if getattr(self, f) is None
+            ]
+            if missing:
+                raise ValueError(f"weekly schedule missing {', '.join(missing)}")
+        elif self.kind == "fixed_dates" and not self.fixed_dates:
+            raise ValueError("fixed_dates schedule has no dates")
+        elif self.kind == "drop_in" and not self.open_hours_note:
+            raise ValueError("drop_in schedule needs an open_hours_note")
+        return self
+
+    def is_weekday_evening(self) -> bool:
+        """Used by the coverage report to check adversarial scenario 2."""
+        if self.kind != "weekly" or self.weekday is None or self.start_time is None:
+            return False
+        return self.weekday in ("mon", "tue", "wed", "thu", "fri") and self.start_time >= time(17, 0)
+
+    def is_weekend(self) -> bool:
+        return self.kind == "weekly" and self.weekday in ("sat", "sun")
+
+
+class ListingRecord(BaseModel):
+    """One real activity, transcribed by hand from a page someone actually opened.
+
+    Nothing in here depends on who is asking.
+    """
+
+    # scripts/build_ckb.py emits a few convenience keys (cost_total_first_session)
+    # that are derived, not authoritative. Ignore rather than reject them.
+    model_config = ConfigDict(extra="ignore")
+
+    listing_id: str
+    title: str
+    provider: str
+    provider_type: ProviderType
+
+    # --- provenance. The whole set is worthless without these three. ---
+    source_url: HttpUrl
+    verified_at: date | None  # a human opened the page on this date
+    verified_by: str | None  # and it was this person. Accountability, not credit.
+
+    verification: Literal["verified", "unverified", "retired"]
+    is_fictional: bool = False  # quarantine rows only. Enforced below.
+
+    # --- money. 0 is common and is the point. ---
+    cost_one_off_sgd: Decimal = Decimal("0")
+    cost_recurring_sgd: Decimal = Decimal("0")
+    equipment_cost_sgd: Decimal = Decimal("0")
+
+    # --- where. Not how far: that is per-teen, see `Listing`. ---
+    venue_name: str
+    postal_code: str  # 6 digits
+    postal_sector: str = ""  # first 2 digits; filled below if not supplied
+    planning_area: str  # URA planning area, e.g. "Toa Payoh"
+    nearest_mrt: str | None = None
+
+    # --- who it is for ---
+    age_min: int
+    age_max: int
+    beginner_friendly: bool
+    join_alone_ok: bool
+    guest_allowed: bool
+
+    commitment: Literal["taster", "one_off", "short_course", "term"]
+    schedule: Schedule
+
+    vibes: list[Vibe] = Field(default_factory=list)  # coverage auditing only
+    in_incumbent_directory: bool  # is it already on ActiveSG/Skoop/etc? Feeds B9.
+
+    last_seen_at: datetime
+    freshness_state: Literal["fresh", "stale", "dead"] = "fresh"
+    notes: str | None = None
+
+    @property
+    def is_free(self) -> bool:
+        return (
+            self.cost_one_off_sgd == 0
+            and self.cost_recurring_sgd == 0
+            and self.equipment_cost_sgd == 0
+        )
+
+    @field_validator("postal_code")
+    @classmethod
+    def _six_digits(cls, v: str) -> str:
+        if not (len(v) == 6 and v.isdigit()):
+            raise ValueError(f"postal_code must be 6 digits, got {v!r}")
+        return v
+
+    @field_validator("cost_one_off_sgd", "cost_recurring_sgd", "equipment_cost_sgd")
+    @classmethod
+    def _non_negative(cls, v: Decimal) -> Decimal:
+        if v < 0:
+            raise ValueError("cost cannot be negative")
+        return v
+
+    @field_validator("verified_at")
+    @classmethod
+    def _not_in_the_future(cls, v: date | None) -> date | None:
+        if v is not None and v > date.today():
+            raise ValueError(f"verified_at {v} is in the future")
+        return v
+
+    @model_validator(mode="after")
+    def _coherent(self) -> ListingRecord:
+        if not self.postal_sector:
+            self.postal_sector = self.postal_code[:2]
+        elif self.postal_sector != self.postal_code[:2]:
+            raise ValueError(
+                f"postal_sector {self.postal_sector!r} does not match "
+                f"postal_code {self.postal_code!r}"
+            )
+
+        if self.age_min > self.age_max:
+            raise ValueError(f"age_min {self.age_min} > age_max {self.age_max}")
+
+        # A row nobody 13-17 can attend cannot help any teen, and its presence
+        # would make the age-boundary test (A11) pass vacuously.
+        if self.age_max < AGE_FLOOR or self.age_min > AGE_CEILING:
+            raise ValueError(
+                f"age range {self.age_min}-{self.age_max} cannot overlap {AGE_FLOOR}-{AGE_CEILING}"
+            )
+
+        # Provenance discipline. "Verified" means a named human, on a named day.
+        if self.verification == "verified":
+            if self.is_fictional:
+                raise ValueError("a fictional listing can never be verified")
+            if self.verified_at is None or not self.verified_by:
+                raise ValueError("verified rows need both verified_at and verified_by")
+
+        # The safety interlock. Invented rows exist to be caught by the vetting
+        # queue on camera; one leaking out as real is the worst outcome here.
+        if self.is_fictional:
+            if self.verification != "unverified":
+                raise ValueError("fictional rows must be verification='unverified'")
+            if self.provider_type != "private_unverified":
+                raise ValueError("fictional rows must be provider_type='private_unverified'")
+
+        return self
+
+
+class PeerCohort(BaseModel):
+    """Aggregate presence. There is no identity in this object, by construction.
+
+    Resolved at planning-area or 2-digit postal-sector level and never at school
+    level; suppressed below the k-floor of 5. See architecture.md §9.3 and A12.
+    """
+
+    same_age_band: Literal["none", "few", "some", "many"]
+    same_area: bool
+    suppressed: bool
+
+
+class Listing(ListingRecord):
+    """A `ListingRecord` seen from one teen's position. This is what Planner ranks."""
+
+    travel_min_home: int
+    travel_min_school: int
+    peer_cohort: PeerCohort | None = None
+    next_sessions: list[datetime] = Field(default_factory=list)
