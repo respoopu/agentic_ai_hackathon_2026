@@ -1,8 +1,8 @@
 # User Stories — Hobbi
 
-*Version 2.1 · 31 Aug 2026. Every story names the **agent that owns it** and whether it is in the prototype. As of 31 Aug no story is unowned.*
+*Version 2.2 · 31 Aug 2026. Every story names the **component that owns it** and whether it is in the prototype. As of 31 Aug no story is unowned.*
 
-Grouped by user. Each row: the story, what Hobbi needs to know, the feature it implies, and the owning agent from [`architecture.md`](../3-system/architecture.md) §3.
+Grouped by user. Each row: the story, what Hobbi needs to know, the feature it implies, and the owning component from [`architecture.md`](../3-system/architecture.md) §§2.1–3.
 
 **Build status — nothing is implemented yet.** These marks are *scope*, not progress: ✅ planned for the PoC · 🔶 partial / simulated in the PoC · ⬜ deferred to roadmap.
 
@@ -19,7 +19,7 @@ Grouped by user. Each row: the story, what Hobbi needs to know, the feature it i
 | **As a teen, I want to discover hobbies that suit me, because I don't know what I would enjoy.** | Preference axes, prior attendance | Experiment sequencing, not a ranked list | **Planner** | ✅ |
 | **As a teen, I want recommendations to improve when I tell Hobbi what I liked or disliked.** | Debrief content, attendance, return behaviour | Feedback-driven preference model | **Observer** → **Planner** | ✅ |
 | **As a teen, I want to not be typed or labelled before I've tried anything.** | — | No personality test, no learning style, no result screen — ever | **Planner** *(by design)* | ✅ |
-| **As a teen with no history, I want to say roughly what I'm after — or skip it — and still get a real first plan.** | 4–6 vibe chips, multi-select, skippable | Cold-start seeds at lowest confidence; *"Surprise me"* is first-class | **Planner** | ✅ |
+| **As a teen with no history, I want to say roughly what I'm after — or skip it — and still get a real first plan.** | 4–6 vibe chips, multi-select, skippable | Intake/Setup writes low-confidence seeds; *"Surprise me"* is first-class; Planner reads either state | **Intake/Setup → Planner** | ✅ |
 
 > ⚠️ **The line is seeding vs typing** ([`project_brief.md`](./project_brief.md) §6.1, decision **D10**). A short "where should we start?" screen is allowed; a "what are you like?" assessment is not. Concretely: skippable · no label ever shown back · lowest confidence, outranked by the first attended session · biases ranking but **never** filters the candidate set (invariant **A9**). Left/right-brain and MBTI-style typing remain hard-forbidden.
 >
@@ -54,8 +54,8 @@ Grouped by user. Each row: the story, what Hobbi needs to know, the feature it i
 | **As someone joining alone, I want to know how welcoming a group is to newcomers.** | Whether people usually join alone; newcomer process | `join_alone_ok` — "good for first-timers" | **Planner** / **Discovery** | ✅ |
 | **As a shy teen, I want to know what will happen before I arrive so I feel less anxious.** | Meeting format, group size, meeting point, activities | "What to expect" preview | **Broker** | ✅ |
 | **As a teen, I want to know exactly what I need before joining.** | Equipment, clothing, prerequisites | Preparation checklist | **Broker** | ✅ |
-| **As a teen, I want to bring a friend if I'm uncomfortable attending alone.** | Whether groups allow guests | `guest_allowed` + a share link — not a social graph | **Planner** / **Broker** | 🔶 |
-| **As a teen, I want to go where other people my age from my area already go, so I'm not the only new face.** | Aggregate presence, bucketed, k-anonymity floor | `PeerCohort` ranking tiebreak — never identity, never a filter, absence never shown | **Planner** | ✅ |
+| **As a teen, I want to bring a friend if I'm uncomfortable attending alone.** | Whether groups allow guests | `guest_allowed` shown in Broker's preparation preview; share link deferred — not a social graph | **Planner** / **Broker** | 🔶 |
+| **As a teen, I want to go where other people my age from my area already go, so I'm not the only new face.** | Aggregate presence, bucketed, k-anonymity floor | Simulated `PeerCohort` ranking tiebreak — never identity, never a filter, absence never shown | **Planner** | 🔶 |
 
 > The Broker's teen-facing output is not a confirmation email. It is an **anxiety-reduction artefact** — where exactly to meet, what happens in the first ten minutes, whether people usually come alone. It exists because a burnt `try` cannot be recovered.
 
@@ -70,7 +70,7 @@ Grouped by user. Each row: the story, what Hobbi needs to know, the feature it i
 | **As a teen, I want something I disliked once to be able to come back later.** | Which negative it was — the activity or that instance | Decaying `DislikeSignal`, ranking-only, never a blocklist | **Observer** → **Planner** | ✅ |
 | **As a teen, I want to see actual upcoming sessions rather than just reading about a hobby.** | Group calendars, `next_sessions` | Upcoming events feed | **Discovery** → **Planner** | ✅ |
 | **As a teen, I want to save interesting hobbies and come back later.** | Favourites | Saved hobbies | **Planner** *(reads a favourites list in Personal Data)* | ⬜ |
-| **As a teen, I want to compare different activities before deciding.** | Cost, distance, time, social level, equipment | Comparison view | **Planner** | 🔶 |
+| **As a teen, I want to compare different activities before deciding.** | Cost, distance, time, social level, equipment | Comparison view | **Planner** | ⬜ |
 | **As a teen, I want to be left alone when there's nothing worth telling me.** | Whether anything actually changed | `hold_this_week` | **Observer** → **Planner** | ✅ |
 
 > "Try it first" is the product surface for the loop's **explore** phase — cheapest experiments before term-long commitments ([`project_brief.md`](./project_brief.md) §3.1).
@@ -113,9 +113,9 @@ Grouped by user. Each row: the story, what Hobbi needs to know, the feature it i
 |---|---|---|---|---|
 | **As Hobbi, we want to detect outdated groups so users aren't sent to dead Telegram/Instagram communities.** | Last activity, link validity, event recency | Automated freshness checking | **Compliance** | 🔶 |
 | **As Hobbi, we want to find supply that isn't in any directory yet.** | What CKB already holds; external sources | Gap-driven external search | **Discovery** | ✅ |
-| **As Hobbi, we want to never leak personal data to the open internet.** | — | Discovery receives the plan, not the person | **Orchestrator** *(gate ◆1)* | ✅ |
+| **As Hobbi, we want to never leak personal data to the open internet.** | — | Discovery receives the plan, not the person | **Orchestrator** *(gate G1)* | ✅ |
 | **As Hobbi, we want to know whether the agent is converging or circling.** | Loop counts vs caps | Loop discipline logging | **Orchestrator** | ✅ |
-| **As Hobbi, we want every claim on our slides to be reproducible.** | Gate log, token usage | One-command evaluation report | **Orchestrator** → [`evaluation.md`](../3-system/evaluation.md) | ✅ |
+| **As Hobbi, we want every claim on our slides to be reproducible.** | Gate log, model-response token usage, terminal/tool events | One-command evaluation report | **Orchestrator** *(gate data)* + evaluation harness → [`evaluation.md`](../3-system/evaluation.md) | ✅ |
 
 > Compliance is 🔶 because the PoC runs a **manually-triggered** scan plus a demonstrated retire→replan cascade, not a deployed scheduler ([`architecture.md`](../3-system/architecture.md) §10). Say so on the slide.
 
@@ -127,7 +127,7 @@ A quick read on whether each agent is carrying its weight — the deck's test is
 
 | Agent | Stories | Verdict |
 |---|---|---|
-| **Planner** | 19 | The core, and by a wide margin. Owns every constraint, all sequencing, the ledger reads, the cold start and the belonging tiebreak. See the warning below. |
+| **Planner** | 19 | The core, and by a wide margin. Owns every constraint, all sequencing, the ledger reads, use of cold-start seeds and the belonging tiebreak. See the warning below. |
 | **Broker** | 6 | Two distinct audiences — the teen's anxiety artefact and the parent's reassurance artefact — plus the ledger decrement, which is the only irreversible write in the system. |
 | **Discovery** | 4 | The only component that grows the supply side. Our differentiator. |
 | **Guardian** | 4 | The only component that can say no. Two granularities: per-listing vetting, per-plan spend. |
@@ -137,6 +137,6 @@ A quick read on whether each agent is carrying its weight — the deck's test is
 
 No agent is idle, and no two agents overlap. **Every story above now has an owning agent** — the last two unowned ones (the budget ledger and belonging) both landed on Planner and needed *state*, not a new agent, which is why v1's *Reallocator* stays retired.
 
-> ⚠️ **Planner owning 19 of 34 is the number to argue about, and D1, D2 and D10 each made it worse rather than better.** It now does constraint filtering, experiment sequencing, ledger-aware reallocation, the cold start *and* two-objective scoring. The deck's own advice — *"build short, single-purpose agents that do one job and exit"* — points at a split, most plausibly **filtering + sequencing** in one agent and **allocation** in another.
+> ⚠️ **Planner owning 19 of 34 is the number to argue about, and D1, D2 and D10 each made it worse rather than better.** It now does constraint filtering, experiment sequencing, ledger-aware reallocation, cold-start seed interpretation *and* two-objective scoring. Intake/Setup owns chip capture and persistence, not planning. The deck's own advice — *"build short, single-purpose agents that do one job and exit"* — points at a split, most plausibly **filtering + sequencing** in one agent and **allocation** in another.
 >
 > Counter-argument, and the reason we have not split it: those jobs share one working set (ledger + preference model + candidate listings) and the sequencing decision *is* the allocation decision. Splitting them would mean passing the whole working set across an agent boundary on every replan, which is the payload bloat the deck warns about, for no gain in independent testability. Recorded here so the answer exists when a judge asks why one agent is doing four things.

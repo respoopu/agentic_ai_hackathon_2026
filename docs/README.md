@@ -14,12 +14,13 @@ The folders carry the order. Numbers are the reading sequence, not a priority ra
 |---|---|---|---|
 | 1 | **[`1-requirements/deliverables.md`](./1-requirements/deliverables.md)** | What the hackathon requires, the full rubric, and how we maximise the score | Before anything. It constrains everything else. |
 | 2 | **[`2-product/project_brief.md`](./2-product/project_brief.md)** | The problem, the person, the solution argument, the positioning | Writing slides 1–3, 6, 7, 9, 10 |
-| 3 | **[`3-system/architecture.md`](./3-system/architecture.md)** | The system: 5 pipeline agents + Compliance + validation layer, 2 stores, 3 bounded loops, state, stack, scope | Writing code, or slide 5 |
+| 3 | **[`3-system/architecture.md`](./3-system/architecture.md)** | The system: 5 pipeline agents + Compliance + validation layer, 2 stores, 2 capped request loops + 1 ledger-bounded cycle, state, stack, scope | Writing code, or slide 5 |
 | 4 | **[`3-system/evaluation.md`](./3-system/evaluation.md)** | Metrics, invariants, test data, the counterfactual baseline | Writing tests, or the evaluation slide |
 | 5 | **[`3-system/seed-ckb.md`](./3-system/seed-ckb.md)** | The transcription contract for the seed listing set, and what "done" means | Filling the CKB — the one build task with no code dependency |
 | 6 | **[`2-product/user_stories.md`](./2-product/user_stories.md)** | Every story mapped to the agent that owns it | Checking a feature has a home |
 | 7 | **[`2-product/sources.md`](./2-product/sources.md)** | Every citation, with reliability marks | **Before any figure goes on a slide** |
 | 8 | **[`4-decisions/discrepancies.md`](./4-decisions/discrepancies.md)** | 33 conflicts between the brief, the diagram and the requirements, and the 12 decisions that closed them | Deciding anything |
+| 9 | **[`5-delivery/outstanding.md`](./5-delivery/outstanding.md)** | Canonical backlog: status, owner, target and acceptance test for every unfinished item | Planning the next piece of work |
 
 ### The folders
 
@@ -29,6 +30,7 @@ The folders carry the order. Numbers are the reading sequence, not a priority ra
 | **`2-product/`** | What we are building and for whom, with the evidence behind it. |
 | **`3-system/`** | How it works and how we prove it works. |
 | **`4-decisions/`** | The register of every conflict found and every decision taken. |
+| **`5-delivery/`** | What remains to validate, integrate, build and submit. [`outstanding.md`](./5-delivery/outstanding.md) is the only canonical task-status tracker. |
 | **`assets/`** | [`architecture-diagram.png`](./assets/architecture-diagram.png) for slides, and [`architecture-diagram.html`](./assets/architecture-diagram.html) — its editable SVG source. Regenerate from the HTML, never redraw by hand. |
 
 ---
@@ -41,21 +43,21 @@ When two documents disagree:
 judging-criteria.pdf  >  deliverables.md  >  architecture.md  >  project_brief.md  >  the diagram
 ```
 
-The diagram is downstream of the spec, never upstream of it. It is now **regenerable** — [`assets/architecture-diagram.html`](./assets/architecture-diagram.html) is the source, the PNG is an export — so it should never drift again. [`architecture.md`](./3-system/architecture.md) §13 lists all nineteen places the current picture differs from the original v1 drawing, and why.
+The diagram is downstream of the spec, never upstream of it. It is **regenerable** — [`assets/architecture-diagram.html`](./assets/architecture-diagram.html) is the source and the PNG is its export. [`architecture.md`](./3-system/architecture.md) §13 is the 23-item synchronization checklist used before slide 5 is updated.
 
 ---
 
 ## The state of things right now
 
-**Decided and written up.** Problem statement in POV format · six agents (five on the request path, one scheduled) with contracts, caps and failure behaviour · three bounded loops with hard caps · typed state and schemas · human-in-the-loop mapped to the IMDA framework · a PDPA position for minors' data · an evaluation plan with invariants and a counterfactual baseline · tech stack · PoC scope.
+**Decided and written up.** Problem statement in POV format · six agents (five on the request path, one scheduled) with contracts, caps and failure behaviour · two capped request loops and one ledger-bounded longitudinal cycle · typed state and schemas · human-in-the-loop mapped to the IMDA framework · a PDPA position for minors' data · an evaluation plan with invariants and a counterfactual baseline · tech stack · PoC scope.
 
-**All twelve decisions in [`discrepancies.md`](./4-decisions/discrepancies.md) §D closed on 31 Aug.** In brief: **D3** the statement is narrow on outcome and broad on audience, leading with S$0 · **D3b** the headline metric is B15, actions to a first attended session at S$0 · **D2** belonging is cohort presence, not a friend graph · **D7** the cohort is 13–17 at both ends, enforced · **D1** the budget ledger is in typed state · **D8** seed CKB from real listings + live whitelisted Discovery + sandboxed Broker + cached replay · **D9** the observation channel is an in-app form behind a swappable adapter *(revised from Telegram — a third party would have held the voice note first)* · **D10** cold start is skippable vibe chips, *seeding not typing* · **D11** dislike decays and never blocklists · **D4** Q&A prep at second priority · **D5** organiser questions handled directly · **D6** prompts re-derived after this branch merges.
+**All twelve decisions in [`discrepancies.md`](./4-decisions/discrepancies.md) §D closed on 31 Aug.** In brief: **D3** the statement is narrow on outcome and broad on audience, leading with S$0 · **D3b** B15 measures attendance within 30 days, with actions and elapsed time · **D2** belonging is simulated cohort presence, not a friend graph · **D7** the cohort is 13–17 at both ends, enforced at I0 · **D1** the budget ledger is in typed state · **D8** seed CKB from real listings + live whitelisted Discovery + sandboxed Broker + cached replay · **D9** the PoC observation channel is an in-app text form; audio and messaging adapters are roadmap · **D10** cold start is skippable vibe chips, *seeding not typing* · **D11** dislike decays and never blocklists · **D4** Q&A prep at second priority · **D5** organiser questions handled directly · **D6** prompts re-derived after this branch merges.
 
-Every discrepancy in classes A, B and C is resolved. **Nothing in these documents contradicts another, the diagram, or the deck.**
+Every discrepancy in classes A, B and C is resolved. Cross-document consistency is checked against [`architecture.md`](./3-system/architecture.md) §13 and the audit notes in [`discrepancies.md`](./4-decisions/discrepancies.md) §F; any future mismatch is treated as a defect rather than covered by an absolute “nothing contradicts” claim.
 
-One register row stays open — **E1**, the `feat/agent-system-prompts` branch — but it is scheduled rather than undecided: D6 re-derives it from [`architecture.md`](./3-system/architecture.md) §3 once this branch merges. What remains beyond that is the build, the deck, the video — and the one task below.
+One register row stays open — **E1**, the `feat/agent-system-prompts` branch — but it is scheduled rather than undecided: D6 re-derives it from [`architecture.md`](./3-system/architecture.md) §3 once this branch merges. The status, owner and acceptance test for E1 and every other unfinished item now live in the canonical [`outstanding.md`](./5-delivery/outstanding.md) tracker.
 
-**The one task that is not a decision:** talk to five teenagers. It closes the only pressure-test question we currently fail ([`project_brief.md`](./2-product/project_brief.md) §1.2), and it converts our best original insight into primary research. One afternoon.
+**The highest-priority validation task:** talk to five teenagers. It closes the pressure-test question we currently fail ([`project_brief.md`](./2-product/project_brief.md) §1.2), tests the adult-coordination hypothesis, and converts our best original insight into primary research. One afternoon. Track it as **OW-01** in [`outstanding.md`](./5-delivery/outstanding.md); [`sources.md`](./2-product/sources.md) §J retains the research detail.
 
 ---
 
