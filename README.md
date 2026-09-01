@@ -55,6 +55,10 @@ The single `POST /` endpoint accepts these operations:
 
 Protected operations use `Authorization: Bearer <token>`. Setup returns a one-time `teen_access_token` for that profile. Trusted-adult approval is a separate request and is bound to the exact `plan_id`; paid plans also require an amount ceiling. Setup refuses to replace an existing profile, declared age, or parental rules.
 
+`HOBBI_GUARDIAN_API_TOKEN` is a deployment-wide PoC operator credential, not a teen- or household-specific identity. Plan and teen data ownership checks still apply, but anyone holding that token can act as the trusted-adult operator for every profile in that deployment. Production deployment therefore requires household-scoped identities and authorization in front of this API.
+
+Peer-cohort ranking is implemented only as a privacy-preserving tiebreak seam. The current canonical CKB and simulation catalogue do not populate cohort buckets, so this objective does not affect normal runtime output or any reported metric yet. Agent `ToolGuard` checks are centralized method-entry assertions against declared permissions; they do not mediate every store or CKB call as capability wrappers.
+
 The default runtime executes deterministic typed policies. `src.runtime.structured.invoke_structured` is an optional prompt-backed Bedrock adapter; it is not wired into the default LangGraph and has not been validated against a live AWS account.
 
 The API and simulation do not need AWS. Live model use is lazy through `src.runtime.structured.invoke_structured`; model IDs are fixed constants and credentials come from the normal AWS chain.

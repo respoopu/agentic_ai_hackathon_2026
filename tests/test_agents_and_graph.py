@@ -456,6 +456,56 @@ class AgentAndGraphTests(unittest.TestCase):
         )
         self.assertFalse(final["gate_log"][-1].passed)
 
+    def test_paid_plan_waits_for_approval_without_free_replan(self) -> None:
+        ledger = self.setup_teen(constraints={"max_items": 1})
+        self.ckb.seed(
+            [
+                listing_record("paid-a", cost="9"),
+                listing_record("paid-b", cost="12"),
+            ]
+        )
+        runtime = HobbiRuntime(personal_data=self.personal, ckb=self.ckb, in_memory=True)
+        final = runtime.invoke(
+            {
+                "teen_id": "teen",
+                "thread_id": "paid-approval-thread",
+                "declared_age": 15,
+                "intake_result": IntakeResult(eligible=True, reason="eligible"),
+                "request": self.request,
+                "ledger": ledger,
+                "candidate_plan": None,
+                "approved_plan": None,
+                "guardian_verdict": None,
+                "rejection_history": [],
+                "binding_constraint": None,
+                "resume_approved_plan": False,
+                "booking_records": [],
+                "replan_count": 0,
+                "discovery_rounds": 0,
+                "guardian_rejects": 0,
+                "gate_log": [],
+                "token_usage": [],
+                "unavailable_listing_ids": [],
+                "outcome": None,
+            }
+        )
+        runtime.close()
+
+        self.assertEqual("escalated_to_adult", final["outcome"])
+        self.assertEqual(0, final["replan_count"])
+        self.assertEqual("paid-a", final["approved_plan"].items[0].listing_id)
+        self.assertEqual(Decimal(9), final["approved_plan"].total_cost_sgd)
+        stored = self.personal.get_plan("teen", final["approved_plan"].plan_id)
+        self.assertEqual(final["approved_plan"], stored)
+        self.assertCountEqual(
+            ["attendance_approval_required", "spend_approval_required"],
+            final["guardian_verdict"].reason_codes,
+        )
+        self.assertEqual(
+            ["G1", "G2", "G3"],
+            [gate.gate for gate in final["gate_log"]],
+        )
+
     def test_broker_availability_failure_replans_through_fresh_gates(self) -> None:
         ledger = self.setup_teen(constraints={"max_items": 1})
         records = [listing_record("a-full"), listing_record("b-open")]

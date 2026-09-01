@@ -72,11 +72,7 @@ def build_graph(
         records = _records(ckb)
         constraints = dict(snapshot["constraints"])
         rejection_history = state.get("rejection_history", [])
-        if any(
-            reason == "spend_approval_required"
-            or reason == "parental_rule:no_paid_activities"
-            for reason in rejection_history
-        ):
+        if "parental_rule:no_paid_activities" in rejection_history:
             constraints["max_item_cost_sgd"] = 0
         rejected_listing_ids = {
             reason.split(":", 1)[1]
@@ -176,7 +172,7 @@ def build_graph(
         next_rejections = state["guardian_rejects"] + 1
         replannable = any(
             reason.startswith(("provider_vetting_required:", "listing_dead:"))
-            or reason in {"spend_approval_required", "parental_rule:no_paid_activities"}
+            or reason == "parental_rule:no_paid_activities"
             for reason in verdict.reason_codes
         )
         common = {
