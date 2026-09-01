@@ -6,6 +6,7 @@ from decimal import Decimal
 
 from pydantic import ValidationError
 
+from src import ckb
 from src.schema.plan import BudgetLedger, Plan, PlanItem
 from src.schema.preferences import Axis, DislikeSignal
 
@@ -46,6 +47,18 @@ class CoreSchemaTests(unittest.TestCase):
             recorded_at=NOW,
         )
         self.assertEqual(0, dislike.effective_strength(NOW + timedelta(days=360)))
+
+    def test_ckb_package_preserves_merged_loader_exports(self) -> None:
+        self.assertEqual(
+            {
+                "KnowledgeBase",
+                "expand_next_sessions",
+                "hydrate_listing",
+                "hydrate_seed_records",
+                "load_seed_records",
+            },
+            set(ckb.__all__),
+        )
 
 
 if __name__ == "__main__":

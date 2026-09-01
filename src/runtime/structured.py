@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -45,7 +46,11 @@ def invoke_structured(
     result = model.invoke(
         [
             ("system", prompt),
-            ("user", f"Return only the typed result for this payload:\n{payload}"),
+            (
+                "user",
+                "Return only the typed result for this JSON payload:\n"
+                + json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str),
+            ),
         ]
     )
     return result if isinstance(result, output_schema) else output_schema.model_validate(result)

@@ -3,6 +3,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 from pydantic import ValidationError
 
@@ -11,6 +12,7 @@ from src.agents.planner import Planner
 from src.ckb.store import KnowledgeBase
 from src.graph import HobbiRuntime
 from src.intake import SetupInput, preference_seeds, setup
+from src.runtime.structured import invoke_structured
 from src.schema.events import BookingRecord, DebriefSubmission
 from src.schema.listing import PeerCohort
 from src.schema.plan import BudgetLedger, IntakeResult, Plan, PlanItem, SessionRequest
@@ -23,6 +25,26 @@ from tests.test_intake_and_gates import consents
 
 
 class RuntimeInvariantTests(unittest.TestCase):
+    def test_optional_bedrock_seam_sends_canonical_json_and_validates_output(self) -> None:
+        typed_model = Mock()
+        typed_model.invoke.return_value = {
+            "eligible": True,
+            "reason": "eligible",
+            "referral": None,
+        }
+        model = Mock()
+        model.with_structured_output.return_value = typed_model
+        with patch("src.runtime.structured.create_bedrock_model", return_value=model):
+            result = invoke_structured(
+                "planner",
+                {"goal": "try art", "budget": 0},
+                IntakeResult,
+            )
+        self.assertTrue(result.eligible)
+        user_message = typed_model.invoke.call_args.args[0][1][1]
+        self.assertIn('{"budget":0,"goal":"try art"}', user_message)
+        self.assertNotIn("'goal'", user_message)
+
     def test_a1_a2_unverified_and_budget_are_hard_gates(self) -> None:
         private = listing_record(
             "private", verification="unverified", provider_type="private_unverified"
@@ -118,7 +140,7 @@ class RuntimeInvariantTests(unittest.TestCase):
         )
         self.assertEqual(["allowed"], [item.listing_id for item in result.plan.items])
 
-    def test_a5_guardian_loop_stops_at_second_rejection(self) -> None:
+    def test_a5_non_replannable_approval_checkpoint_does_not_fake_a_loop(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             personal = PersonalDataStore(Path(temporary, "personal.sqlite"))
             ckb = KnowledgeBase(Path(temporary, "ckb.sqlite"))
@@ -148,6 +170,9 @@ class RuntimeInvariantTests(unittest.TestCase):
                     "candidate_plan": None,
                     "approved_plan": None,
                     "guardian_verdict": None,
+                    "rejection_history": [],
+                    "binding_constraint": None,
+                    "resume_approved_plan": False,
                     "booking_records": [],
                     "replan_count": 0,
                     "discovery_rounds": 0,
@@ -160,8 +185,9 @@ class RuntimeInvariantTests(unittest.TestCase):
                 final = runtime.invoke(state)
                 runtime.close()
                 self.assertEqual("escalated_to_adult", final["outcome"])
-                self.assertEqual(2, final["guardian_rejects"])
-                self.assertLessEqual(final["replan_count"], 3)
+                self.assertEqual(1, final["guardian_rejects"])
+                self.assertEqual(0, final["replan_count"])
+                self.assertIn("attendance_approval_required", final["rejection_history"])
             finally:
                 ckb.close()
                 personal.close()

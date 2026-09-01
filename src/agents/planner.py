@@ -9,6 +9,7 @@ from decimal import Decimal
 
 from pydantic import Field
 
+from src.agents.tools import ToolGuard
 from src.schema.listing import Listing
 from src.schema.plan import BudgetLedger, Plan, PlanItem, SessionRequest, StrictModel
 from src.schema.preferences import PreferenceModel
@@ -37,10 +38,14 @@ class Planner:
         constraints: dict[str, object] | None = None,
         unavailable_listing_ids: set[str] | None = None,
     ) -> PlannerResult:
+        guard = ToolGuard("planner")
+        guard.require("reads", "CKB")
+        guard.require("reads", "Personal Data")
         rules = set(parental_rules or [])
         limits = constraints or {}
         unavailable = unavailable_listing_ids or set()
         max_travel = int(limits.get("max_travel_min", 10_000))
+        max_item_cost = Decimal(str(limits.get("max_item_cost_sgd", ledger.money_remaining_sgd)))
         max_items = min(int(limits.get("max_items", 3)), ledger.tries_remaining)
         eligible: list[Listing] = []
         binding_counts = {"money": 0, "travel": 0, "time": 0, "age": 0, "rules": 0}
@@ -54,7 +59,7 @@ class Planner:
                 binding_counts["travel"] += 1
                 continue
             cost = listing.cost_total_first_session or Decimal(0)
-            if cost > ledger.money_remaining_sgd:
+            if cost > ledger.money_remaining_sgd or cost > max_item_cost:
                 binding_counts["money"] += 1
                 continue
             duration = (listing.schedule.duration_min or 60) / 60
@@ -65,6 +70,9 @@ class Planner:
                 binding_counts["rules"] += 1
                 continue
             if "no_private_unverified" in rules and listing.provider_type == "private_unverified":
+                binding_counts["rules"] += 1
+                continue
+            if "no_paid_activities" in rules and cost > 0:
                 binding_counts["rules"] += 1
                 continue
             allowed_areas = limits.get("allowed_planning_areas")
@@ -92,7 +100,12 @@ class Planner:
             if "artistic" in listing.vibes:
                 score += preferences.contact_noncontact.value * preferences.contact_noncontact.confidence
             for dislike in preferences.dislikes:
-                if dislike.listing_id == listing.listing_id:
+                applies = dislike.listing_id == listing.listing_id
+                if dislike.attribution == "instance" and dislike.provider:
+                    applies = dislike.provider == listing.provider
+                elif dislike.attribution == "activity" and dislike.axis.startswith("vibe:"):
+                    applies = dislike.axis.removeprefix("vibe:") in listing.vibes
+                if applies:
                     score -= dislike.effective_strength(at)
             return score
 

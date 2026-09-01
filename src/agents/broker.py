@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from pydantic import Field
 
-from src.schema.events import BookingRecord
+from src.agents.tools import ToolGuard
+from src.schema.events import BookingRecord, CommitEvidence
 from src.schema.listing import ListingRecord
-from src.schema.plan import GuardianVerdict, Plan, StrictModel
+from src.schema.plan import GuardianVerdict, Plan, PlanItem, StrictModel
 from src.store.personal_data import PersonalDataStore
 from src.validation.orchestrator import Validator
 
 
 class BrokerResult(StrictModel):
     records: list[BookingRecord] = Field(default_factory=list)
+    commit_evidence: CommitEvidence | None = None
     replayed: bool = False
     failure_reason: str | None = None
     unavailable_listing_id: str | None = None
@@ -32,10 +36,16 @@ class Broker:
         listings: dict[str, ListingRecord],
         store: PersonalDataStore,
         unavailable_listing_ids: set[str] | None = None,
+        sandbox_availability: Callable[[PlanItem], bool] | None = None,
     ) -> BrokerResult:
+        guard = ToolGuard("broker")
+        guard.require("reads", "guardian_passed_plan")
+        guard.require("writes", "Personal Data.ledger")
+        guard.require("writes", "booking_records")
         unavailable = unavailable_listing_ids or set()
+        availability = sandbox_availability or (lambda _: True)
         for item in plan.items:
-            if item.listing_id in unavailable:
+            if item.listing_id in unavailable or not availability(item):
                 return BrokerResult(
                     failure_reason=(
                         f"{item.listing_id} is unavailable for that session; "
@@ -44,9 +54,9 @@ class Broker:
                     unavailable_listing_id=item.listing_id,
                 )
         Validator.require_pass(Validator().g3(plan, verdict, listings))
-        store.save_plan(teen_id, plan)
+        store.save_plan(teen_id, plan, live=False)
         store.save_guardian_verdict(teen_id, verdict)
-        records, replayed = store.commit_plan_bookings(
+        records, evidence = store.commit_plan_bookings(
             teen_id=teen_id, plan=plan, verdict=verdict
         )
         teen: list[dict[str, object]] = []
@@ -77,7 +87,8 @@ class Broker:
             )
         return BrokerResult(
             records=records,
-            replayed=replayed,
+            commit_evidence=evidence,
+            replayed=evidence.replayed,
             teen_preparation=teen,
             parent_reassurance=parent,
         )

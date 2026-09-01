@@ -34,6 +34,7 @@ class Axis(StrictModel):
 class DislikeSignal(StrictModel):
     axis: str = Field(min_length=1)
     listing_id: str = Field(min_length=1)
+    provider: str | None = None
     attribution: Literal["activity", "instance", "unattributed"]
     strength: float = Field(ge=0, le=1)
     recorded_at: datetime

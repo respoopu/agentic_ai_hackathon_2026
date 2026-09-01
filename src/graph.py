@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Literal
 
@@ -18,7 +19,8 @@ from src.agents.planner import Planner
 from src.ckb.seed_loader import hydrate_listing
 from src.ckb.store import KnowledgeBase
 from src.constants import MAX_DISCOVERY_ROUNDS, MAX_GUARDIAN_REJECTIONS, MAX_REPLANS
-from src.schema.listing import Listing, ListingRecord
+from src.schema.listing import Listing, ListingRecord, PeerCohort
+from src.schema.plan import PlanItem
 from src.schema.state import HobbiState
 from src.store.personal_data import PersonalDataStore
 from src.validation.orchestrator import Validator
@@ -35,11 +37,16 @@ def _hydrated(
     listings: list[Listing] = []
     for record in records.values():
         travel = configured.get(record.listing_id, [20, 20]) if isinstance(configured, dict) else [20, 20]
+        cohort_values = constraints.get("peer_cohorts", {})
+        cohort = None
+        if isinstance(cohort_values, dict) and record.listing_id in cohort_values:
+            cohort = PeerCohort.model_validate(cohort_values[record.listing_id])
         listings.append(
             hydrate_listing(
                 record,
                 travel_min_home=int(travel[0]),
                 travel_min_school=int(travel[1]),
+                peer_cohort=cohort,
                 as_of=as_of,
             )
         )
@@ -52,6 +59,7 @@ def build_graph(
     ckb: KnowledgeBase,
     discovery_replay_path: str | Path | None = None,
     checkpointer: Any | None = None,
+    sandbox_availability: Callable[[PlanItem], bool] | None = None,
 ):
     planner = Planner()
     discovery = Discovery()
@@ -62,38 +70,54 @@ def build_graph(
     def planner_node(state: HobbiState) -> dict[str, Any]:
         snapshot = personal_data.planner_snapshot(state["teen_id"])
         records = _records(ckb)
+        constraints = dict(snapshot["constraints"])
+        rejection_history = state.get("rejection_history", [])
+        if any(
+            reason == "spend_approval_required"
+            or reason == "parental_rule:no_paid_activities"
+            for reason in rejection_history
+        ):
+            constraints["max_item_cost_sgd"] = 0
+        rejected_listing_ids = {
+            reason.split(":", 1)[1]
+            for reason in rejection_history
+            if reason.startswith(("provider_vetting_required:", "listing_dead:"))
+        }
         result = planner.create_plan(
             planning_key=state["teen_id"],
             declared_age=state["declared_age"],
             request=state["request"],
             ledger=snapshot["ledger"],
             preferences=snapshot["preferences"],
-            listings=_hydrated(records, snapshot["constraints"], state["request"].requested_at),
+            listings=_hydrated(records, constraints, state["request"].requested_at),
             parental_rules=snapshot["parental_rules"],
-            constraints=snapshot["constraints"],
+            constraints=constraints,
             unavailable_listing_ids=(
                 set(state.get("unavailable_listing_ids", []))
                 | snapshot["booked_listing_ids"]
+                | rejected_listing_ids
             ),
         )
         if result.plan is None:
-            return {"candidate_plan": None, "outcome": "no_viable_plan"}
-        g2 = validator.g2(result.plan, snapshot["ledger"], records)
-        if not g2.passed:
             return {
-                "candidate_plan": result.plan,
-                "gate_log": [g2],
+                "candidate_plan": None,
+                "binding_constraint": result.binding_constraint,
                 "outcome": "no_viable_plan",
             }
+        g1 = validator.g1_plan(result.plan)
+        validator.require_pass(g1)
+        personal_data.save_plan(state["teen_id"], result.plan, live=False)
         return {
             "candidate_plan": result.plan,
-            "approved_plan": result.plan,
+            "approved_plan": None,
+            "resume_approved_plan": False,
             "ledger": snapshot["ledger"],
-            "gate_log": [g2],
+            "binding_constraint": result.binding_constraint,
+            "gate_log": [g1],
             "outcome": None,
         }
 
-    def after_planner(state: HobbiState) -> Literal["discovery", "guardian", "end"]:
+    def after_planner(state: HobbiState) -> Literal["discovery", "g2", "end"]:
         if state.get("outcome") is not None or state.get("candidate_plan") is None:
             return "end"
         plan = state["candidate_plan"]
@@ -103,25 +127,40 @@ def build_graph(
             and state["discovery_rounds"] < MAX_DISCOVERY_ROUNDS
         ):
             return "discovery"
-        return "guardian"
+        return "g2"
 
     def discovery_node(state: HobbiState) -> dict[str, Any]:
         plan = state["candidate_plan"]
-        assert plan is not None and discovery_replay_path is not None
-        g1_out = validator.g1_plan(plan)
-        validator.require_pass(g1_out)
+        if plan is None or discovery_replay_path is None:
+            raise ValueError("Discovery requires a candidate plan and replay source")
         result = discovery.cached_replay(plan, discovery_replay_path, ckb)
         g1_in = validator.g1_records(result.records)
         validator.require_pass(g1_in)
         return {
             "discovery_rounds": state["discovery_rounds"] + 1,
-            "gate_log": [g1_out, g1_in],
+            "gate_log": [g1_in],
         }
+
+    def g2_node(state: HobbiState) -> dict[str, Any]:
+        plan = state["candidate_plan"]
+        if plan is None:
+            raise ValueError("G2 requires a candidate plan")
+        snapshot = personal_data.planner_snapshot(state["teen_id"])
+        g2 = validator.g2(plan, snapshot["ledger"], _records(ckb))
+        if not g2.passed:
+            return {
+                "approved_plan": None,
+                "gate_log": [g2],
+                "binding_constraint": ",".join(g2.reason_codes),
+                "outcome": "no_viable_plan",
+            }
+        return {"approved_plan": plan, "gate_log": [g2]}
 
     def guardian_node(state: HobbiState) -> dict[str, Any]:
         plan = state["approved_plan"]
-        assert plan is not None
-        snapshot = personal_data.guardian_snapshot(state["teen_id"])
+        if plan is None:
+            raise ValueError("Guardian requires a G2-approved plan")
+        snapshot = personal_data.guardian_snapshot(state["teen_id"], plan)
         verdict = guardian.review(
             plan=plan,
             listings=_records(ckb),
@@ -130,24 +169,34 @@ def build_graph(
             spend_approval_id=snapshot["spend_approval_id"],
             parental_rules=snapshot["parental_rules"],
         )
+        g3 = validator.g3(plan, verdict, _records(ckb))
         if verdict.approved:
-            return {"guardian_verdict": verdict}
+            validator.require_pass(g3)
+            return {"guardian_verdict": verdict, "gate_log": [g3]}
         next_rejections = state["guardian_rejects"] + 1
-        if next_rejections >= MAX_GUARDIAN_REJECTIONS:
+        replannable = any(
+            reason.startswith(("provider_vetting_required:", "listing_dead:"))
+            or reason in {"spend_approval_required", "parental_rule:no_paid_activities"}
+            for reason in verdict.reason_codes
+        )
+        common = {
+            "guardian_verdict": verdict,
+            "guardian_rejects": next_rejections,
+            "rejection_history": verdict.reason_codes,
+            "gate_log": [g3],
+        }
+        if next_rejections >= MAX_GUARDIAN_REJECTIONS or not replannable:
             return {
-                "guardian_verdict": verdict,
-                "guardian_rejects": next_rejections,
+                **common,
                 "outcome": "escalated_to_adult",
             }
         if state["replan_count"] >= MAX_REPLANS:
             return {
-                "guardian_verdict": verdict,
-                "guardian_rejects": next_rejections,
+                **common,
                 "outcome": "cap_breached",
             }
         return {
-            "guardian_verdict": verdict,
-            "guardian_rejects": next_rejections,
+            **common,
             "replan_count": state["replan_count"] + 1,
             "candidate_plan": None,
             "approved_plan": None,
@@ -162,10 +211,9 @@ def build_graph(
     def broker_node(state: HobbiState) -> dict[str, Any]:
         plan = state["approved_plan"]
         verdict = state["guardian_verdict"]
-        assert plan is not None and verdict is not None
+        if plan is None or verdict is None:
+            raise ValueError("Broker requires an approved plan and Guardian verdict")
         records = _records(ckb)
-        g3 = validator.g3(plan, verdict, records)
-        validator.require_pass(g3)
         result = broker.book(
             teen_id=state["teen_id"],
             plan=plan,
@@ -173,12 +221,12 @@ def build_graph(
             listings=records,
             store=personal_data,
             unavailable_listing_ids=set(state.get("unavailable_listing_ids", [])),
+            sandbox_availability=sandbox_availability,
         )
         if result.failure_reason:
             if state["replan_count"] >= MAX_REPLANS:
-                return {"gate_log": [g3], "outcome": "cap_breached"}
+                return {"outcome": "cap_breached"}
             return {
-                "gate_log": [g3],
                 "unavailable_listing_ids": [
                     *state.get("unavailable_listing_ids", []),
                     result.unavailable_listing_id,
@@ -187,15 +235,17 @@ def build_graph(
                 "approved_plan": None,
                 "guardian_verdict": None,
             }
+        if result.commit_evidence is None:
+            raise ValueError("Broker success requires durable commit evidence")
         g4_results = [
-            validator.g4(record, ledger_applied=not result.replayed, replayed=result.replayed)
+            validator.g4(record, evidence=result.commit_evidence)
             for record in result.records
         ]
         for gate in g4_results:
             validator.require_pass(gate)
         return {
             "booking_records": result.records,
-            "gate_log": [g3, *g4_results],
+            "gate_log": g4_results,
             "outcome": "booked",
         }
 
@@ -205,13 +255,19 @@ def build_graph(
     graph = StateGraph(HobbiState)
     graph.add_node("planner", planner_node)
     graph.add_node("discovery", discovery_node)
+    graph.add_node("g2", g2_node)
     graph.add_node("guardian", guardian_node)
     graph.add_node("broker", broker_node)
-    graph.add_edge(START, "planner")
     graph.add_conditional_edges(
-        "planner", after_planner, {"discovery": "discovery", "guardian": "guardian", "end": END}
+        START,
+        lambda state: "g2" if state.get("resume_approved_plan") else "planner",
+        {"planner": "planner", "g2": "g2"},
+    )
+    graph.add_conditional_edges(
+        "planner", after_planner, {"discovery": "discovery", "g2": "g2", "end": END}
     )
     graph.add_edge("discovery", "planner")
+    graph.add_edge("g2", "guardian")
     graph.add_conditional_edges(
         "guardian", after_guardian, {"planner": "planner", "broker": "broker", "end": END}
     )
@@ -230,6 +286,7 @@ class HobbiRuntime:
         checkpoint_path: str | Path | None = None,
         discovery_replay_path: str | Path | None = None,
         in_memory: bool = False,
+        sandbox_availability: Callable[[PlanItem], bool] | None = None,
     ) -> None:
         self._checkpoint_connection: sqlite3.Connection | None = None
         serde = JsonPlusSerializer(
@@ -241,6 +298,7 @@ class HobbiRuntime:
                 ("src.schema.plan", "Plan"),
                 ("src.schema.plan", "GuardianVerdict"),
                 ("src.schema.events", "BookingRecord"),
+                ("src.schema.events", "CommitEvidence"),
                 ("src.schema.gates", "GateResult"),
                 ("src.schema.gates", "TokenUsage"),
             }
@@ -261,6 +319,7 @@ class HobbiRuntime:
             ckb=ckb,
             discovery_replay_path=discovery_replay_path,
             checkpointer=checkpointer,
+            sandbox_availability=sandbox_availability,
         )
 
     def invoke(self, state: HobbiState) -> HobbiState:

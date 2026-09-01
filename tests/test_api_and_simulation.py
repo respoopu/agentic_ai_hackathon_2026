@@ -2,20 +2,89 @@ from __future__ import annotations
 
 import tempfile
 import unittest
-from unittest.mock import patch
+import urllib.error
+from unittest.mock import MagicMock, patch
 
 from sim.counterfactual import run as counterfactual
 from sim.harness import load_profiles, run_eligible_profiles
 from sim.report import rows
-from src.api import HobbiService
+from src.api import ApiAuthorizationError, HobbiService, _source_status
+from src.store.personal_data import AuthorizationError
 from tests.helpers import NOW, listing_record
 from tests.test_intake_and_gates import consents
 
+GUARDIAN_TOKEN = "guardian-test-token-0000000000000000"
+COMPLIANCE_TOKEN = "compliance-test-token-000000000000"
+
 
 class ApiAndSimulationTests(unittest.TestCase):
+    def test_compliance_source_check_honors_robots_and_explicit_missing(self) -> None:
+        denied = MagicMock()
+        denied.status = 200
+        denied.read.return_value = b"User-agent: *\nDisallow: /private\n"
+        denied.__enter__.return_value = denied
+        with patch("src.api.urllib.request.urlopen", return_value=denied) as fetch:
+            self.assertEqual(
+                "transient", _source_status("https://onepa.gov.sg/private/listing")
+            )
+        self.assertEqual(1, fetch.call_count)
+
+        robots_missing = urllib.error.HTTPError(
+            "https://onepa.gov.sg/robots.txt", 404, "missing", {}, None
+        )
+        listing_missing = urllib.error.HTTPError(
+            "https://onepa.gov.sg/listing", 410, "gone", {}, None
+        )
+        with patch(
+            "src.api.urllib.request.urlopen",
+            side_effect=[robots_missing, listing_missing],
+        ):
+            self.assertEqual("missing", _source_status("https://onepa.gov.sg/listing"))
+
+    def test_empty_ckb_is_explicitly_not_ready_and_fails_planning(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            service = HobbiService(temporary, guardian_token=GUARDIAN_TOKEN)
+            try:
+                health = service.handle({"operation": "health"})
+                self.assertFalse(health["ready_for_real_planning"])
+                response = service.handle(
+                    {
+                        "operation": "intake_and_plan",
+                        "setup": {
+                            "teen_id": "empty-teen",
+                            "thread_id": "empty-thread",
+                            "declared_age": 15,
+                            "request": {
+                                "goal": "find something free",
+                                "requested_at": NOW.isoformat(),
+                            },
+                            "ledger": {
+                                "money_total_sgd": 0,
+                                "hours_per_week": 2,
+                                "tries_total": 2,
+                            },
+                            "consents": [
+                                value.model_dump(mode="json")
+                                for value in consents("empty-teen")
+                            ],
+                        },
+                    },
+                    authorization=GUARDIAN_TOKEN,
+                )
+                self.assertFalse(response["ok"])
+                self.assertEqual("no_viable_plan", response["state"]["outcome"])
+                self.assertTrue(response["state"]["binding_constraint"])
+                self.assertEqual(["trusted_adult"], response["notification_required"])
+            finally:
+                service.close()
+
     def test_service_health_and_full_intake_path(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            service = HobbiService(temporary)
+            service = HobbiService(
+                temporary,
+                guardian_token=GUARDIAN_TOKEN,
+                compliance_token=COMPLIANCE_TOKEN,
+            )
             try:
                 service.ckb.seed([listing_record("api-free")])
                 health = service.handle({"operation": "health"})
@@ -34,20 +103,89 @@ class ApiAndSimulationTests(unittest.TestCase):
                                 "tries_total": 2,
                             },
                             "consents": [value.model_dump(mode="json") for value in consents("api-teen")],
-                            "constraints": {
-                                "attendance_approval_id": "adult-attendance",
-                                "provider_approval_ids": {
-                                    "DISCOVERY-activesg-yuhua-secondary-field": "adult-provider"
-                                },
-                            },
                         },
-                    }
+                    },
+                    authorization=GUARDIAN_TOKEN,
                 )
                 self.assertTrue(response["ok"])
-                self.assertEqual("booked", response["state"]["outcome"])
+                self.assertEqual("escalated_to_adult", response["state"]["outcome"])
+                initial_gates = [gate["gate"] for gate in response["state"]["gate_log"]]
+                self.assertLess(initial_gates.index("G1"), initial_gates.index("G2"))
+                plan = response["state"]["approved_plan"]
+                approvals = {
+                    item["listing_id"]: f"adult-provider-{item['listing_id']}"
+                    for item in plan["items"]
+                    if service.ckb.get(item["listing_id"]).verification != "verified"
+                }
+                approved = service.handle(
+                    {
+                        "operation": "guardian_approve",
+                        "teen_id": "api-teen",
+                        "plan_id": plan["plan_id"],
+                        "provider_approval_ids": approvals,
+                        "attendance_approval_id": "adult-attendance",
+                    },
+                    authorization=GUARDIAN_TOKEN,
+                )
+                self.assertEqual("booked", approved["state"]["outcome"])
                 self.assertEqual(
-                    ["I0", "G2", "G1", "G1", "G2", "G3", "G4", "G4"],
-                    [gate["gate"] for gate in response["state"]["gate_log"]],
+                    ["G2", "G3", "G4"],
+                    [gate["gate"] for gate in approved["state"]["gate_log"]],
+                )
+                booking = approved["state"]["booking_records"][0]
+                with self.assertRaises(ApiAuthorizationError):
+                    service.handle(
+                        {
+                            "operation": "attendance",
+                            "teen_id": "api-teen",
+                            "event": {
+                                "booking_id": booking["booking_id"],
+                                "attended": True,
+                                "occurred_at": NOW.isoformat(),
+                            },
+                        },
+                        authorization="wrong-profile-token",
+                    )
+                attendance = service.handle(
+                    {
+                        "operation": "attendance",
+                        "teen_id": "api-teen",
+                        "event": {
+                            "booking_id": booking["booking_id"],
+                            "attended": True,
+                            "occurred_at": NOW.isoformat(),
+                        },
+                    },
+                    authorization=response["teen_access_token"],
+                )
+                self.assertTrue(attendance["ok"])
+                with self.assertRaises(AuthorizationError):
+                    service.handle(
+                        {
+                            "operation": "intake_and_plan",
+                            "setup": {
+                                "teen_id": "api-teen",
+                                "thread_id": "replacement-thread",
+                                "declared_age": 17,
+                                "request": {
+                                    "goal": "replace rules",
+                                    "requested_at": NOW.isoformat(),
+                                },
+                                "ledger": {
+                                    "money_total_sgd": 500,
+                                    "hours_per_week": 10,
+                                    "tries_total": 10,
+                                },
+                                "consents": [
+                                    value.model_dump(mode="json")
+                                    for value in consents("api-teen")
+                                ],
+                            },
+                        },
+                        authorization=GUARDIAN_TOKEN,
+                    )
+                self.assertEqual(
+                    15, service.personal_data.profile_identity("api-teen")["declared_age"]
                 )
             finally:
                 service.close()
@@ -60,7 +198,11 @@ class ApiAndSimulationTests(unittest.TestCase):
 
     def test_compliance_retirement_replans_through_fresh_authorization(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            service = HobbiService(temporary)
+            service = HobbiService(
+                temporary,
+                guardian_token=GUARDIAN_TOKEN,
+                compliance_token=COMPLIANCE_TOKEN,
+            )
             try:
                 service.ckb.seed(
                     [
@@ -85,33 +227,55 @@ class ApiAndSimulationTests(unittest.TestCase):
                             "consents": [
                                 value.model_dump(mode="json") for value in consents("cascade-teen")
                             ],
-                            "constraints": {
-                                "max_items": 2,
-                                "attendance_approval_id": "adult-attendance",
-                                "provider_approval_ids": {
-                                    "DISCOVERY-activesg-yuhua-secondary-field": "adult-provider"
-                                },
-                            },
+                            "constraints": {"max_items": 2},
                         },
-                    }
+                    },
+                    authorization=GUARDIAN_TOKEN,
                 )
-                self.assertEqual("booked", response["state"]["outcome"])
+                plan = response["state"]["approved_plan"]
+                approved = service.handle(
+                    {
+                        "operation": "guardian_approve",
+                        "teen_id": "cascade-teen",
+                        "plan_id": plan["plan_id"],
+                        "attendance_approval_id": "adult-attendance",
+                    },
+                    authorization=GUARDIAN_TOKEN,
+                )
+                self.assertEqual("booked", approved["state"]["outcome"])
                 with patch(
-                    "src.api._source_alive",
-                    side_effect=lambda url: "a-retire-target" not in url,
+                    "src.api._source_status",
+                    side_effect=lambda url: (
+                        "missing" if "a-retire-target" in url else "alive"
+                    ),
                 ):
                     cascade = service.handle(
-                        {"operation": "compliance_scan", "replan_flagged": True}
+                        {"operation": "compliance_scan", "replan_flagged": True},
+                        authorization=COMPLIANCE_TOKEN,
                     )
                 self.assertEqual(
                     ["a-retire-target"], cascade["result"]["retired_listing_ids"]
                 )
-                self.assertEqual("booked", cascade["replans"][0]["state"]["outcome"])
+                replacement = cascade["replans"][0]["state"]
+                self.assertEqual("escalated_to_adult", replacement["outcome"])
                 self.assertEqual(
-                    ["retire", "Planner", "G2", "Guardian", "G3", "Broker"],
-                    cascade["replans"][0]["path"],
+                    ["teen", "trusted_adult"],
+                    cascade["replans"][0]["notification_required"],
                 )
-                self.assertEqual(["teen", "parent"], cascade["replans"][0]["notified"])
+                replacement_plan = replacement["approved_plan"]
+                replacement_booking = service.handle(
+                    {
+                        "operation": "guardian_approve",
+                        "teen_id": "cascade-teen",
+                        "plan_id": replacement_plan["plan_id"],
+                        "attendance_approval_id": "replacement-attendance",
+                    },
+                    authorization=GUARDIAN_TOKEN,
+                )
+                self.assertEqual("booked", replacement_booking["state"]["outcome"])
+                self.assertNotIn(
+                    "a-retire-target", service.personal_data.live_listing_ids()
+                )
             finally:
                 service.close()
 
@@ -119,9 +283,9 @@ class ApiAndSimulationTests(unittest.TestCase):
         result = run_eligible_profiles()
         self.assertEqual({"numerator": 4, "denominator": 4}, result["metrics"]["s0_viability"])
         comparison = counterfactual()
-        self.assertEqual(4, comparison["first_attendance"]["hobbi"]["denominator"])
-        self.assertEqual(2, comparison["longitudinal"]["holds"])
-        self.assertEqual(1, comparison["longitudinal"]["adaptation_latency_cycles"])
+        self.assertFalse(comparison["first_attendance"]["measured"])
+        self.assertFalse(comparison["longitudinal"]["measured"])
+        self.assertEqual(2, comparison["longitudinal"]["scripted_holds"])
 
     def test_report_emits_b1_through_b15(self) -> None:
         names = [name for name, _ in rows()]

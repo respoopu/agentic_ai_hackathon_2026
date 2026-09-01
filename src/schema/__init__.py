@@ -3,6 +3,7 @@
 from src.schema.events import (
     AttendanceEvent,
     BookingRecord,
+    CommitEvidence,
     DebriefRecord,
     DebriefSubmission,
 )
@@ -24,6 +25,7 @@ __all__ = [
     "Axis",
     "BookingRecord",
     "BudgetLedger",
+    "CommitEvidence",
     "ConsentRecord",
     "DebriefRecord",
     "DebriefSubmission",

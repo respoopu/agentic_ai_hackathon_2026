@@ -17,7 +17,7 @@ COMPONENT_PERMISSIONS = {
     },
     "discovery": {
         "reads": frozenset({"CKB", "external_sources"}),
-        "writes": frozenset({"CKB.ListingRecord"}),
+        "writes": frozenset({"CKB", "CKB.ListingRecord"}),
         "gates": frozenset({"G1"}),
     },
     "guardian": {
@@ -26,7 +26,7 @@ COMPONENT_PERMISSIONS = {
         "gates": frozenset({"G3"}),
     },
     "broker": {
-        "reads": frozenset({"guardian_passed_plan"}),
+        "reads": frozenset({"guardian_passed_plan", "booking_records"}),
         "writes": frozenset({"Personal Data.ledger", "booking_records"}),
         "gates": frozenset({"G4"}),
     },

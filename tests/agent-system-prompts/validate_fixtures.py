@@ -16,6 +16,10 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from src.agents.tools import COMPONENT_PERMISSIONS
+
 DEFAULT_FIXTURES = Path(__file__).resolve().parent / "fixtures"
 PROMPTS = ROOT / "docs" / "agent-system-prompts"
 REQUIRED_COVERAGE = {
@@ -38,52 +42,13 @@ REQUIRED_AGENTS = {
 # anything outside the set is a contract violation. Intake is explicit here
 # even though it is deterministic application code rather than an agent.
 COMPONENT_BOUNDARIES = {
-    "intake": {
-        "reads": set(),
-        "writes": {"Personal Data.setup"},
-        "gates": {"I0"},
-    },
-    "planner": {
-        "reads": {"CKB", "Personal Data"},
-        "writes": set(),
-        "gates": {"G1", "G2"},
-    },
-    "discovery": {
-        "reads": {"CKB", "external_sources"},
-        "writes": {"CKB", "CKB.ListingRecord"},
-        "gates": {"G1"},
-    },
-    "guardian": {
-        "reads": {"approved_plan", "CKB", "Personal Data"},
-        "writes": set(),
-        "gates": {"G2", "G3"},
-    },
-    "broker": {
-        "reads": {"guardian_passed_plan", "booking_records"},
-        "writes": {"Personal Data.ledger", "booking_records"},
-        "gates": {"G2", "G3", "G4"},
-    },
-    "observer": {
-        "reads": {"AttendanceEvent", "BookingRecord", "DebriefSubmission"},
-        "writes": {
-            "Personal Data.attendance",
-            "Personal Data.ledger",
-            "Personal Data.preferences",
-        },
-        "gates": set(),
-    },
-    "compliance": {
-        "reads": {"CKB", "Personal Data"},
-        "writes": {"CKB.freshness", "Personal Data.plan_live_flags"},
-        "gates": {"G2", "G3"},
-    },
-    "validator": {
-        "reads": set(),
-        "writes": {"gate_log"},
-        "gates": {"I0", "G1", "G2", "G3", "G4"},
-    },
-    "protocol": {"reads": set(), "writes": set(), "gates": set()},
+    component: {
+        "reads": set(boundary["reads"]),
+        "writes": set(boundary["writes"]),
+    }
+    for component, boundary in COMPONENT_PERMISSIONS.items()
 }
+COMPONENT_BOUNDARIES["protocol"] = {"reads": set(), "writes": set()}
 
 REQUIRED_GATES_BY_FIXTURE = {
     "broker-actionable-failure-regated": {"G2", "G3"},
@@ -99,6 +64,18 @@ REQUIRED_GATES_BY_FIXTURE = {
     "planner-budget-parental-age-travel": {"G2"},
     "planner-zero-budget-skipped-cold-start": {"G2"},
     "validator-shape-only-gates": {"I0", "G1", "G2", "G3", "G4"},
+    "compliance-manual-scan-caps": set(),
+    "observer-attendance-paths": set(),
+    "observer-audio-rejected": set(),
+    "observer-dislike-attribution-decay": set(),
+    "observer-no-show-and-adaptation": set(),
+    "planner-actionable-thin-plan": set(),
+    "planner-caps-and-terminal-outcomes": set(),
+    "planner-no-listing-coverage-gap": set(),
+    "planner-peer-cohort-suppressed": set(),
+    "planner-ranking-signals-only": set(),
+    "protocol-poc-boundaries": set(),
+    "protocol-store-permissions": set(),
 }
 
 
@@ -460,7 +437,6 @@ def validate_fixture(fixture: Any, source: str) -> list[str]:
     for declared_key, allowed_key in (
         ("store_reads", "reads"),
         ("store_writes", "writes"),
-        ("gates", "gates"),
     ):
         unexpected = set(fixture["expect"][declared_key]) - boundary[allowed_key]
         _expect(

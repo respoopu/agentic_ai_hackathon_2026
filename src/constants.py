@@ -17,6 +17,7 @@ REASONING_MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 DISCOVERY_ALLOWED_DOMAINS = frozenset(
     {
         "activesg.gov.sg",
+        "activesgcircle.gov.sg",
         "nlb.gov.sg",
         "nlb.libcal.com",
         "onepa.gov.sg",

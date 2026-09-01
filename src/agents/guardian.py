@@ -7,6 +7,7 @@ import json
 from collections.abc import Mapping
 from datetime import UTC, datetime
 
+from src.agents.tools import ToolGuard
 from src.schema.listing import ListingRecord
 from src.schema.plan import GuardianVerdict, Plan
 
@@ -24,6 +25,9 @@ class Guardian:
         spend_approval_id: str | None = None,
         parental_rules: list[str] | None = None,
     ) -> GuardianVerdict:
+        guard = ToolGuard("guardian")
+        for resource in ("approved_plan", "CKB", "Personal Data"):
+            guard.require("reads", resource)
         provider_approvals = provider_approval_ids or {}
         reasons: list[str] = []
         for item in plan.items:

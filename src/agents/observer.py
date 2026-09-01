@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import Field
 
+from src.agents.tools import ToolGuard
 from src.schema.events import AttendanceEvent, DebriefRecord, DebriefSubmission
 from src.schema.listing import ListingRecord
 from src.schema.plan import StrictModel
@@ -33,6 +34,15 @@ class Observer:
         listing: ListingRecord | None = None,
         debrief: DebriefSubmission | None = None,
     ) -> ObserverResult:
+        guard = ToolGuard("observer")
+        for resource in ("AttendanceEvent", "BookingRecord", "DebriefSubmission"):
+            guard.require("reads", resource)
+        for resource in (
+            "Personal Data.attendance",
+            "Personal Data.ledger",
+            "Personal Data.preferences",
+        ):
+            guard.require("writes", resource)
         if debrief is not None and debrief.booking_id != event.booking_id:
             raise ValueError("debrief does not match attendance booking")
         attendance = [*preferences.attendance, event]
@@ -69,16 +79,64 @@ class Observer:
                 attribution = "instance"
             else:
                 attribution = "unattributed"
-            if any(word in lower for word in ("boring", "hate", "far", "awkward", "uncomfortable")):
+            if (
+                listing is not None
+                and any(
+                    word in lower
+                    for word in (
+                        "boring",
+                        "hate",
+                        "not my thing",
+                        "far",
+                        "awkward",
+                        "uncomfortable",
+                    )
+                )
+            ):
+                activity_vibe = next(
+                    (vibe for vibe in ("sporty", "artistic", "chill") if vibe in listing.vibes),
+                    "other",
+                )
+                signal_axis = (
+                    f"vibe:{activity_vibe}" if attribution == "activity" else "activity_fit"
+                )
                 dislikes.append(
                     DislikeSignal(
-                        axis="activity_fit",
-                        listing_id=listing.listing_id if listing is not None else "unknown",
+                        axis=signal_axis,
+                        listing_id=listing.listing_id,
+                        provider=listing.provider if attribution == "instance" else None,
                         attribution=attribution,
                         strength=0.6,
                         recorded_at=debrief.submitted_at,
                     )
                 )
+                corroborating = [
+                    signal
+                    for signal in dislikes
+                    if signal.attribution == "activity" and signal.axis == signal_axis
+                ]
+                if attribution == "activity" and len(corroborating) >= 2:
+                    if activity_vibe == "sporty":
+                        updates["intensity"] = Axis(
+                            value=-0.4,
+                            confidence=0.5,
+                            provenance="debrief",
+                            updated_at=debrief.submitted_at,
+                        )
+                    elif activity_vibe == "chill":
+                        updates["intensity"] = Axis(
+                            value=0.4,
+                            confidence=0.5,
+                            provenance="debrief",
+                            updated_at=debrief.submitted_at,
+                        )
+                    elif activity_vibe == "artistic":
+                        updates["contact_noncontact"] = Axis(
+                            value=-0.4,
+                            confidence=0.5,
+                            provenance="debrief",
+                            updated_at=debrief.submitted_at,
+                        )
         updates.update({"debriefs": debrief_records, "dislikes": dislikes})
         adapted = PreferenceModel.model_validate({**preferences.model_dump(), **updates})
         if len(attendance) >= 2 and not attendance[-1].attended and not attendance[-2].attended:

@@ -34,6 +34,9 @@ class HobbiState(TypedDict):
     candidate_plan: Plan | None
     approved_plan: Plan | None
     guardian_verdict: GuardianVerdict | None
+    rejection_history: Annotated[list[str], operator.add]
+    binding_constraint: str | None
+    resume_approved_plan: bool
     booking_records: Annotated[list[BookingRecord], operator.add]
     replan_count: int
     discovery_rounds: int

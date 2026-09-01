@@ -56,7 +56,9 @@ class SessionRequest(StrictModel):
 
 class IntakeResult(StrictModel):
     eligible: bool
-    reason: Literal["eligible", "under_13", "adult_mode_unavailable"]
+    reason: Literal[
+        "eligible", "under_13", "adult_mode_unavailable", "consent_required"
+    ]
     referral: Literal["trusted_adult", "general_activity_services"] | None = None
 
     @model_validator(mode="after")
@@ -65,6 +67,7 @@ class IntakeResult(StrictModel):
             "eligible": (True, None),
             "under_13": (False, "trusted_adult"),
             "adult_mode_unavailable": (False, "general_activity_services"),
+            "consent_required": (False, "trusted_adult"),
         }[self.reason]
         if (self.eligible, self.referral) != expected:
             raise ValueError("intake eligibility, reason and referral disagree")

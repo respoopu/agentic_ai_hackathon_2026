@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import sqlite3
 from collections.abc import Iterator, Sequence
@@ -12,7 +13,12 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from src.schema.events import AttendanceEvent, BookingRecord, DebriefRecord
+from src.schema.events import (
+    AttendanceEvent,
+    BookingRecord,
+    CommitEvidence,
+    DebriefRecord,
+)
 from src.schema.plan import (
     BudgetLedger,
     ConsentRecord,
@@ -68,6 +74,12 @@ CREATE TABLE IF NOT EXISTS consent_records (
     recorded_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS profile_access (
+    teen_id TEXT PRIMARY KEY REFERENCES profiles(teen_id) ON DELETE CASCADE,
+    token_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS ledgers (
     teen_id TEXT PRIMARY KEY REFERENCES profiles(teen_id) ON DELETE CASCADE,
     money_total_sgd TEXT NOT NULL,
@@ -98,6 +110,20 @@ CREATE TABLE IF NOT EXISTS plans (
     needs_replan INTEGER NOT NULL DEFAULT 0 CHECK (needs_replan IN (0, 1)),
     flag_reason TEXT,
     created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS trusted_adult_approvals (
+    approval_id TEXT PRIMARY KEY,
+    teen_id TEXT NOT NULL REFERENCES profiles(teen_id) ON DELETE CASCADE,
+    plan_id TEXT NOT NULL REFERENCES plans(plan_id) ON DELETE CASCADE,
+    kind TEXT NOT NULL CHECK (kind IN ('provider', 'attendance', 'spend')),
+    listing_id TEXT,
+    amount_ceiling_sgd TEXT,
+    granted_at TEXT NOT NULL,
+    CHECK ((kind = 'provider' AND listing_id IS NOT NULL) OR
+           (kind != 'provider' AND listing_id IS NULL)),
+    CHECK ((kind = 'spend' AND amount_ceiling_sgd IS NOT NULL) OR
+           (kind != 'spend' AND amount_ceiling_sgd IS NULL))
 );
 
 CREATE TABLE IF NOT EXISTS plan_items (
@@ -227,42 +253,30 @@ class PersonalDataStore:
                     "SELECT 1 FROM profiles WHERE teen_id = ?", (teen_id,)
                 ).fetchone()
                 if exists:
-                    connection.execute(
-                        """UPDATE profiles SET thread_id=?, declared_age=?, request_json=?,
-                           parental_rules_json=?, constraints_json=?, updated_at=?
-                           WHERE teen_id=?""",
-                        (
-                            thread_id,
-                            declared_age,
-                            _json(request),
-                            _json(list(parental_rules)),
-                            _json(constraints or {}),
-                            timestamp,
-                            teen_id,
-                        ),
+                    raise AuthorizationError(
+                        "profile already exists; setup cannot replace identity or parental rules"
                     )
-                else:
-                    connection.execute(
-                        """INSERT INTO profiles
-                           (teen_id, thread_id, declared_age, request_json,
-                            parental_rules_json, constraints_json, preferences_json,
-                            created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                        (
-                            teen_id,
-                            thread_id,
-                            declared_age,
-                            _json(request),
-                            _json(list(parental_rules)),
-                            _json(constraints or {}),
-                            _json(preferences),
-                            timestamp,
-                            timestamp,
-                        ),
-                    )
-                    connection.execute(
-                        """INSERT INTO ledgers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                        self._ledger_values(teen_id, ledger),
-                    )
+                connection.execute(
+                    """INSERT INTO profiles
+                       (teen_id, thread_id, declared_age, request_json,
+                        parental_rules_json, constraints_json, preferences_json,
+                        created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        teen_id,
+                        thread_id,
+                        declared_age,
+                        _json(request),
+                        _json(list(parental_rules)),
+                        _json(constraints or {}),
+                        _json(preferences),
+                        timestamp,
+                        timestamp,
+                    ),
+                )
+                connection.execute(
+                    """INSERT INTO ledgers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    self._ledger_values(teen_id, ledger),
+                )
                 for consent in consents:
                     owner = connection.execute(
                         "SELECT teen_id FROM consent_records WHERE consent_id=?",
@@ -354,27 +368,150 @@ class PersonalDataStore:
             "booked_listing_ids": {row["listing_id"] for row in booked_rows},
         }
 
-    def guardian_snapshot(self, teen_id: str) -> dict[str, Any]:
+    @staticmethod
+    def _token_hash(token: str) -> str:
+        return hashlib.sha256(token.encode()).hexdigest()
+
+    def set_profile_access_token(self, teen_id: str, token: str) -> None:
+        if len(token) < 32:
+            raise PersonalDataError("profile access token must be high entropy")
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            try:
+                if connection.execute(
+                    "SELECT 1 FROM profiles WHERE teen_id=?", (teen_id,)
+                ).fetchone() is None:
+                    raise PersonalDataError(f"unknown teen {teen_id}")
+                connection.execute(
+                    """INSERT INTO profile_access (teen_id, token_hash, created_at)
+                       VALUES (?, ?, ?)
+                       ON CONFLICT(teen_id) DO UPDATE SET token_hash=excluded.token_hash,
+                       created_at=excluded.created_at""",
+                    (teen_id, self._token_hash(token), _now().isoformat()),
+                )
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                raise
+
+    def authorize_profile_access(self, teen_id: str, token: str) -> bool:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT token_hash FROM profile_access WHERE teen_id=?", (teen_id,)
+            ).fetchone()
+        return row is not None and hmac.compare_digest(
+            row["token_hash"], self._token_hash(token)
+        )
+
+    def guardian_snapshot(self, teen_id: str, plan: Plan) -> dict[str, Any]:
         with self._connect() as connection:
             profile = connection.execute(
-                """SELECT parental_rules_json, constraints_json FROM profiles
-                   WHERE teen_id=?""",
+                "SELECT parental_rules_json FROM profiles WHERE teen_id=?",
                 (teen_id,),
             ).fetchone()
             consents = connection.execute(
                 "SELECT kind, granted FROM consent_records WHERE teen_id=?",
                 (teen_id,),
             ).fetchall()
+            approvals = connection.execute(
+                """SELECT approval_id, kind, listing_id, amount_ceiling_sgd
+                   FROM trusted_adult_approvals WHERE teen_id=? AND plan_id=?""",
+                (teen_id, plan.plan_id),
+            ).fetchall()
         if profile is None:
             raise PersonalDataError(f"unknown teen {teen_id}")
-        constraints = json.loads(profile["constraints_json"])
+        provider_approvals = {
+            row["listing_id"]: row["approval_id"]
+            for row in approvals
+            if row["kind"] == "provider"
+        }
+        attendance = next(
+            (row["approval_id"] for row in approvals if row["kind"] == "attendance"),
+            None,
+        )
+        spend = next(
+            (
+                row["approval_id"]
+                for row in approvals
+                if row["kind"] == "spend"
+                and Decimal(row["amount_ceiling_sgd"]) >= plan.total_cost_sgd
+            ),
+            None,
+        )
         return {
             "parental_rules": json.loads(profile["parental_rules_json"]),
-            "provider_approval_ids": constraints.get("provider_approval_ids", {}),
-            "attendance_approval_id": constraints.get("attendance_approval_id"),
-            "spend_approval_id": constraints.get("spend_approval_id"),
+            "provider_approval_ids": provider_approvals,
+            "attendance_approval_id": attendance,
+            "spend_approval_id": spend,
             "consent": {row["kind"]: bool(row["granted"]) for row in consents},
         }
+
+    def issue_plan_approvals(
+        self,
+        *,
+        teen_id: str,
+        plan_id: str,
+        provider_approval_ids: dict[str, str] | None = None,
+        attendance_approval_id: str | None = None,
+        spend_approval_id: str | None = None,
+        spend_ceiling_sgd: Decimal | None = None,
+    ) -> None:
+        plan = self.get_plan(teen_id, plan_id)
+        provider_approvals = provider_approval_ids or {}
+        listing_ids = {item.listing_id for item in plan.items}
+        if not set(provider_approvals).issubset(listing_ids):
+            raise AuthorizationError("provider approval refers to a listing outside the plan")
+        if spend_approval_id is not None:
+            if spend_ceiling_sgd is None or spend_ceiling_sgd < plan.total_cost_sgd:
+                raise AuthorizationError("spend approval ceiling does not cover the plan")
+        elif spend_ceiling_sgd is not None:
+            raise AuthorizationError("spend ceiling requires a spend approval id")
+        timestamp = _now().isoformat()
+        rows: list[tuple[str, str, str, str, str | None, str | None, str]] = [
+            (approval_id, teen_id, plan_id, "provider", listing_id, None, timestamp)
+            for listing_id, approval_id in provider_approvals.items()
+        ]
+        if attendance_approval_id:
+            rows.append(
+                (attendance_approval_id, teen_id, plan_id, "attendance", None, None, timestamp)
+            )
+        if spend_approval_id:
+            rows.append(
+                (
+                    spend_approval_id,
+                    teen_id,
+                    plan_id,
+                    "spend",
+                    None,
+                    str(spend_ceiling_sgd),
+                    timestamp,
+                )
+            )
+        if not rows:
+            raise AuthorizationError("at least one trusted-adult approval is required")
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            try:
+                for row in rows:
+                    existing = connection.execute(
+                        """SELECT teen_id, plan_id, kind, listing_id, amount_ceiling_sgd
+                           FROM trusted_adult_approvals WHERE approval_id=?""",
+                        (row[0],),
+                    ).fetchone()
+                    expected = row[1:6]
+                    if existing is not None and tuple(existing) != expected:
+                        raise ReplayConflict("approval id belongs to another authorization")
+                    connection.execute(
+                        """INSERT OR IGNORE INTO trusted_adult_approvals
+                           (approval_id, teen_id, plan_id, kind, listing_id,
+                            amount_ceiling_sgd, granted_at)
+                           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                        row,
+                    )
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                raise
 
     def profile_identity(self, teen_id: str) -> dict[str, Any]:
         with self._connect() as connection:
@@ -386,6 +523,17 @@ class PersonalDataStore:
             raise PersonalDataError(f"unknown teen {teen_id}")
         return dict(row)
 
+    def get_plan(self, teen_id: str, plan_id: str) -> Plan:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT teen_id, plan_json FROM plans WHERE plan_id=?", (plan_id,)
+            ).fetchone()
+        if row is None:
+            raise PersonalDataError(f"unknown plan {plan_id}")
+        if row["teen_id"] != teen_id:
+            raise AuthorizationError("plan belongs to another teen")
+        return Plan.model_validate_json(row["plan_json"])
+
     def get_booking(self, booking_id: str) -> BookingRecord:
         with self._connect() as connection:
             row = connection.execute(
@@ -393,6 +541,18 @@ class PersonalDataStore:
             ).fetchone()
         if row is None:
             raise PersonalDataError(f"unknown booking {booking_id}")
+        return BookingRecord.model_validate_json(row["record_json"])
+
+    def require_booking_owner(self, teen_id: str, booking_id: str) -> BookingRecord:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT teen_id, record_json FROM bookings WHERE booking_id=?",
+                (booking_id,),
+            ).fetchone()
+        if row is None:
+            raise PersonalDataError(f"unknown booking {booking_id}")
+        if row["teen_id"] != teen_id:
+            raise AuthorizationError("booking belongs to another teen")
         return BookingRecord.model_validate_json(row["record_json"])
 
     def save_plan(self, teen_id: str, plan: Plan, *, live: bool = True) -> None:
@@ -411,7 +571,7 @@ class PersonalDataStore:
                     """INSERT INTO plans (plan_id, teen_id, plan_json, is_live, created_at)
                        VALUES (?, ?, ?, ?, ?)
                        ON CONFLICT(plan_id) DO UPDATE SET plan_json=excluded.plan_json,
-                       is_live=excluded.is_live""",
+                       is_live=MAX(plans.is_live, excluded.is_live)""",
                     (plan.plan_id, teen_id, _json(plan), int(live), timestamp),
                 )
                 connection.execute("DELETE FROM plan_items WHERE plan_id = ?", (plan.plan_id,))
@@ -422,6 +582,22 @@ class PersonalDataStore:
                         for item in plan.items
                     ],
                 )
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                raise
+
+    def retire_plan(self, teen_id: str, plan_id: str) -> None:
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            try:
+                result = connection.execute(
+                    """UPDATE plans SET is_live=0, needs_replan=0
+                       WHERE plan_id=? AND teen_id=?""",
+                    (plan_id, teen_id),
+                )
+                if result.rowcount != 1:
+                    raise AuthorizationError("plan is missing or belongs to another teen")
                 connection.commit()
             except Exception:
                 connection.rollback()
@@ -472,6 +648,44 @@ class PersonalDataStore:
         digest = hashlib.sha256(cls.logical_commitment_key(plan, item).encode()).hexdigest()
         return f"ledger_{digest[:24]}"
 
+    @staticmethod
+    def _commit_evidence(
+        connection: sqlite3.Connection,
+        *,
+        teen_id: str,
+        transaction_ids: list[str],
+        replayed: bool,
+    ) -> CommitEvidence:
+        placeholders = ",".join("?" for _ in transaction_ids)
+        rows = connection.execute(
+            f"SELECT ledger_transaction_id, ledger_version_before, "
+            f"ledger_version_after FROM ledger_transactions "
+            f"WHERE ledger_transaction_id IN ({placeholders})",
+            transaction_ids,
+        ).fetchall()
+        found_ids = {row["ledger_transaction_id"] for row in rows}
+        if found_ids != set(transaction_ids) or len(rows) != len(transaction_ids):
+            raise ReplayConflict("commit is missing durable transaction rows")
+        versions = {
+            (row["ledger_version_before"], row["ledger_version_after"])
+            for row in rows
+        }
+        if len(versions) != 1:
+            raise ReplayConflict("commit has inconsistent ledger transitions")
+        before, after = versions.pop()
+        ledger = connection.execute(
+            "SELECT version FROM ledgers WHERE teen_id=?", (teen_id,)
+        ).fetchone()
+        if ledger is None or ledger["version"] < after:
+            raise ReplayConflict("commit evidence is ahead of the durable ledger")
+        return CommitEvidence(
+            transaction_ids=transaction_ids,
+            ledger_version_before=before,
+            ledger_version_after=after,
+            transaction_rows=len(rows),
+            replayed=replayed,
+        )
+
     def commit_booking(
         self,
         *,
@@ -480,8 +694,8 @@ class PersonalDataStore:
         item: PlanItem,
         verdict: GuardianVerdict,
         transaction_id: str | None = None,
-    ) -> tuple[BookingRecord, bool]:
-        """Commit once. Returns ``(record, replayed)``."""
+    ) -> tuple[BookingRecord, CommitEvidence]:
+        """Commit once and return durable evidence for G4."""
 
         if len(plan.items) != 1:
             raise PersonalDataError("use commit_plan_bookings for a multi-item plan")
@@ -506,8 +720,14 @@ class PersonalDataStore:
                 if replay is not None:
                     if replay["logical_commitment_key"] != logical_key:
                         raise ReplayConflict("transaction id was used for another commitment")
+                    evidence = self._commit_evidence(
+                        connection,
+                        teen_id=teen_id,
+                        transaction_ids=[tx_id],
+                        replayed=True,
+                    )
                     connection.commit()
-                    return BookingRecord.model_validate_json(replay["record_json"]), True
+                    return BookingRecord.model_validate_json(replay["record_json"]), evidence
 
                 stored_verdict = connection.execute(
                     """SELECT approved, plan_id FROM guardian_verdicts
@@ -596,8 +816,23 @@ class PersonalDataStore:
                         record.created_at.isoformat(),
                     ),
                 )
+                connection.execute(
+                    "UPDATE plans SET is_live=0 WHERE teen_id=? AND plan_id<>?",
+                    (teen_id, plan.plan_id),
+                )
+                connection.execute(
+                    """UPDATE plans SET is_live=1, needs_replan=0, flag_reason=NULL
+                       WHERE teen_id=? AND plan_id=?""",
+                    (teen_id, plan.plan_id),
+                )
+                evidence = self._commit_evidence(
+                    connection,
+                    teen_id=teen_id,
+                    transaction_ids=[tx_id],
+                    replayed=False,
+                )
                 connection.commit()
-                return record, False
+                return record, evidence
             except Exception:
                 connection.rollback()
                 raise
@@ -608,7 +843,7 @@ class PersonalDataStore:
         teen_id: str,
         plan: Plan,
         verdict: GuardianVerdict,
-    ) -> tuple[list[BookingRecord], bool]:
+    ) -> tuple[list[BookingRecord], CommitEvidence]:
         """Atomically commit every item in one approved Plan.
 
         The ledger version is checked once and incremented once. Each logical
@@ -639,8 +874,14 @@ class PersonalDataStore:
                         if row is None or row["logical_commitment_key"] != logical_key:
                             raise ReplayConflict("transaction id was used for another commitment")
                         records.append(BookingRecord.model_validate_json(row["record_json"]))
+                    evidence = self._commit_evidence(
+                        connection,
+                        teen_id=teen_id,
+                        transaction_ids=transactions,
+                        replayed=True,
+                    )
                     connection.commit()
-                    return records, True
+                    return records, evidence
 
                 stored_verdict = connection.execute(
                     """SELECT approved, plan_id FROM guardian_verdicts
@@ -735,8 +976,25 @@ class PersonalDataStore:
                         ledger.version,
                     ),
                 )
+                if connection.execute("SELECT changes()").fetchone()[0] != 1:
+                    raise StaleLedgerVersion("ledger version changed during commitment")
+                connection.execute(
+                    "UPDATE plans SET is_live=0 WHERE teen_id=? AND plan_id<>?",
+                    (teen_id, plan.plan_id),
+                )
+                connection.execute(
+                    """UPDATE plans SET is_live=1, needs_replan=0, flag_reason=NULL
+                       WHERE teen_id=? AND plan_id=?""",
+                    (teen_id, plan.plan_id),
+                )
+                evidence = self._commit_evidence(
+                    connection,
+                    teen_id=teen_id,
+                    transaction_ids=transactions,
+                    replayed=False,
+                )
                 connection.commit()
-                return records, False
+                return records, evidence
             except Exception:
                 connection.rollback()
                 raise

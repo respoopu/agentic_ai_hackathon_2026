@@ -7,7 +7,7 @@ from pathlib import Path
 
 from src.agents.tools import COMPONENT_PERMISSIONS, ToolGuard, ToolPermissionError
 from src.intake import SetupInput, setup
-from src.schema.events import BookingRecord
+from src.schema.events import BookingRecord, CommitEvidence
 from src.schema.plan import (
     BudgetLedger,
     ConsentRecord,
@@ -113,16 +113,57 @@ class IntakeAndGateTests(unittest.TestCase):
             committed_sgd=0,
             created_at=NOW,
         )
-        result = Validator().g4(record, ledger_applied=True)
+        result = Validator().g4(
+            record,
+            evidence=CommitEvidence(
+                transaction_ids=["transaction-secret"],
+                ledger_version_before=0,
+                ledger_version_after=1,
+                transaction_rows=1,
+            ),
+        )
         serialized = result.model_dump_json()
         self.assertNotIn("verdict-secret", serialized)
         self.assertNotIn("transaction-secret", serialized)
+
+    def test_g4_rejects_missing_transaction_evidence(self) -> None:
+        record = BookingRecord(
+            booking_id="booking",
+            plan_id="plan",
+            listing_id="listing",
+            guardian_verdict_id="verdict",
+            status="booked",
+            ledger_transaction_id="expected-transaction",
+            committed_sgd=0,
+            created_at=NOW,
+        )
+        evidence = CommitEvidence(
+            transaction_ids=["different-transaction"],
+            ledger_version_before=4,
+            ledger_version_after=5,
+            transaction_rows=1,
+        )
+        result = Validator().g4(record, evidence=evidence)
+        self.assertFalse(result.passed)
+        self.assertEqual(["transaction_evidence_missing"], result.reason_codes)
 
     def test_permission_matrix_includes_intake_and_fails_closed(self) -> None:
         self.assertIn("intake", COMPONENT_PERMISSIONS)
         ToolGuard("planner").require("reads", "CKB")
         with self.assertRaises(ToolPermissionError):
             ToolGuard("planner").require("writes", "Personal Data")
+
+    def test_setup_cannot_carry_trusted_adult_approvals(self) -> None:
+        with self.assertRaises(ValueError):
+            SetupInput(
+                teen_id="teen",
+                thread_id="thread",
+                declared_age=15,
+                request=self.request,
+                ledger=self.ledger,
+                consents=consents(),
+                constraints={"attendance_approval_id": "self-issued"},
+            )
 
 
 if __name__ == "__main__":

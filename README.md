@@ -9,14 +9,14 @@ The backend implements architecture v2.2 without changing the merged agent promp
 - deterministic Intake/I0 and detached G1–G4 validation;
 - Planner, Discovery, Guardian, Broker, Observer, and off-path Compliance components with fail-closed tool boundaries;
 - a bounded LangGraph pipeline with persistent SQLite checkpoints;
-- lazy Bedrock structured-output support, cached Discovery replay, sandbox booking, and a local JSON API;
-- twelve eligible evaluation profiles, a twelve-cycle longitudinal replay, a static counterfactual, and a one-command B1–B15 report.
+- an optional, not-yet-production-validated Bedrock structured-output adapter, cached Discovery replay, sandbox booking, and an authenticated local JSON API;
+- twelve eligible runtime profiles and a one-command B1–B15 report that marks unsupported counterfactual metrics unmeasured.
 
 The canonical CKB sources are the merged transcription sheet, 157 sourced drafts, quarantine fixtures, builder, and loader. The runtime consumes `data/seed_ckb.json` when the existing builder can publish it. It does not silently promote unfinished drafts or invent verification metadata. Evaluation uses an explicitly synthetic catalogue and never presents those rows as real activities.
 
 ### Install and verify
 
-Python 3.11 or later is recommended.
+Python 3.11 or later is required.
 
 ```bash
 python -m venv .venv
@@ -28,12 +28,14 @@ python -m sim.counterfactual
 python -m sim.report
 ```
 
-`sim.report` labels every result as simulated, carries numerators and denominators, and leaves B6 unmeasured until an LLM judge and the required human double-score are actually run.
+`sim.report` labels every result as simulated and keeps the scope of partial diagnostics visible. B1 lacks first-attempt parse instrumentation; B2 covers booking calls only; B9 is illustrative because its catalogue is authored; B10 covers eligible rather than adversarial runs; and B6 plus B11–B15 remain unmeasured until their required instrumentation, judge, executable baseline, Observer transitions, live-link checks, and attendance evidence exist.
 
 ### Run the local API
 
 ```bash
 export HOBBI_RUNTIME_DIR=.hobbi
+export HOBBI_GUARDIAN_API_TOKEN='replace-with-a-random-guardian-secret'
+export HOBBI_COMPLIANCE_API_TOKEN='replace-with-a-random-compliance-secret'
 python -m src.api --port 8080
 curl -s http://127.0.0.1:8080/ \
   -X POST -H 'content-type: application/json' \
@@ -45,10 +47,15 @@ The single `POST /` endpoint accepts these operations:
 | Operation | Purpose |
 |---|---|
 | `health` | Runtime and CKB readiness |
-| `discovery_replay` | Validate a thin Plan at G1 and replay the typed, unverified ActiveSG capture |
-| `intake_and_plan` | Run I0, persist eligible setup, then execute the bounded graph |
-| `attendance` | Reconcile one booking outcome and optional in-app text debrief |
-| `compliance_scan` | Manually scan freshness; `replan_flagged=true` demonstrates the retire → fresh G2/G3 → Broker cascade |
+| `discovery_replay` | Operator-authorized G1 replay of the typed, unverified ActiveSG capture |
+| `intake_and_plan` | Trusted-adult-authorized, one-time I0/setup followed by bounded planning |
+| `guardian_approve` | Store provider/attendance/spend approval against one exact Plan, then resume at G2 |
+| `attendance` | Teen-profile-authorized booking outcome and optional in-app text debrief |
+| `compliance_scan` | Operator-authorized, allow-listed, robots-aware freshness scan; denied/transient checks mark stale, while explicit listing 404/410 retires |
+
+Protected operations use `Authorization: Bearer <token>`. Setup returns a one-time `teen_access_token` for that profile. Trusted-adult approval is a separate request and is bound to the exact `plan_id`; paid plans also require an amount ceiling. Setup refuses to replace an existing profile, declared age, or parental rules.
+
+The default runtime executes deterministic typed policies. `src.runtime.structured.invoke_structured` is an optional prompt-backed Bedrock adapter; it is not wired into the default LangGraph and has not been validated against a live AWS account.
 
 The API and simulation do not need AWS. Live model use is lazy through `src.runtime.structured.invoke_structured`; model IDs are fixed constants and credentials come from the normal AWS chain.
 

@@ -24,9 +24,23 @@ def rows() -> list[tuple[str, str]]:
     long = comparison["longitudinal"]
     completion = metrics["task_completion"]
     denominator = completion["denominator"]
+    schema = metrics["schema_validation"]
+    tools = metrics["tool_call_success"]
+    long_tail = metrics["long_tail_coverage"]
+    constraints = metrics["constraint_violations"]
     return [
-        ("B1 Schema validation", _rate(metrics["schema_validation"])),
-        ("B2 Tool-call success", _rate(metrics["tool_call_success"])),
+        (
+            "B1 Schema validation",
+            (
+                f"not measured — {schema['note']}; diagnostic gate runs "
+                f"{schema['observed_successful_continuations']}/"
+                f"{schema['observed_continuation_denominator']} approval continuations"
+            ),
+        ),
+        (
+            "B2 Tool-call success",
+            f"not fully measured — {_rate(tools)} booking commits; {tools['note']}",
+        ),
         (
             "B3 Task completion",
             (
@@ -50,32 +64,28 @@ def rows() -> list[tuple[str, str]]:
         ("B6 Answer fidelity", "not measured — requires LLM judge plus 20% human double-score"),
         ("B7 S$0 viability", _rate(metrics["s0_viability"])),
         ("B8 Free-option share", _rate(metrics["free_option_share"])),
-        ("B9 Long-tail coverage", _rate(metrics["long_tail_coverage"])),
-        ("B10 Constraint violations", _rate(metrics["constraint_violations"])),
-        ("B11 Adaptation latency", f"{long['adaptation_latency_cycles']} cycle"),
-        ("B12 Hold rate", f"{long['holds']}/{long['hold_denominator']} ({long['holds']/long['hold_denominator']*100:.1f}%)"),
-        ("B13 Dead-link rate", _rate(metrics["dead_links"])),
         (
-            "B14 Adherence delta",
+            "B9 Long-tail coverage",
             (
-                f"{long['hobbi']['attended']}/{long['hobbi']['bookings']} vs "
-                f"{long['static']['attended']}/{long['static']['bookings']} "
-                f"({long['adherence_delta_percentage_points']:+.1f} pp)"
+                f"illustrative only: {long_tail['illustrative_numerator']}/"
+                f"{long_tail['illustrative_denominator']}; {long_tail['note']}"
             ),
         ),
         (
-            "B15 First attendance ≤30d",
+            "B10 Constraint violations",
+            f"not fully measured — {_rate(constraints)} eligible-run diagnostic; {constraints['note']}",
+        ),
+        ("B11 Adaptation latency", f"not measured — {long['reason']}"),
+        (
+            "B12 Hold rate",
             (
-                f"Hobbi {first['hobbi']['completed']}/{first['hobbi']['denominator']} "
-                f"(median {first['hobbi']['median_days']}d, "
-                f"{first['hobbi']['median_cycles']} cycles, "
-                f"{first['hobbi']['median_teen_actions']} actions) vs static "
-                f"{first['static']['completed']}/{first['static']['denominator']} "
-                f"(median {first['static']['median_days']}d, "
-                f"{first['static']['median_cycles']} cycles, "
-                f"{first['static']['median_teen_actions']} actions)"
+                f"illustrative input only: {long['scripted_holds']}/"
+                f"{long['scripted_hold_denominator']}; not a measured product result"
             ),
         ),
+        ("B13 Dead-link rate", f"not measured — {metrics['dead_links']['note']}"),
+        ("B14 Adherence delta", f"not measured — {long['reason']}"),
+        ("B15 First attendance ≤30d", f"not measured — {first['reason']}"),
         ("A1 Unverified reached teen", _rate(metrics["unverified_reached_teen"])),
     ]
 

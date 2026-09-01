@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 
 from pydantic import Field
 
+from src.agents.tools import ToolGuard
 from src.ckb.store import KnowledgeBase
 from src.constants import DISCOVERY_ALLOWED_DOMAINS
 from src.schema.listing import ListingRecord
@@ -34,9 +35,20 @@ class Discovery:
         return any(host == domain or host.endswith(f".{domain}") for domain in DISCOVERY_ALLOWED_DOMAINS)
 
     def cached_replay(self, plan: Plan, path: str | Path, ckb: KnowledgeBase) -> DiscoveryResult:
+        guard = ToolGuard("discovery")
+        guard.require("reads", "CKB")
+        guard.require("reads", "external_sources")
+        guard.require("writes", "CKB.ListingRecord")
         self.validator.require_pass(self.validator.g1_plan(plan))
         payload = json.loads(Path(path).read_text(encoding="utf-8"))
         records = [ListingRecord.model_validate(value) for value in payload]
+        disallowed = [
+            str(record.source_url) for record in records if not self._allowed(str(record.source_url))
+        ]
+        if disallowed:
+            raise PermissionError(
+                "cached Discovery source is not whitelisted: " + ", ".join(disallowed)
+            )
         self.validator.require_pass(self.validator.g1_records(records))
         inserted = sum(1 for record in records if ckb.upsert_discovered(record))
         return DiscoveryResult(mode="cached_replay", records=records, inserted=inserted)
@@ -48,6 +60,10 @@ class Discovery:
         ckb: KnowledgeBase,
         fetch_extract: Callable[[str], ListingRecord | None],
     ) -> DiscoveryResult:
+        guard = ToolGuard("discovery")
+        guard.require("reads", "CKB")
+        guard.require("reads", "external_sources")
+        guard.require("writes", "CKB.ListingRecord")
         self.validator.require_pass(self.validator.g1_plan(plan))
         records: list[ListingRecord] = []
         for url in urls:

@@ -10,7 +10,8 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
-from src.schema.events import BookingRecord
+from src.agents.tools import ToolGuard
+from src.schema.events import BookingRecord, CommitEvidence
 from src.schema.gates import GateResult
 from src.schema.listing import ListingRecord
 from src.schema.plan import (
@@ -81,6 +82,7 @@ class Validator:
         return result
 
     def i0(self, declared_age: int, consents: list[ConsentRecord]) -> tuple[IntakeResult, GateResult]:
+        ToolGuard("validator").require("gates", "I0")
         if declared_age < 13:
             intake = IntakeResult(eligible=False, reason="under_13", referral="trusted_adult")
             reasons = ["age_under_13"]
@@ -99,9 +101,15 @@ class Validator:
                 if not grants.get(kind, False)
             ]
             reasons = [f"missing_{kind}" for kind in missing]
-            # IntakeResult expresses the deterministic age boundary. Consent
-            # failures are carried by the I0 GateResult and still block setup.
-            intake = IntakeResult(eligible=True, reason="eligible", referral=None)
+            intake = (
+                IntakeResult(
+                    eligible=False,
+                    reason="consent_required",
+                    referral="trusted_adult",
+                )
+                if missing
+                else IntakeResult(eligible=True, reason="eligible", referral=None)
+            )
         result = self._result(
             "I0",
             {"declared_age": declared_age, "consent_kinds": sorted(c.kind for c in consents)},
@@ -111,6 +119,7 @@ class Validator:
         return intake, result
 
     def g1_plan(self, payload: Any) -> GateResult:
+        ToolGuard("validator").require("gates", "G1")
         reasons: list[str] = []
         try:
             plan = payload if isinstance(payload, Plan) else Plan.model_validate(payload)
@@ -123,6 +132,7 @@ class Validator:
         return self._result("G1", serialized, "Plan", reasons)
 
     def g1_records(self, payload: Any) -> GateResult:
+        ToolGuard("validator").require("gates", "G1")
         reasons: list[str] = []
         try:
             records = [
@@ -143,6 +153,7 @@ class Validator:
         ledger: BudgetLedger,
         listings: Mapping[str, ListingRecord],
     ) -> GateResult:
+        ToolGuard("validator").require("gates", "G2")
         reasons: list[str] = []
         if plan.ledger_version != ledger.version:
             reasons.append("stale_ledger_version")
@@ -170,6 +181,7 @@ class Validator:
         verdict: GuardianVerdict | None,
         listings: Mapping[str, ListingRecord],
     ) -> GateResult:
+        ToolGuard("validator").require("gates", "G3")
         reasons: list[str] = []
         if verdict is None:
             reasons.append("guardian_verdict_missing")
@@ -196,12 +208,21 @@ class Validator:
         self,
         booking: BookingRecord,
         *,
-        ledger_applied: bool,
-        replayed: bool = False,
+        evidence: CommitEvidence,
     ) -> GateResult:
+        ToolGuard("validator").require("gates", "G4")
         reasons: list[str] = []
         if booking.status != "booked" or not booking.ledger_transaction_id:
             reasons.append("booking_not_committed")
-        if not ledger_applied and not replayed:
-            reasons.append("ledger_commitment_missing")
-        return self._result("G4", booking, "BookingRecord", reasons)
+        if booking.ledger_transaction_id not in evidence.transaction_ids:
+            reasons.append("transaction_evidence_missing")
+        if evidence.transaction_rows != len(evidence.transaction_ids):
+            reasons.append("transaction_row_count_mismatch")
+        if evidence.ledger_version_after != evidence.ledger_version_before + 1:
+            reasons.append("ledger_version_not_exactly_once")
+        return self._result(
+            "G4",
+            {"booking": booking, "commit_evidence": evidence},
+            "BookingRecord+CommitEvidence",
+            reasons,
+        )

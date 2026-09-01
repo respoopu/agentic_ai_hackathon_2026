@@ -10,6 +10,22 @@ from src.schema.listing import Listing, ListingRecord
 AS_OF = datetime(2026, 9, 1, tzinfo=UTC)
 
 
+def travel_times() -> dict[str, tuple[int, int]]:
+    return {
+        listing_id: (travel, travel + 3)
+        for listing_id, travel in [
+            ("SYN-sport-free", 10),
+            ("SYN-chill-free", 10),
+            ("SYN-art-free", 12),
+            ("SYN-explore-free", 14),
+            ("SYN-sport-paid", 18),
+            ("SYN-chill-paid", 20),
+            ("SYN-art-paid", 25),
+            ("SYN-explore-paid", 30),
+        ]
+    }
+
+
 def records() -> list[ListingRecord]:
     rows = []
     specifications = [
@@ -66,24 +82,12 @@ def records() -> list[ListingRecord]:
 
 
 def listings() -> list[Listing]:
-    distances = {
-        listing_id: travel
-        for listing_id, _, _, travel in [
-            ("SYN-sport-free", "sporty", "0", 10),
-            ("SYN-chill-free", "chill", "0", 10),
-            ("SYN-art-free", "artistic", "0", 12),
-            ("SYN-explore-free", "explorative", "0", 14),
-            ("SYN-sport-paid", "sporty", "8", 18),
-            ("SYN-chill-paid", "chill", "12", 20),
-            ("SYN-art-paid", "artistic", "15", 25),
-            ("SYN-explore-paid", "explorative", "20", 30),
-        ]
-    }
+    distances = travel_times()
     return [
         hydrate_listing(
             record,
-            travel_min_home=distances[record.listing_id],
-            travel_min_school=distances[record.listing_id] + 3,
+            travel_min_home=distances[record.listing_id][0],
+            travel_min_school=distances[record.listing_id][1],
             as_of=AS_OF,
         )
         for record in records()

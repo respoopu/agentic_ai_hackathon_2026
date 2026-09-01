@@ -91,14 +91,15 @@ class PersonalDataTests(unittest.TestCase):
             )
 
     def test_booking_replay_is_exactly_once_and_survives_reopen(self) -> None:
-        first, replayed = self.store.commit_booking(
+        first, evidence = self.store.commit_booking(
             teen_id="teen-1", plan=self.plan, item=self.item, verdict=self.verdict
         )
-        second, replayed_second = self.store.commit_booking(
+        second, replay_evidence = self.store.commit_booking(
             teen_id="teen-1", plan=self.plan, item=self.item, verdict=self.verdict
         )
-        self.assertFalse(replayed)
-        self.assertTrue(replayed_second)
+        self.assertFalse(evidence.replayed)
+        self.assertTrue(replay_evidence.replayed)
+        self.assertEqual((0, 1), (evidence.ledger_version_before, evidence.ledger_version_after))
         self.assertEqual(first, second)
         self.assertEqual(Decimal(8), self.store.get_ledger("teen-1").money_committed_sgd)
         reopened = PersonalDataStore(self.path)
@@ -161,10 +162,10 @@ class PersonalDataTests(unittest.TestCase):
         def commit() -> tuple[str, bool]:
             store = PersonalDataStore(self.path)
             try:
-                record, replayed = store.commit_booking(
+                record, evidence = store.commit_booking(
                     teen_id="teen-1", plan=self.plan, item=self.item, verdict=self.verdict
                 )
-                return record.booking_id, replayed
+                return record.booking_id, evidence.replayed
             finally:
                 store.close()
 
@@ -189,6 +190,41 @@ class PersonalDataTests(unittest.TestCase):
         )
         with self.assertRaises(ReplayConflict):
             self.store.save_plan("teen-2", self.plan)
+
+    def test_setup_cannot_replace_identity_or_parental_rules(self) -> None:
+        with self.assertRaises(AuthorizationError):
+            self.store.setup_profile(
+                teen_id="teen-1",
+                thread_id="attacker-thread",
+                declared_age=17,
+                request=self.request,
+                ledger=self.ledger,
+                preferences=self.preferences,
+                consents=[self.consent],
+                parental_rules=[],
+            )
+        self.assertEqual(15, self.store.profile_identity("teen-1")["declared_age"])
+
+    def test_approvals_are_plan_bound_and_spend_capped(self) -> None:
+        self.store.issue_plan_approvals(
+            teen_id="teen-1",
+            plan_id=self.plan.plan_id,
+            attendance_approval_id="plan-attendance",
+            spend_approval_id="plan-spend",
+            spend_ceiling_sgd=Decimal(8),
+        )
+        snapshot = self.store.guardian_snapshot("teen-1", self.plan)
+        self.assertEqual("plan-spend", snapshot["spend_approval_id"])
+        other = Plan(
+            plan_id="other-plan",
+            items=[self.item],
+            total_cost_sgd=Decimal(8),
+            ledger_version=0,
+        )
+        self.store.save_plan("teen-1", other, live=False)
+        other_snapshot = self.store.guardian_snapshot("teen-1", other)
+        self.assertIsNone(other_snapshot["attendance_approval_id"])
+        self.assertIsNone(other_snapshot["spend_approval_id"])
 
 
 if __name__ == "__main__":
