@@ -381,6 +381,8 @@ class ListingRecord(BaseModel):
                                "commercial", "informal", "private_unverified"]
     verification:      Literal["verified", "unverified", "retired"]
     verified_at:       date | None
+    verified_by:       str | None       # human attribution for verified rows
+    is_fictional:      bool             # quarantine interlock
     cost_one_off_sgd:  Decimal        # 0 is common and is the point
     cost_recurring_sgd:Decimal
     equipment_cost_sgd:Decimal
@@ -402,6 +404,7 @@ class ListingRecord(BaseModel):
     source_url:        HttpUrl
     last_seen_at:      datetime
     freshness_state:   Literal["fresh", "stale", "dead"]
+    notes:             str | None
 
 class PeerCohort(BaseModel):
     same_age_band:     Literal["none", "few", "some", "many"]

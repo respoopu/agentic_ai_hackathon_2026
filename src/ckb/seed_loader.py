@@ -19,7 +19,7 @@ from typing import Iterable
 
 from pydantic import TypeAdapter
 
-from src.schema.listing import Listing, ListingRecord, PeerCohort, Schedule
+from src.schema.listing import SG_TZ, Listing, ListingRecord, PeerCohort, Schedule
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SEED_PATH = ROOT / "data" / "seed_ckb.json"
@@ -29,7 +29,10 @@ def load_seed_records(path: Path = DEFAULT_SEED_PATH) -> list[ListingRecord]:
     """Read and validate the immutable build artifact.
 
     The entire artifact is validated before any record is returned, preventing
-    a partial CKB load when one row is malformed.
+    a partial CKB load when one row is malformed. Quarantine fixtures remain in
+    the CKB intentionally: Planner may rank them, but Guardian must block them
+    from teen-facing output unless a trusted adult approves the provider. The
+    loader validates records; it is not an authorisation boundary.
     """
 
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -54,7 +57,11 @@ def expand_next_sessions(
     become invented timestamps.
     """
 
-    boundary = as_of or datetime.now()
+    boundary = as_of or datetime.now(SG_TZ)
+    if boundary.tzinfo is None:
+        boundary = boundary.replace(tzinfo=SG_TZ)
+    else:
+        boundary = boundary.astimezone(SG_TZ)
     if schedule.kind == "fixed_dates":
         return sorted(
             session for session in schedule.fixed_dates if session >= boundary
@@ -67,7 +74,7 @@ def expand_next_sessions(
     assert schedule.first_session is not None
     assert schedule.num_sessions is not None
 
-    first = datetime.combine(schedule.first_session, schedule.start_time)
+    first = datetime.combine(schedule.first_session, schedule.start_time, tzinfo=SG_TZ)
     sessions = (
         first + timedelta(weeks=offset) for offset in range(schedule.num_sessions)
     )

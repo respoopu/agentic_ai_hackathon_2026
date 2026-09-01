@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import sys
 import urllib.parse
@@ -120,21 +121,34 @@ def vibes_for(event: dict) -> str:
     )  # a library default a human can correct
 
 
-def to_row(event: dict, seq: int) -> dict:
+def stable_listing_id(event: dict) -> str:
+    source_url = str(event.get("url") or "")
+    slug = urllib.parse.urlsplit(source_url).path.rstrip("/").rsplit("/", 1)[-1]
+    if slug.isdigit():
+        return f"NLB-{slug}"
+    digest = hashlib.sha256(source_url.encode("utf-8")).hexdigest()[:12]
+    return f"NLB-{digest}"
+
+
+def to_row(event: dict) -> dict:
     start = event.get("startdt") or ""
     try:
         when = datetime.fromisoformat(start).strftime("%Y-%m-%dT%H:%M")
     except ValueError:
         when = ""
 
-    # An empty registration_cost is how libcal renders a free event, but it is
-    # also how it renders one that simply did not fill the field in. Zero here,
-    # flagged in notes, confirmed by the human who opens the link.
+    # Empty and non-numeric values remain incomplete on purpose. A human must
+    # confirm the page and enter an explicit number (including 0 for free)
+    # before the builder will accept the row.
     cost = (event.get("registration_cost") or "").strip()
-    cost_note = "" if not cost else f"page shows cost {cost!r} — CHECK"
+    cost_note = (
+        f"page shows cost {cost!r} — CHECK"
+        if cost
+        else "cost not stated — confirm and enter 0 only if free"
+    )
 
     return {
-        "listing_id": f"NLB-{seq:03d}",
+        "listing_id": stable_listing_id(event),
         "title": (event.get("title") or "").strip(),
         "provider": "National Library Board",
         "provider_type": "third_space",
@@ -142,7 +156,9 @@ def to_row(event: dict, seq: int) -> dict:
         "verified_at": "",  # deliberately blank — a human fills this
         "verified_by": "",  # and this
         "verification": "unverified",
-        "cost_one_off_sgd": "0" if not cost else "",
+        # Preserve the observed value. Blank or non-numeric text fails loudly
+        # in the builder instead of silently becoming free.
+        "cost_one_off_sgd": cost,
         "cost_recurring_sgd": "0",
         "equipment_cost_sgd": "0",
         "venue_name": (event.get("location") or event.get("campus") or "").strip(),
@@ -164,7 +180,9 @@ def to_row(event: dict, seq: int) -> dict:
         "fixed_dates": when,
         "open_hours_note": "",
         "vibes": vibes_for(event),
-        "in_incumbent_directory": "no",
+        # These rows come from NLB's own public event directory, so they are
+        # incumbent supply rather than evidence for the B9 long-tail metric.
+        "in_incumbent_directory": "yes",
         "notes": " · ".join(
             x
             for x in [
@@ -187,8 +205,13 @@ def main() -> int:
     )
     ap.add_argument("--out", type=Path, default=ROOT / "data" / "draft_nlb.csv")
     ap.add_argument("--include-past", action="store_true")
+    ap.add_argument("--force", action="store_true", help="overwrite --out")
     args = ap.parse_args()
     args.out = args.out.resolve()
+
+    if args.out.exists() and not args.force:
+        print(f"refusing to overwrite {args.out}; pass --force after reviewing it")
+        return 1
 
     print("  fetching nlb.libcal.com, audience = Teenagers (13-17 yo)...")
     events = [e for e in fetch_all() if is_teen_tagged(e)]
@@ -217,7 +240,7 @@ def main() -> int:
         print(f"  {len(events)} still upcoming ({dropped} already past, dropped)")
 
     events.sort(key=lambda e: e.get("startdt") or "")
-    rows = [to_row(e, i) for i, e in enumerate(events, start=1)]
+    rows = [to_row(event) for event in events]
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.out.open("w", newline="", encoding="utf-8") as f:

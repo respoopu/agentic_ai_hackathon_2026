@@ -6,15 +6,26 @@ import unittest
 from datetime import date, datetime, time
 from pathlib import Path
 
-from pydantic import ValidationError
-
 from scripts.build_ckb import coverage
-from src.ckb.seed_loader import expand_next_sessions, hydrate_listing, load_seed_records
-from src.schema.listing import ListingRecord, Schedule
+
+try:
+    from pydantic import ValidationError
+except ImportError:
+    HAS_PYDANTIC = False
+else:
+    from src.ckb.seed_loader import (
+        expand_next_sessions,
+        hydrate_listing,
+        load_seed_records,
+    )
+    from src.schema.listing import SG_TZ, ListingRecord, Schedule
+
+    HAS_PYDANTIC = True
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
+@unittest.skipUnless(HAS_PYDANTIC, "Pydantic model tests need project dependencies")
 class ListingContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -52,7 +63,17 @@ class ListingContractTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "duplicate listing IDs"):
                 load_seed_records(path)
 
+    def test_seed_load_keeps_quarantine_for_guardian_vetting(self) -> None:
+        rows = self.quarantine[:2]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "seed.json"
+            path.write_text(json.dumps(rows), encoding="utf-8")
+            records = load_seed_records(path)
+        self.assertEqual(2, len(records))
+        self.assertTrue(all(record.is_fictional for record in records))
 
+
+@unittest.skipUnless(HAS_PYDANTIC, "Pydantic model tests need project dependencies")
 class HydrationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -71,9 +92,9 @@ class HydrationTests(unittest.TestCase):
         sessions = expand_next_sessions(schedule, as_of=datetime(2026, 9, 1))
         self.assertEqual(
             [
-                datetime(2026, 9, 5, 10, 0),
-                datetime(2026, 9, 12, 10, 0),
-                datetime(2026, 9, 19, 10, 0),
+                datetime(2026, 9, 5, 10, 0, tzinfo=SG_TZ),
+                datetime(2026, 9, 12, 10, 0, tzinfo=SG_TZ),
+                datetime(2026, 9, 19, 10, 0, tzinfo=SG_TZ),
             ],
             sessions,
         )
@@ -98,6 +119,20 @@ class HydrationTests(unittest.TestCase):
                 first_session=date(2026, 9, 5),
                 num_sessions=3,
             )
+
+    def test_aware_fixed_dates_are_normalised_to_singapore(self) -> None:
+        schedule = Schedule(
+            kind="fixed_dates",
+            fixed_dates=["2026-09-05T02:00:00Z"],
+        )
+        sessions = expand_next_sessions(
+            schedule,
+            as_of=datetime.fromisoformat("2026-09-05T09:00:00+08:00"),
+        )
+        self.assertEqual(
+            [datetime.fromisoformat("2026-09-05T10:00:00+08:00")],
+            sessions,
+        )
 
     def test_hydration_keeps_relative_fields_out_of_stored_record(self) -> None:
         listing = hydrate_listing(
@@ -126,7 +161,16 @@ class CoverageTests(unittest.TestCase):
         results = coverage(payload["listings"])
         self.assertFalse(all(passed for _, passed, _ in results))
 
+    def test_empty_real_seed_does_not_pass_freshness(self) -> None:
+        payload = json.loads((ROOT / "data" / "quarantine_listings.json").read_text())
+        results = dict(
+            (label, passed) for label, passed, _ in coverage(payload["listings"])
+        )
+        self.assertFalse(results["freshness · verified within 30 days"])
+
     def test_drop_in_availability_is_explicit(self) -> None:
+        if not HAS_PYDANTIC:
+            self.skipTest("Pydantic model tests need project dependencies")
         schedule = Schedule(
             kind="drop_in",
             open_hours_note="Weekends only",
@@ -137,6 +181,8 @@ class CoverageTests(unittest.TestCase):
         self.assertTrue(schedule.is_weekend())
 
     def test_drop_in_without_availability_flags_is_rejected(self) -> None:
+        if not HAS_PYDANTIC:
+            self.skipTest("Pydantic model tests need project dependencies")
         with self.assertRaises(ValidationError):
             Schedule(kind="drop_in", open_hours_note="Open when posted")
 

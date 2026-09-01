@@ -7,9 +7,9 @@
 
 Every area sweep found the same thing: free *programmes* for teens barely
 exist, and the real free supply is space — school fields opened to the public
-under the Dual Use Scheme, stadium tracks, courts. That layer is absent from
-every commercial activity directory, which is exactly why it carries most of
-metric B9, and it is the reason the seed set can satisfy A3 at all.
+under the Dual Use Scheme, stadium tracks, courts. These rows come from an
+ActiveSG directory and therefore do not count as absent from incumbent
+directories for B9, even when other activity directories omit them.
 
 activesgcircle.gov.sg serves this server-rendered (unlike activesg.gov.sg,
 which 403s everything). The zone-filtered listing page carries names and
@@ -121,7 +121,7 @@ def parse_hours(detail: str) -> str:
     return "; ".join(kept)
 
 
-def to_row(f: dict, hours: str, seq: int) -> dict:
+def to_row(f: dict, hours: str) -> dict:
     is_school = "school" in f["name"].lower()
     flags = []
     if not hours:
@@ -132,7 +132,7 @@ def to_row(f: dict, hours: str, seq: int) -> dict:
     flags.append("DRAFT from activesgcircle free-to-play — verify before using")
 
     return {
-        "listing_id": f"FTP-{seq:03d}",
+        "listing_id": f"FTP-{f['slug']}",
         "title": f["name"],
         "provider": "Sport Singapore (ActiveSG)",
         # A school field opened to the public is the `school` provider type;
@@ -151,9 +151,11 @@ def to_row(f: dict, hours: str, seq: int) -> dict:
         "nearest_mrt": "",
         "age_min": "",  # not stated on these pages. Do not guess.
         "age_max": "",
-        "beginner_friendly": "yes",  # unstructured open space; nothing to be bad at
-        "join_alone_ok": "yes",
-        "guest_allowed": "yes",
+        # The directory does not state participation rules. Leave them for the
+        # human verifier rather than manufacturing A3-friendly answers.
+        "beginner_friendly": "",
+        "join_alone_ok": "",
+        "guest_allowed": "",
         "commitment": "taster",
         "schedule_kind": "drop_in",
         "weekday": "",
@@ -162,12 +164,14 @@ def to_row(f: dict, hours: str, seq: int) -> dict:
         "first_session": "",
         "num_sessions": "",
         "fixed_dates": "",
-        "open_hours_note": hours or "not stated on page",
+        "open_hours_note": hours,
         "vibes": "sporty",
-        "in_incumbent_directory": "no",  # this is precisely the unindexed layer
+        "in_incumbent_directory": "yes",  # sourced from ActiveSG's own directory
         "notes": f"zone: {f['zone']} · {f['address']} · " + " · ".join(flags),
-        "weekday_evening_available": "no",
-        "weekend_available": "yes",
+        # Do not infer evaluation fields from category membership. A human
+        # reads the captured hours and records both booleans explicitly.
+        "weekday_evening_available": "",
+        "weekend_available": "",
     }
 
 
@@ -178,8 +182,13 @@ def main() -> int:
     ap.add_argument(
         "--delay", type=float, default=1.0, help="seconds between detail fetches"
     )
+    ap.add_argument("--force", action="store_true", help="overwrite --out")
     args = ap.parse_args()
     args.out = args.out.resolve()
+
+    if args.out.exists() and not args.force:
+        print(f"refusing to overwrite {args.out}; pass --force after reviewing it")
+        return 1
 
     zones = [z.strip() for z in args.zone.split(",")] if args.zone else ZONES
 
@@ -196,13 +205,13 @@ def main() -> int:
 
     print(f"\n  fetching {len(facilities)} detail pages for opening hours...")
     rows = []
-    for i, f in enumerate(facilities, start=1):
+    for f in facilities:
         try:
             hours = parse_hours(get(f["url"]))
         except Exception as e:  # noqa: BLE001
             print(f"    {f['slug']}: {type(e).__name__}")
             hours = ""
-        rows.append(to_row(f, hours, i))
+        rows.append(to_row(f, hours))
         time.sleep(args.delay)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -211,7 +220,7 @@ def main() -> int:
         w.writeheader()
         w.writerows(rows)
 
-    with_hours = sum(1 for r in rows if r["open_hours_note"] != "not stated on page")
+    with_hours = sum(1 for r in rows if r["open_hours_note"])
     with_postal = sum(1 for r in rows if r["postal_code"])
     schools = sum(1 for r in rows if r["provider_type"] == "school")
     display_path = (

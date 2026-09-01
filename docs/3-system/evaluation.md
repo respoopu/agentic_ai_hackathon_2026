@@ -236,7 +236,7 @@ Canonical judge path, matching the planned `requirements.txt`:
 ```bash
 python -m venv .venv
 python -m pip install -r requirements.txt
-python -m pytest tests/                       # Family A invariants
+python -m unittest discover -s tests -t .    # current contract tests; Family A grows here
 python -m sim.harness --profiles eligible     # Family B rates + replay
 python -m sim.counterfactual                  # B14/B15, both arms
 python -m sim.report                          # emits the §7 table

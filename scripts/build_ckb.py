@@ -25,7 +25,9 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import sys
+import tempfile
 import urllib.error
 import urllib.request
 from collections import Counter, defaultdict
@@ -33,6 +35,7 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from urllib.parse import urlsplit
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 SHEET = ROOT / "data" / "seed_ckb.csv"
@@ -41,6 +44,8 @@ OUT = ROOT / "data" / "seed_ckb.json"
 
 AGE_FLOOR, AGE_CEILING = 13, 17
 STALE_AFTER_DAYS = 30
+DEEP_AREA = "Jurong West"
+SG_TZ = ZoneInfo("Asia/Singapore")
 
 PROVIDER_TYPES = {
     "cc",
@@ -97,7 +102,42 @@ COLUMNS = [
 ]
 
 TRUE = {"yes", "y", "true", "1"}
-FALSE = {"no", "n", "false", "0", ""}
+FALSE = {"no", "n", "false", "0"}
+
+LISTING_REQUIRED_KEYS = {
+    "listing_id",
+    "title",
+    "provider",
+    "provider_type",
+    "source_url",
+    "verified_at",
+    "verified_by",
+    "verification",
+    "is_fictional",
+    "cost_one_off_sgd",
+    "cost_recurring_sgd",
+    "equipment_cost_sgd",
+    "venue_name",
+    "postal_code",
+    "planning_area",
+    "age_min",
+    "age_max",
+    "beginner_friendly",
+    "join_alone_ok",
+    "guest_allowed",
+    "commitment",
+    "schedule",
+    "vibes",
+    "in_incumbent_directory",
+    "last_seen_at",
+    "freshness_state",
+}
+LISTING_OPTIONAL_KEYS = {
+    "cost_total_first_session",
+    "postal_sector",
+    "nearest_mrt",
+    "notes",
+}
 
 
 class RowError(Exception):
@@ -119,13 +159,13 @@ def _bool(v: str, field: str) -> bool:
 
 
 def _money(v: str, field: str) -> str:
-    s = (v or "").strip().replace("$", "").replace("S$", "").replace(",", "")
+    s = (v or "").strip().replace("S$", "").replace("$", "").replace(",", "")
     if not s:
-        return "0"
+        raise RowError(f"{field}: required; enter 0 explicitly when free")
     try:
         d = Decimal(s)
-    except InvalidOperation:
-        raise RowError(f"{field}: not a number: {v!r}")
+    except InvalidOperation as exc:
+        raise RowError(f"{field}: not a number: {v!r}") from exc
     if d < 0:
         raise RowError(f"{field}: negative cost {v!r}")
     return str(d)
@@ -139,12 +179,17 @@ def _int(v: str, field: str, required: bool = True) -> int | None:
         return None
     try:
         return int(s)
-    except ValueError:
-        raise RowError(f"{field}: not a whole number: {v!r}")
+    except ValueError as exc:
+        raise RowError(f"{field}: not a whole number: {v!r}") from exc
 
 
 def _date(
-    v: str, field: str, required: bool = True, allow_future: bool = False
+    v: str,
+    field: str,
+    *,
+    as_of: datetime,
+    required: bool = True,
+    allow_future: bool = False,
 ) -> str | None:
     s = (v or "").strip()
     if not s:
@@ -153,12 +198,22 @@ def _date(
         return None
     try:
         d = date.fromisoformat(s)
-    except ValueError:
-        raise RowError(f"{field}: use YYYY-MM-DD, got {v!r}")
+    except ValueError as exc:
+        raise RowError(f"{field}: use YYYY-MM-DD, got {v!r}") from exc
     # A session date is meant to be ahead of us; a verification date never is.
-    if d > date.today() and not allow_future:
+    if d > as_of.date() and not allow_future:
         raise RowError(f"{field}: {s} is in the future")
     return s
+
+
+def _datetime(value: str | datetime, field: str) -> datetime:
+    try:
+        parsed = value if isinstance(value, datetime) else datetime.fromisoformat(value)
+    except (TypeError, ValueError) as exc:
+        raise RowError(f"{field}: use an ISO-8601 date-time, got {value!r}") from exc
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=SG_TZ)
+    return parsed.astimezone(SG_TZ)
 
 
 def _time(v: str, field: str) -> str | None:
@@ -167,8 +222,8 @@ def _time(v: str, field: str) -> str | None:
         return None
     try:
         return time.fromisoformat(s).isoformat(timespec="minutes")
-    except ValueError:
-        raise RowError(f"{field}: use HH:MM (24h), got {v!r}")
+    except ValueError as exc:
+        raise RowError(f"{field}: use HH:MM (24h), got {v!r}") from exc
 
 
 def _one_of(v: str, allowed: set[str], field: str) -> str:
@@ -183,7 +238,7 @@ def _one_of(v: str, allowed: set[str], field: str) -> str:
 # --------------------------------------------------------------------------
 
 
-def parse_row(raw: dict[str, str], line_no: int) -> dict:
+def parse_row(raw: dict[str, str], *, as_of: datetime) -> dict:
     def g(k: str) -> str:
         return (raw.get(k) or "").strip()
 
@@ -193,7 +248,9 @@ def parse_row(raw: dict[str, str], line_no: int) -> dict:
         "provider": g("provider"),
         "provider_type": _one_of(g("provider_type"), PROVIDER_TYPES, "provider_type"),
         "source_url": g("source_url"),
-        "verified_at": _date(g("verified_at"), "verified_at", required=False),
+        "verified_at": _date(
+            g("verified_at"), "verified_at", as_of=as_of, required=False
+        ),
         "verified_by": g("verified_by") or None,
         "verification": _one_of(
             g("verification"), {"verified", "unverified", "retired"}, "verification"
@@ -216,8 +273,10 @@ def parse_row(raw: dict[str, str], line_no: int) -> dict:
             g("in_incumbent_directory"), "in_incumbent_directory"
         ),
         "notes": g("notes") or None,
-        "freshness_state": "fresh",
-        "last_seen_at": datetime.now().isoformat(timespec="seconds"),
+        "freshness_state": (
+            "dead" if g("verification").lower() == "retired" else "fresh"
+        ),
+        "last_seen_at": as_of.isoformat(timespec="seconds"),
     }
 
     for field in ("listing_id", "title", "provider", "venue_name", "planning_area"):
@@ -260,14 +319,14 @@ def parse_row(raw: dict[str, str], line_no: int) -> dict:
         raise RowError("vibes: at least one required (used for coverage auditing only)")
     rec["vibes"] = vibes
 
-    rec["schedule"] = parse_schedule(g, raw)
+    rec["schedule"] = parse_schedule(g, as_of=as_of)
     rec["cost_total_first_session"] = str(
         Decimal(rec["cost_one_off_sgd"]) + Decimal(rec["equipment_cost_sgd"])
     )
     return rec
 
 
-def parse_schedule(g, raw: dict[str, str]) -> dict:
+def parse_schedule(g, *, as_of: datetime) -> dict:
     kind = _one_of(
         g("schedule_kind"), {"weekly", "fixed_dates", "drop_in"}, "schedule_kind"
     )
@@ -278,7 +337,11 @@ def parse_schedule(g, raw: dict[str, str]) -> dict:
         s["start_time"] = _time(g("start_time"), "start_time")
         s["duration_min"] = _int(g("duration_min"), "duration_min", required=False)
         s["first_session"] = _date(
-            g("first_session"), "first_session", required=False, allow_future=True
+            g("first_session"),
+            "first_session",
+            as_of=as_of,
+            required=False,
+            allow_future=True,
         )
         s["num_sessions"] = _int(g("num_sessions"), "num_sessions", required=False)
         for f in ("start_time", "duration_min", "first_session", "num_sessions"):
@@ -298,13 +361,13 @@ def parse_schedule(g, raw: dict[str, str]) -> dict:
         if not dates:
             raise RowError("fixed_dates: required when schedule_kind=fixed_dates")
         for d in dates:
-            try:
-                datetime.fromisoformat(d)
-            except ValueError:
-                raise RowError(f"fixed_dates: use YYYY-MM-DDTHH:MM, got {d!r}")
-            if datetime.fromisoformat(d) < datetime.now():
+            parsed = _datetime(d, "fixed_dates")
+            if parsed < as_of:
                 raise RowError(f"fixed_dates: {d} has already happened")
-        s["fixed_dates"] = dates
+        s["fixed_dates"] = [
+            _datetime(value, "fixed_dates").isoformat(timespec="minutes")
+            for value in dates
+        ]
     else:  # drop_in
         if not g("open_hours_note"):
             raise RowError("open_hours_note: required when schedule_kind=drop_in")
@@ -314,6 +377,204 @@ def parse_schedule(g, raw: dict[str, str]) -> dict:
                 raise RowError(f"{field}: required when schedule_kind=drop_in")
             s[field] = _bool(g(field), field)
     return s
+
+
+def validate_quarantine_record(
+    raw: object,
+    *,
+    index: int,
+) -> dict:
+    """Validate a fictional fixture without third-party dependencies."""
+
+    label = f"quarantine row {index}"
+    if not isinstance(raw, dict):
+        raise RowError(f"{label}: expected an object")
+
+    missing = LISTING_REQUIRED_KEYS - set(raw)
+    extra = set(raw) - LISTING_REQUIRED_KEYS - LISTING_OPTIONAL_KEYS
+    if missing:
+        raise RowError(f"{label}: missing keys {sorted(missing)}")
+    if extra:
+        raise RowError(f"{label}: unknown keys {sorted(extra)}")
+
+    rec = dict(raw)
+    if rec.get("is_fictional") is not True:
+        raise RowError(f"{label}: is_fictional must be true")
+    listing_id = rec.get("listing_id")
+    if not isinstance(listing_id, str) or not listing_id.strip():
+        raise RowError(f"{label}: listing_id must be a non-empty string")
+    label = f"quarantine {listing_id}"
+
+    for field in ("title", "provider", "venue_name", "planning_area"):
+        if not isinstance(rec.get(field), str) or not rec[field].strip():
+            raise RowError(f"{label}: {field} must be a non-empty string")
+
+    if rec.get("provider_type") != "private_unverified":
+        raise RowError(f"{label}: provider_type must be 'private_unverified'")
+    if rec.get("verification") != "unverified":
+        raise RowError(f"{label}: verification must be 'unverified'")
+    if rec.get("freshness_state") != "fresh":
+        raise RowError(
+            f"{label}: an unverified fixture must have freshness_state='fresh'"
+        )
+    if rec.get("verified_at") is not None or rec.get("verified_by") is not None:
+        raise RowError(f"{label}: fictional rows cannot carry verification attribution")
+
+    source_url = rec.get("source_url")
+    hostname = urlsplit(str(source_url or "")).hostname or ""
+    if not str(source_url).startswith(("http://", "https://")):
+        raise RowError(f"{label}: source_url must be a full http(s) URL")
+    if not hostname.endswith(".invalid"):
+        raise RowError(f"{label}: source_url must use the reserved .invalid TLD")
+
+    for field in (
+        "cost_one_off_sgd",
+        "cost_recurring_sgd",
+        "equipment_cost_sgd",
+    ):
+        rec[field] = _money(str(rec.get(field, "")), field)
+    expected_cost = Decimal(rec["cost_one_off_sgd"]) + Decimal(
+        rec["equipment_cost_sgd"]
+    )
+    if "cost_total_first_session" in rec:
+        actual_cost = Decimal(
+            _money(
+                str(rec["cost_total_first_session"]),
+                "cost_total_first_session",
+            )
+        )
+        if actual_cost != expected_cost:
+            raise RowError(f"{label}: cost_total_first_session does not balance")
+    rec["cost_total_first_session"] = str(expected_cost)
+
+    postal_code = rec.get("postal_code")
+    if not isinstance(postal_code, str) or not (
+        len(postal_code) == 6 and postal_code.isdigit()
+    ):
+        raise RowError(f"{label}: postal_code must be 6 digits")
+    expected_sector = postal_code[:2]
+    if rec.get("postal_sector") not in (None, "", expected_sector):
+        raise RowError(f"{label}: postal_sector does not match postal_code")
+    rec["postal_sector"] = expected_sector
+
+    for field in ("age_min", "age_max"):
+        value = rec.get(field)
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise RowError(f"{label}: {field} must be a whole number")
+        if not 0 <= value <= 120:
+            raise RowError(f"{label}: {field} must be between 0 and 120")
+    if rec["age_min"] > rec["age_max"]:
+        raise RowError(f"{label}: age_min cannot exceed age_max")
+    if rec["age_max"] < AGE_FLOOR or rec["age_min"] > AGE_CEILING:
+        raise RowError(f"{label}: age range does not overlap {AGE_FLOOR}-{AGE_CEILING}")
+
+    for field in (
+        "beginner_friendly",
+        "join_alone_ok",
+        "guest_allowed",
+        "in_incumbent_directory",
+    ):
+        if not isinstance(rec.get(field), bool):
+            raise RowError(f"{label}: {field} must be a boolean")
+    if (
+        not isinstance(rec.get("commitment"), str)
+        or rec["commitment"] not in COMMITMENTS
+    ):
+        raise RowError(f"{label}: invalid commitment {rec.get('commitment')!r}")
+
+    vibes = rec.get("vibes")
+    if (
+        not isinstance(vibes, list)
+        or not vibes
+        or any(not isinstance(vibe, str) for vibe in vibes)
+    ):
+        raise RowError(f"{label}: vibes must be a non-empty list of strings")
+    bad_vibes = set(vibes) - VIBES
+    if bad_vibes:
+        raise RowError(f"{label}: unknown vibes {sorted(bad_vibes)}")
+
+    rec["schedule"] = validate_quarantine_schedule(rec.get("schedule"), label=label)
+    rec["last_seen_at"] = _datetime(
+        str(rec.get("last_seen_at", "")), "last_seen_at"
+    ).isoformat(timespec="seconds")
+    if rec.get("nearest_mrt") is not None and not isinstance(rec["nearest_mrt"], str):
+        raise RowError(f"{label}: nearest_mrt must be a string or null")
+    if rec.get("notes") is not None and not isinstance(rec["notes"], str):
+        raise RowError(f"{label}: notes must be a string or null")
+    return rec
+
+
+def validate_quarantine_schedule(raw: object, *, label: str) -> dict:
+    if not isinstance(raw, dict):
+        raise RowError(f"{label}: schedule must be an object")
+    kind = raw.get("kind")
+    common = {"kind"}
+    if kind == "weekly":
+        allowed = common | {
+            "weekday",
+            "start_time",
+            "duration_min",
+            "first_session",
+            "num_sessions",
+        }
+        if set(raw) - allowed:
+            raise RowError(f"{label}: weekly schedule has unknown fields")
+        weekday = raw.get("weekday")
+        if not isinstance(weekday, str) or weekday not in WEEKDAYS:
+            raise RowError(f"{label}: invalid weekly weekday")
+        start_time = _time(str(raw.get("start_time") or ""), "start_time")
+        if start_time is None:
+            raise RowError(f"{label}: start_time must use HH:MM")
+        duration = raw.get("duration_min")
+        sessions = raw.get("num_sessions")
+        if isinstance(duration, bool) or not isinstance(duration, int) or duration <= 0:
+            raise RowError(f"{label}: duration_min must be a positive integer")
+        if isinstance(sessions, bool) or not isinstance(sessions, int) or sessions <= 0:
+            raise RowError(f"{label}: num_sessions must be a positive integer")
+        try:
+            first = date.fromisoformat(str(raw.get("first_session") or ""))
+        except ValueError as exc:
+            raise RowError(f"{label}: invalid first_session") from exc
+        if first.weekday() != WEEKDAY_INDEX[weekday]:
+            raise RowError(f"{label}: first_session does not match weekday")
+        return {
+            "kind": "weekly",
+            "weekday": weekday,
+            "start_time": start_time,
+            "duration_min": duration,
+            "first_session": first.isoformat(),
+            "num_sessions": sessions,
+        }
+    if kind == "fixed_dates":
+        allowed = common | {"fixed_dates"}
+        if set(raw) - allowed:
+            raise RowError(f"{label}: fixed_dates schedule has unknown fields")
+        values = raw.get("fixed_dates")
+        if not isinstance(values, list) or not values:
+            raise RowError(f"{label}: fixed_dates must be a non-empty list")
+        return {
+            "kind": "fixed_dates",
+            "fixed_dates": [
+                _datetime(str(value), "fixed_dates").isoformat(timespec="minutes")
+                for value in values
+            ],
+        }
+    if kind == "drop_in":
+        allowed = common | {
+            "open_hours_note",
+            "weekday_evening_available",
+            "weekend_available",
+        }
+        if set(raw) - allowed:
+            raise RowError(f"{label}: drop_in schedule has unknown fields")
+        note = raw.get("open_hours_note")
+        if not isinstance(note, str) or not note.strip():
+            raise RowError(f"{label}: open_hours_note must be non-empty")
+        for field in ("weekday_evening_available", "weekend_available"):
+            if not isinstance(raw.get(field), bool):
+                raise RowError(f"{label}: {field} must be a boolean")
+        return dict(raw)
+    raise RowError(f"{label}: invalid schedule kind {kind!r}")
 
 
 # --------------------------------------------------------------------------
@@ -352,7 +613,12 @@ def is_weekend(rec: dict) -> bool:
 # --------------------------------------------------------------------------
 
 
-def coverage(records: list[dict]) -> list[tuple[str, bool, str]]:
+def coverage(
+    records: list[dict],
+    *,
+    deep_area: str = DEEP_AREA,
+    as_of: datetime | None = None,
+) -> list[tuple[str, bool, str]]:
     """Each check names the doc requirement it exists to satisfy."""
     real = [r for r in records if not r.get("is_fictional")]
     fake = [r for r in records if r.get("is_fictional")]
@@ -361,8 +627,8 @@ def coverage(records: list[dict]) -> list[tuple[str, bool, str]]:
     by_area: dict[str, list[dict]] = defaultdict(list)
     for r in real:
         by_area[r["planning_area"]].append(r)
-    deep = max(by_area, key=lambda a: len(by_area[a])) if by_area else None
-    deep_rows = by_area.get(deep, [])
+    densest = max(by_area, key=lambda area: len(by_area[area])) if by_area else None
+    deep_rows = by_area.get(deep_area, [])
     deep_free = [r for r in deep_rows if is_free(r)]
 
     results: list[tuple[str, bool, str]] = []
@@ -376,9 +642,9 @@ def coverage(records: list[dict]) -> list[tuple[str, bool, str]]:
         f"{len(real)} real + {len(fake)} quarantine = {len(records)}",
     )
     check(
-        "A3 · at least 3 planning areas",
-        len(by_area) >= 3,
-        f"{len(by_area)} areas: {', '.join(sorted(by_area)) or 'none'}",
+        "A3 · configured deep area + 3 planning areas",
+        len(by_area) >= 3 and bool(deep_rows) and densest == deep_area,
+        f"{len(by_area)} areas; configured={deep_area!r}; densest={densest!r}",
     )
 
     thin = {
@@ -405,7 +671,7 @@ def coverage(records: list[dict]) -> list[tuple[str, bool, str]]:
     check(
         "scenario 2 · the demo moment",
         len(ev) <= 2 and len(we) >= 6,
-        f"{deep or '-'}: {len(ev)} free weekday-evening (want <=2), "
+        f"{deep_area}: {len(ev)} free weekday-evening (want <=2), "
         f"{len(we)} free weekend (want >=6)",
     )
 
@@ -442,7 +708,7 @@ def coverage(records: list[dict]) -> list[tuple[str, bool, str]]:
     check(
         "D10 · all four vibes in the deep area",
         deep_vibes == VIBES,
-        f"{deep or '-'} has {sorted(deep_vibes) or 'none'}; "
+        f"{deep_area} has {sorted(deep_vibes) or 'none'}; "
         f"missing {sorted(VIBES - deep_vibes) or 'none'}",
     )
 
@@ -464,7 +730,8 @@ def coverage(records: list[dict]) -> list[tuple[str, bool, str]]:
         f"{len(free)}/{len(real)} rows are S$0",
     )
 
-    cutoff = date.today() - timedelta(days=STALE_AFTER_DAYS)
+    reference = as_of or datetime.now(SG_TZ)
+    cutoff = reference.date() - timedelta(days=STALE_AFTER_DAYS)
     stale = [
         r
         for r in real
@@ -472,8 +739,10 @@ def coverage(records: list[dict]) -> list[tuple[str, bool, str]]:
     ]
     check(
         f"freshness · verified within {STALE_AFTER_DAYS} days",
-        not stale,
-        "all fresh" if not stale else f"{len(stale)} rows need re-checking",
+        bool(real) and not stale,
+        "no real rows"
+        if not real
+        else ("all fresh" if not stale else f"{len(stale)} rows need re-checking"),
     )
 
     return results
@@ -513,6 +782,43 @@ def check_urls(records: list[dict]) -> tuple[list[str], list[str]]:
 # --------------------------------------------------------------------------
 
 
+def display_path(path: Path) -> Path:
+    resolved = path.resolve()
+    return resolved.relative_to(ROOT) if resolved.is_relative_to(ROOT) else resolved
+
+
+def atomic_write_json(path: Path, records: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle = tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        dir=path.parent,
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+        delete=False,
+    )
+    temp_path = Path(handle.name)
+    try:
+        with handle:
+            json.dump(records, handle, indent=2, ensure_ascii=False)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temp_path, path)
+    except BaseException:
+        temp_path.unlink(missing_ok=True)
+        raise
+
+
+def parse_as_of(value: str | None) -> datetime:
+    if value is None:
+        return datetime.now(SG_TZ)
+    return _datetime(value, "as_of")
+
+
+# --------------------------------------------------------------------------
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--check-urls", action="store_true", help="HEAD every source_url")
@@ -525,10 +831,26 @@ def main() -> int:
         help="write a structurally valid artifact even when coverage checks have gaps",
     )
     ap.add_argument("--sheet", type=Path, default=SHEET)
+    ap.add_argument("--quarantine", type=Path, default=QUARANTINE)
+    ap.add_argument("--out", type=Path, default=OUT)
+    ap.add_argument("--deep-area", default=DEEP_AREA)
+    ap.add_argument(
+        "--as-of",
+        help="ISO-8601 build time; naive values are interpreted as Asia/Singapore",
+    )
     args = ap.parse_args()
+    args.sheet = args.sheet.resolve()
+    args.quarantine = args.quarantine.resolve()
+    args.out = args.out.resolve()
+
+    try:
+        as_of = parse_as_of(args.as_of)
+    except RowError as exc:
+        print(exc)
+        return 1
 
     if not args.sheet.exists():
-        print(f"no sheet at {args.sheet.relative_to(ROOT)}")
+        print(f"no sheet at {display_path(args.sheet)}")
         print("Export the transcription sheet as CSV and save it there.")
         return 1
 
@@ -547,30 +869,24 @@ def main() -> int:
             if (raw.get("listing_id") or "").strip().startswith("#"):
                 continue  # commented-out example row
             try:
-                records.append(parse_row(raw, i))
+                records.append(parse_row(raw, as_of=as_of))
             except RowError as e:
                 errors.append(f"  row {i} ({(raw.get('title') or '?')[:40]}): {e}")
 
-    if QUARANTINE.exists():
-        blob = json.loads(QUARANTINE.read_text())
-        fake = blob["listings"] if isinstance(blob, dict) else blob
-        for r in fake:
-            # Set here as well as in the file: a row in the quarantine file is
-            # fictional by virtue of being in it, whatever the row claims.
-            r["is_fictional"] = True
-            if r.get("verification") != "unverified":
-                errors.append(
-                    f"  quarantine {r.get('listing_id')}: "
-                    "must be verification='unverified'"
-                )
-            hostname = urlsplit(str(r.get("source_url", ""))).hostname or ""
-            if not hostname.endswith(".invalid"):
-                errors.append(
-                    f"  quarantine {r.get('listing_id')}: source_url must use the "
-                    "reserved "
-                    ".invalid TLD so it can never resolve to a real business"
-                )
-        records.extend(fake)
+    if args.quarantine.exists():
+        try:
+            blob = json.loads(args.quarantine.read_text(encoding="utf-8"))
+            fake = blob["listings"] if isinstance(blob, dict) else blob
+            if not isinstance(fake, list):
+                raise RowError("quarantine payload must contain a list of listings")
+        except (json.JSONDecodeError, KeyError, OSError, RowError) as exc:
+            errors.append(f"  quarantine file: {exc}")
+            fake = []
+        for index, raw in enumerate(fake, start=1):
+            try:
+                records.append(validate_quarantine_record(raw, index=index))
+            except (InvalidOperation, RowError) as exc:
+                errors.append(f"  {exc}")
 
     ids = Counter(r["listing_id"] for r in records)
     for lid, n in ids.items():
@@ -592,7 +908,7 @@ def main() -> int:
 
     print("\n  coverage\n  " + "-" * 62)
     passed = 0
-    coverage_results = coverage(records)
+    coverage_results = coverage(records, deep_area=args.deep_area, as_of=as_of)
     for label, ok, detail in coverage_results:
         print(f"  {'PASS' if ok else 'GAP '}  {label:<42} {detail}")
         passed += ok
@@ -619,7 +935,7 @@ def main() -> int:
         errors.extend(dead)
 
     if errors:
-        print(f"\n  not writing {OUT.name} — fix the rejected rows first\n")
+        print(f"\n  not writing {args.out.name} — fix the rejected rows first\n")
         return 1
 
     # Run the executable schema contract before writing so a failed conformance
@@ -638,7 +954,7 @@ def main() -> int:
         )
     except Exception as e:  # noqa: BLE001
         print(f"\n  pydantic conformance FAILED: {e}")
-        print(f"  not writing {OUT.name}\n")
+        print(f"  not writing {args.out.name}\n")
         return 1
 
     if args.coverage_only:
@@ -647,14 +963,13 @@ def main() -> int:
 
     if passed != total and not args.allow_incomplete:
         print(
-            f"\n  not writing {OUT.name} — coverage is incomplete "
+            f"\n  not writing {args.out.name} — coverage is incomplete "
             "(use --allow-incomplete only for local development)\n"
         )
         return 1
 
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(records, indent=2, ensure_ascii=False) + "\n")
-    print(f"\n  wrote {OUT.relative_to(ROOT)} ({len(records)} listings)")
+    atomic_write_json(args.out, records)
+    print(f"\n  wrote {display_path(args.out)} ({len(records)} listings)")
 
     print()
     return 0

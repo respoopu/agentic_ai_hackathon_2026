@@ -60,6 +60,7 @@ python3 scripts/build_ckb.py                 # validate + build data/seed_ckb.js
 python3 scripts/build_ckb.py --coverage-only # just the gap report
 python3 scripts/build_ckb.py --check-urls    # HEAD every source_url
 python3 scripts/build_ckb.py --allow-incomplete # local development only
+python3 scripts/build_ckb.py --as-of 2026-09-01T09:00:00+08:00 # reproducible build
 ```
 
 Stdlib only — it runs on a clean laptop with nothing installed. It refuses
@@ -68,6 +69,12 @@ against the test that needs them. By default it does not write an incomplete
 artifact; `--allow-incomplete` is an explicit local-development escape hatch.
 When Pydantic is installed it also validates the full executable schema before
 writing, and a failure never leaves a malformed artifact behind.
+
+All date-times are normalised to **Asia/Singapore**. A value without an offset
+is interpreted as Singapore local time; an offset-aware value is converted to
+Singapore time. Use `--as-of` when reproducing a historical build. `--sheet`,
+`--quarantine` and `--out` may point outside the repository without changing
+the canonical artifact, and output replacement is atomic.
 
 `--check-urls` distinguishes a **dead** link (404/410 — fix or drop the row)
 from an **unchecked** one (403, timeout — several government sites block
@@ -137,6 +144,13 @@ Three shapes. Fill only the columns your shape needs:
 | `fixed_dates` | `fixed_dates`, pipe-separated `2026-09-13T14:00\|2026-09-27T14:00` | One-off workshops. |
 | `drop_in` | `open_hours_note`, free text; `weekday_evening_available` and `weekend_available`, yes/no | A court, a park, a fitness corner. The exact booleans prevent scenario 2 from being inferred unreliably from free text. |
 
+The source fetchers leave the two drop-in availability booleans blank even when
+the captured hours look obvious. They also leave participation facts blank
+when the source does not state them. A human records the evidence-backed
+values; the builder rejects blanks. Both fetchers refuse to overwrite an
+existing draft unless `--force` is supplied, and source-derived IDs remain
+stable across filters and re-runs.
+
 ### Two columns that exist for the evaluation
 
 | Column | What goes in it |
@@ -154,7 +168,7 @@ validator prints this list with PASS/GAP against your current sheet:
 
 | Check | Requirement |
 |---|---|
-| **A3** · region spread | At least 3 planning areas |
+| **A3** · region spread | Configured deep area exists, is densest, and at least 3 planning areas exist |
 | **A3** · free supply | ≥3 free, beginner-friendly, join-alone rows **per area** |
 | **Scenario 2** · the demo | In the deep area: ≤2 free weekday-evening, **≥6 free weekend** |
 | **A11** · age boundary | ≥1 row starting at exactly 13, ≥1 ending at exactly 17 |
@@ -194,9 +208,13 @@ you point at the area you did and say it took four people one evening.
 
 ### Which area — this has now been checked
 
-Three candidate areas were swept before pinning anything. **Jurong West /
-Jurong East / Clementi wins, and not narrowly.** It is the only candidate where
-all four supply tiers were verified present:
+Three western planning areas were considered together during source discovery:
+**Jurong West / Jurong East / Clementi won the regional sweep, and not
+narrowly.** The actual demo and coverage key are pinned to the exact URA
+planning-area string **`Jurong West`**. Jurong East and Clementi remain separate
+planning-area buckets; they never silently contribute to Jurong West's
+scenario-2 or vibe counts. The two thinner comparison areas are selected from
+the finished, verified seed rather than implied by the regional source sweep.
 
 | | **Jurong (west)** | Punggol / Hougang (NE) | Toa Payoh / Bishan (central) |
 |---|---|---|---|

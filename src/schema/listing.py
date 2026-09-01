@@ -21,6 +21,7 @@ from __future__ import annotations
 from datetime import date, datetime, time
 from decimal import Decimal
 from typing import Literal
+from zoneinfo import ZoneInfo
 
 from pydantic import (
     BaseModel,
@@ -34,6 +35,7 @@ from pydantic import (
 # The cohort boundary is a consent boundary, not a preference (D7).
 AGE_FLOOR = 13
 AGE_CEILING = 17
+SG_TZ = ZoneInfo("Asia/Singapore")
 
 ProviderType = Literal[
     "cc",  # Community Club course
@@ -85,6 +87,23 @@ class Schedule(BaseModel):
     open_hours_note: str | None = None
     weekday_evening_available: bool | None = None
     weekend_available: bool | None = None
+
+    @field_validator("fixed_dates", mode="before")
+    @classmethod
+    def _normalise_fixed_dates(cls, values: object) -> object:
+        if not isinstance(values, list):
+            return values
+        normalised: list[datetime] = []
+        for value in values:
+            parsed = (
+                value if isinstance(value, datetime) else datetime.fromisoformat(value)
+            )
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=SG_TZ)
+            else:
+                parsed = parsed.astimezone(SG_TZ)
+            normalised.append(parsed)
+        return normalised
 
     @model_validator(mode="after")
     def _required_fields_per_kind(self) -> Schedule:
@@ -222,6 +241,16 @@ class ListingRecord(BaseModel):
         if v is not None and v > date.today():
             raise ValueError(f"verified_at {v} is in the future")
         return v
+
+    @field_validator("last_seen_at", mode="before")
+    @classmethod
+    def _normalise_last_seen(cls, value: object) -> datetime:
+        parsed = (
+            value if isinstance(value, datetime) else datetime.fromisoformat(str(value))
+        )
+        if parsed.tzinfo is None:
+            return parsed.replace(tzinfo=SG_TZ)
+        return parsed.astimezone(SG_TZ)
 
     @model_validator(mode="after")
     def _coherent(self) -> ListingRecord:
