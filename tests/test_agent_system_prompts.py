@@ -13,9 +13,22 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PROMPTS = ROOT / "docs" / "agent-system-prompts"
 FIXTURES = ROOT / "tests" / "agent-system-prompts" / "fixtures"
+VALIDATOR = ROOT / "tests" / "agent-system-prompts" / "validate_fixtures.py"
 
 
 class AgentPromptContractTests(unittest.TestCase):
+    def run_fixture_validator(self, fixtures: dict[str, object]) -> subprocess.CompletedProcess[str]:
+        with tempfile.TemporaryDirectory() as temporary:
+            for filename, fixture in fixtures.items():
+                Path(temporary, filename).write_text(json.dumps(fixture), encoding="utf-8")
+            return subprocess.run(
+                [sys.executable, str(VALIDATOR), "--fixtures", temporary, "--no-docs"],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
     def test_v22_agent_roster_and_topology_are_documented(self) -> None:
         readme = (PROMPTS / "README.md").read_text(encoding="utf-8")
         for filename in (
@@ -72,10 +85,9 @@ class AgentPromptContractTests(unittest.TestCase):
             self.assertIn(marker, protocol)
 
     def test_fixture_validator_is_canonical_python_and_complete(self) -> None:
-        validator = ROOT / "tests" / "agent-system-prompts" / "validate_fixtures.py"
-        self.assertTrue(validator.is_file())
+        self.assertTrue(VALIDATOR.is_file())
         result = subprocess.run(
-            [sys.executable, str(validator)],
+            [sys.executable, str(VALIDATOR)],
             cwd=ROOT,
             capture_output=True,
             text=True,
@@ -84,36 +96,74 @@ class AgentPromptContractTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
     def test_unknown_fixture_invariant_is_rejected(self) -> None:
-        validator = ROOT / "tests" / "agent-system-prompts" / "validate_fixtures.py"
-        with tempfile.TemporaryDirectory() as temporary:
-            fixture = {
-                "fixture_version": "2.2",
-                "id": "unknown-invariant",
-                "name": "Unknown invariant is not silently accepted",
-                "agent": "validator",
-                "given": {},
-                "expect": {
-                    "output": {},
-                    "tool_calls": {},
-                    "store_reads": [],
-                    "store_writes": [],
-                    "gates": [],
-                },
-                "invariants": ["not_a_real_invariant"],
-                "covers": [],
-            }
-            Path(temporary, "unknown.yaml").write_text(
-                json.dumps(fixture), encoding="utf-8"
-            )
-            result = subprocess.run(
-                [sys.executable, str(validator), "--fixtures", temporary, "--no-docs"],
-                cwd=ROOT,
-                capture_output=True,
-                text=True,
-                check=False,
-            )
+        fixture = {
+            "fixture_version": "2.2",
+            "id": "unknown-invariant",
+            "name": "Unknown invariant is not silently accepted",
+            "agent": "validator",
+            "given": {},
+            "expect": {
+                "output": {},
+                "tool_calls": {},
+                "store_reads": [],
+                "store_writes": [],
+                "gates": [],
+            },
+            "invariants": ["not_a_real_invariant"],
+            "covers": [],
+        }
+        result = self.run_fixture_validator({"unknown.yaml": fixture})
         self.assertNotEqual(0, result.returncode)
         self.assertIn("unknown invariant", result.stdout + result.stderr)
+
+    def test_discovery_payload_is_required_for_pii_isolation(self) -> None:
+        fixture = json.loads(
+            (FIXTURES / "discovery" / "private-cached-replay.yaml").read_text(encoding="utf-8")
+        )
+        del fixture["given"]["discovery_payload"]
+        result = self.run_fixture_validator({"missing-payload.yaml": fixture})
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("given.discovery_payload must be present", result.stdout + result.stderr)
+
+    def test_nested_discovery_page_dump_is_rejected(self) -> None:
+        fixture = json.loads(
+            (FIXTURES / "discovery" / "private-cached-replay.yaml").read_text(encoding="utf-8")
+        )
+        fixture["expect"]["output"]["listing"]["raw_html"] = "<html>private page</html>"
+        result = self.run_fixture_validator({"nested-page-dump.yaml": fixture})
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("raw page content field raw_html", result.stdout + result.stderr)
+
+    def test_non_object_fixture_is_reported_without_crashing(self) -> None:
+        result = self.run_fixture_validator({"array.yaml": []})
+        combined = result.stdout + result.stderr
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("fixture root must be an object", combined)
+        self.assertNotIn("Traceback", combined)
+
+    def test_malformed_nested_value_is_reported_without_crashing(self) -> None:
+        fixture = json.loads(
+            (FIXTURES / "discovery" / "private-cached-replay.yaml").read_text(encoding="utf-8")
+        )
+        fixture["expect"]["output"] = []
+        result = self.run_fixture_validator({"malformed-output.yaml": fixture})
+        combined = result.stdout + result.stderr
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("could not evaluate", combined)
+        self.assertNotIn("Traceback", combined)
+
+    def test_cascade_fixtures_forbid_direct_business_agent_calls(self) -> None:
+        cases = (
+            ("compliance", "dead-listing-cascade.yaml", "planner"),
+            ("broker", "actionable-failure-regated.yaml", "planner"),
+        )
+        for directory, filename, direct_call in cases:
+            with self.subTest(filename=filename):
+                fixture = json.loads((FIXTURES / directory / filename).read_text(encoding="utf-8"))
+                fixture["expect"]["tool_calls"][direct_call] = 1
+                result = self.run_fixture_validator({filename: fixture})
+                self.assertNotEqual(0, result.returncode)
+                self.assertIn("call Planner directly", result.stdout + result.stderr)
 
     def test_fixture_corpus_traces_family_a_and_adversarial_sets(self) -> None:
         coverage: set[str] = set()
@@ -145,8 +195,8 @@ class AgentPromptContractTests(unittest.TestCase):
         self.assertNotIn("other four rows still need re-deriving", discrepancies)
         self.assertNotIn("canonical unittest suite passed 34 tests", discrepancies)
         self.assertNotIn("canonical unittest suite passed 34 tests", tracker)
-        self.assertIn("8 agent-system contract tests passed", discrepancies)
-        self.assertIn("Windows zoneinfo", tracker)
+        self.assertIn("agent-system contract tests passed", discrepancies)
+        self.assertNotIn("PR #1 remains open for review", tracker)
 
 
 if __name__ == "__main__":

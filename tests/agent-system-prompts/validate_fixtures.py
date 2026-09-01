@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
@@ -137,7 +138,15 @@ def _caps_and_outcomes(fixture: dict[str, Any], source: str, errors: list[str]) 
 
 @invariant("discovery_payload_absolute_pii_isolation")
 def _discovery_pii(fixture: dict[str, Any], source: str, errors: list[str]) -> None:
-    payload = fixture["given"].get("discovery_payload", {})
+    payload = fixture["given"].get("discovery_payload")
+    _expect(
+        errors,
+        source,
+        isinstance(payload, Mapping),
+        "given.discovery_payload must be present and be an object",
+    )
+    if not isinstance(payload, Mapping):
+        return
     for key in ("teen_id", "address", "school", "parental_rule", "parental_rules"):
         _expect(errors, source, not _contains_key(payload, key), f"Discovery payload contains forbidden personal field {key}")
 
@@ -149,7 +158,8 @@ def _typed_discovery_write(fixture: dict[str, Any], source: str, errors: list[st
     _expect(errors, source, writes == ["CKB.ListingRecord"], "Discovery must write only typed ListingRecord rows to CKB")
     for key in ("listing_id", "verification", "source_url", "last_seen_at"):
         _expect(errors, source, key in output.get("listing", {}), f"Discovery ListingRecord missing {key}")
-    _expect(errors, source, "raw_html" not in output and "page_dump" not in output, "Discovery output must not contain raw page content")
+    for key in ("raw_html", "page_dump"):
+        _expect(errors, source, not _contains_key(output, key), f"Discovery output must not contain raw page content field {key}")
 
 
 @invariant("cached_replay_matches_live_shape")
@@ -219,9 +229,11 @@ def _no_listing(fixture: dict[str, Any], source: str, errors: list[str]) -> None
 
 @invariant("dead_listing_replacement_rechecks_g2_g3")
 def _dead_listing(fixture: dict[str, Any], source: str, errors: list[str]) -> None:
-    output = fixture["expect"]["output"]
+    output, calls = fixture["expect"]["output"], fixture["expect"]["tool_calls"]
     _expect(errors, source, output.get("path") == ["retire", "Planner", "G2", "Guardian", "G3", "Broker"], "dead-listing replacement must traverse Planner/G2/Guardian/G3")
     _expect(errors, source, set(output.get("notified", [])) == {"teen", "parent"}, "dead-listing cascade must notify teen and parent")
+    for agent in ("planner", "guardian", "broker"):
+        _expect(errors, source, calls.get(agent) == 0, f"Compliance must not call {agent.title()} directly")
 
 
 @invariant("exactly_two_guardian_rejections_escalate")
@@ -265,10 +277,11 @@ def _duplicate_transaction(fixture: dict[str, Any], source: str, errors: list[st
 
 @invariant("booking_failure_rechecks_g2_g3")
 def _booking_failure(fixture: dict[str, Any], source: str, errors: list[str]) -> None:
-    output = fixture["expect"]["output"]
+    output, calls = fixture["expect"]["output"], fixture["expect"]["tool_calls"]
     _expect(errors, source, bool(output.get("actionable_reason")), "booking failure must be actionable")
     _expect(errors, source, output.get("slot_marked_unavailable") is True, "failed slot must be marked unavailable")
     _expect(errors, source, output.get("replacement_path") == ["Planner", "G2", "Guardian", "G3", "Broker"], "replacement booking must re-enter G2/G3")
+    _expect(errors, source, calls.get("planner") == 0, "Broker must return a failure result rather than call Planner directly")
 
 
 @invariant("observer_handles_attended_and_no_show")
@@ -375,7 +388,7 @@ def validate_fixture(fixture: Any, source: str) -> list[str]:
         else:
             try:
                 check(fixture, source, errors)
-            except (KeyError, TypeError, ValueError) as exc:
+            except (AttributeError, KeyError, TypeError, ValueError) as exc:
                 _fail(errors, source, f"invariant {name!r} could not evaluate: {exc}")
     return errors
 
@@ -399,7 +412,8 @@ def validate_fixture_directory(root: Path, require_coverage: bool = True) -> lis
             errors.append(f"{path}: duplicate fixture id {fixture_id!r}; first seen in {ids[fixture_id]}")
         elif fixture_id:
             ids[fixture_id] = path
-        coverage.update(fixture.get("covers", []))
+        if isinstance(fixture, dict) and isinstance(fixture.get("covers"), list):
+            coverage.update(fixture["covers"])
     if require_coverage:
         unknown_coverage = coverage - REQUIRED_COVERAGE
         missing_coverage = REQUIRED_COVERAGE - coverage
@@ -425,7 +439,7 @@ def validate_docs() -> list[str]:
         if path.name.endswith("-agent.md") or path.name == "discovery-engine.md":
             if sum(1 for line in content.splitlines() if line.startswith("```")) != 2:
                 errors.append(f"{path}: role prompt must contain exactly one fenced prompt")
-        for match in __import__("re").finditer(r"\]\(([^)]+)\)", content):
+        for match in re.finditer(r"\]\(([^)]+)\)", content):
             link = match.group(1).split("#", 1)[0]
             if not link or link.startswith(("http://", "https://", "mailto:")):
                 continue

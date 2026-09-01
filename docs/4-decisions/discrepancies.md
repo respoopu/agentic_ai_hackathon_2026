@@ -462,7 +462,7 @@ The pre-OW-03 divergences were:
 
 The old PowerShell-only validation also silently accepted unknown invariant labels. OW-03 replaced it with dependency-free Python validation on the canonical judge path; unknown invariants now fail.
 
-**Outcome:** The suite now has five pipeline prompts plus scheduled Compliance and detached Validator, the v2.2 typed protocol/store boundaries, and 25 executable fixtures covering A1-A12 and adversarial scenarios 1-8. The fixture validator passed all 25 scenarios and 8 agent-system contract tests passed. Full repository discovery on the current Windows/Blender host remains limited by unchanged seed-CKB `-S` subprocesses being unable to load `Asia/Singapore`; it is not counted as OW-03 acceptance evidence. Completion is recorded as **OW-03** in [`outstanding.md`](../5-delivery/outstanding.md).
+**Outcome:** The suite now has five pipeline prompts plus scheduled Compliance and detached Validator, the v2.2 typed protocol/store boundaries, and 25 executable fixtures covering A1-A12 and adversarial scenarios 1-8. The fixture validator passed all 25 scenarios and the agent-system contract tests passed. Repository-wide discovery remains environment-dependent where optional project dependencies are unavailable; it is not counted as OW-03 acceptance evidence. Completion is recorded as **OW-03** in [`outstanding.md`](../5-delivery/outstanding.md).
 
 ---
 

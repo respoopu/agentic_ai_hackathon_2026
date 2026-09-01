@@ -6,7 +6,7 @@
   "given": {"booking_record": {"status": "failed", "listing_id": "listing_full"}},
   "expect": {
     "output": {"actionable_reason": "venue full on 3 Sep; two alternatives are available the same evening", "slot_marked_unavailable": true, "replacement_path": ["Planner", "G2", "Guardian", "G3", "Broker"]},
-    "tool_calls": {"planner": 1},
+    "tool_calls": {"planner": 0},
     "store_reads": ["guardian_passed_plan"],
     "store_writes": ["booking_records"],
     "gates": ["G2", "G3"]

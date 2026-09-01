@@ -6,7 +6,7 @@
   "given": {"listing_id": "listing_dead", "freshness_state": "dead", "live_plan_ids": ["plan_7"]},
   "expect": {
     "output": {"path": ["retire", "Planner", "G2", "Guardian", "G3", "Broker"], "notified": ["teen", "parent"]},
-    "tool_calls": {"planner": 1, "guardian": 1, "broker": 1},
+    "tool_calls": {"planner": 0, "guardian": 0, "broker": 0},
     "store_reads": ["CKB", "Personal Data"],
     "store_writes": ["CKB.freshness", "Personal Data.plan_live_flags"],
     "gates": ["G2", "G3"]
