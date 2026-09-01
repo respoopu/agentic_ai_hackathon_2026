@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "broker-duplicate-transaction-replay",
+  "name": "Duplicate ledger transaction returns stored booking without side effects",
+  "agent": "broker",
+  "given": {"ledger_transaction_id": "ledger_tx_1", "existing_booking_record": {"booking_id": "booking_1", "plan_id": "plan_1", "listing_id": "listing_1", "status": "booked", "ledger_transaction_id": "ledger_tx_1", "committed_sgd": 8, "created_at": "2026-09-01T00:00:00Z"}},
+  "expect": {
+    "output": {"replayed": true, "booking_record": {"booking_id": "booking_1", "plan_id": "plan_1", "listing_id": "listing_1", "status": "booked", "ledger_transaction_id": "ledger_tx_1", "committed_sgd": 8, "created_at": "2026-09-01T00:00:00Z"}},
+    "tool_calls": {"sandbox_provider": 0, "ledger_commit": 0},
+    "store_reads": ["booking_records"],
+    "store_writes": [],
+    "gates": ["G4"]
+  },
+  "invariants": ["duplicate_transaction_replays_without_side_effects"],
+  "covers": []
+}

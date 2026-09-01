@@ -1,0 +1,23 @@
+{
+  "fixture_version": "2.2",
+  "id": "intake-age-boundary-matrix",
+  "name": "I0 distinguishes under-13, eligible and adult-mode cases",
+  "agent": "intake",
+  "given": {"ages": [11, 12, 13, 17, 18, 19]},
+  "expect": {
+    "output": {"cases": [
+      {"age": 11, "eligible": false, "reason": "under_13", "referral": "trusted_adult", "planner_calls": 0, "personal_data_writes": 0},
+      {"age": 12, "eligible": false, "reason": "under_13", "referral": "trusted_adult", "planner_calls": 0, "personal_data_writes": 0},
+      {"age": 13, "eligible": true, "reason": "eligible", "referral": null, "planner_calls": 1, "personal_data_writes": 1},
+      {"age": 17, "eligible": true, "reason": "eligible", "referral": null, "planner_calls": 1, "personal_data_writes": 1},
+      {"age": 18, "eligible": false, "reason": "adult_mode_unavailable", "referral": "general_activity_services", "planner_calls": 0, "personal_data_writes": 0},
+      {"age": 19, "eligible": false, "reason": "adult_mode_unavailable", "referral": "general_activity_services", "planner_calls": 0, "personal_data_writes": 0}
+    ]},
+    "tool_calls": {"planner": 2},
+    "store_reads": [],
+    "store_writes": ["Personal Data.setup"],
+    "gates": ["I0"]
+  },
+  "invariants": ["intake_age_matrix_enforced"],
+  "covers": ["A11", "ADV-7"]
+}

@@ -1,0 +1,22 @@
+{
+  "fixture_version": "2.2",
+  "id": "planner-budget-parental-age-travel",
+  "name": "Ledger and hard constraints override preference",
+  "agent": "planner",
+  "given": {
+    "ledger": {"money_total_sgd": 50, "money_spent_sgd": 15, "money_committed_sgd": 10, "hours_per_week": 4, "hours_committed": 1, "tries_total": 4, "tries_used": 1, "tries_abandoned": 0},
+    "declared_age": 15,
+    "teen_preference": "late_evening",
+    "parental_rule": "home_by_20_00",
+    "travel_limit_min": 30
+  },
+  "expect": {
+    "output": {"plan": {"plan_id": "plan_constraints", "items": [{"listing_id": "listing_early", "session_at": "2026-09-05T18:00:00+08:00", "cost_sgd": 20}], "total_cost_sgd": 20, "ledger_version": 7}, "parental_rule_won": true, "age_ok": true, "travel_ok": true, "conflict_surfaced": true},
+    "tool_calls": {"discovery": 0},
+    "store_reads": ["CKB", "Personal Data"],
+    "store_writes": [],
+    "gates": ["G2"]
+  },
+  "invariants": ["ledger_budget_balances", "parental_age_travel_rules_hard_filtered"],
+  "covers": ["A2", "A4", "ADV-3"]
+}

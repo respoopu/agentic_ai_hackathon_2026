@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "planner-peer-cohort-suppressed",
+  "name": "Peer cohort below k=5 is hidden and never filters",
+  "agent": "planner",
+  "given": {"underlying_count": 2, "contributor_opt_in": true, "without_peer_signal": ["listing_a", "listing_b"], "with_peer_signal": ["listing_a", "listing_b"]},
+  "expect": {
+    "output": {"peer_cohort": {"same_age_band": "few", "same_area": true, "suppressed": true}, "display": null},
+    "tool_calls": {},
+    "store_reads": ["CKB"],
+    "store_writes": [],
+    "gates": []
+  },
+  "invariants": ["peer_cohort_k5_private_tiebreak_only"],
+  "covers": ["A12", "ADV-8"]
+}

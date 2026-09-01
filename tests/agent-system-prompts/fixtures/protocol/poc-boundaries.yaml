@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "protocol-poc-boundaries",
+  "name": "Cached, manual, sandboxed and simulated PoC boundaries are explicit",
+  "agent": "protocol",
+  "given": {},
+  "expect": {
+    "output": {"boundaries": {"discovery": "live_whitelist_plus_cached_replay", "compliance": "manual_seeded_ckb_scan", "broker": "sandbox_zero_live_provider_payment_calls", "observer": "in_app_text_with_simulated_attendance", "longitudinal": "simulated_9_to_12_month_replay", "peer_cohort": "simulated_prebucketed_k5"}},
+    "tool_calls": {"live_provider": 0, "payment": 0, "audio_processor": 0, "deployed_scheduler": 0, "real_peer_aggregator": 0},
+    "store_reads": [],
+    "store_writes": [],
+    "gates": []
+  },
+  "invariants": ["poc_boundaries_exact"],
+  "covers": []
+}

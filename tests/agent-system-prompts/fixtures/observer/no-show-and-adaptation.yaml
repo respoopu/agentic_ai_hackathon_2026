@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "observer-no-show-and-adaptation",
+  "name": "Observer replans after no-shows and supports commit, hold and one debrief",
+  "agent": "observer",
+  "given": {"attendance_history": [false, false], "sustained_repeat_attendance": true, "debrief_submission": null},
+  "expect": {
+    "output": {"consecutive_no_shows": 2, "action": "replan", "message_sent": false, "sustained_attendance_action": "try_to_commit", "hold_outcome": "hold_this_week"},
+    "tool_calls": {"debrief_prompt": 1, "debrief_reprompt": 0, "planner": 1},
+    "store_reads": ["BookingRecord", "AttendanceEvent", "DebriefSubmission"],
+    "store_writes": ["Personal Data.attendance", "Personal Data.ledger", "Personal Data.preferences"],
+    "gates": []
+  },
+  "invariants": ["two_no_shows_trigger_replan", "observer_try_commit_hold_and_debrief_cap"],
+  "covers": []
+}

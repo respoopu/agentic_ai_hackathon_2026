@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "broker-sandbox-idempotent-booking",
+  "name": "Sandbox Broker commits ledger once and emits both artefacts",
+  "agent": "broker",
+  "given": {"plan": {"plan_id": "plan_1", "ledger_version": 4}, "GuardianVerdict": {"approved": true}, "ledger_transaction_id": "ledger_tx_1"},
+  "expect": {
+    "output": {"mode": "sandbox", "status": "booked", "ledger_version_checked": true, "booking_record": {"booking_id": "booking_1", "plan_id": "plan_1", "listing_id": "listing_1", "status": "booked", "ledger_transaction_id": "ledger_tx_1", "committed_sgd": 8, "created_at": "2026-09-01T00:00:00Z"}, "teen_preparation": {"bring": "water", "meet": "lobby", "people_come_alone": true}, "parent_reassurance": {"organiser": "Community Club", "venue": "Hall", "timing": "18:00", "contact": "seeded-contact"}},
+    "tool_calls": {"sandbox_provider": 1, "live_provider": 0, "payment": 0, "ledger_commit": 1, "duplicate_ledger_commit": 0},
+    "store_reads": ["guardian_passed_plan"],
+    "store_writes": ["booking_records", "Personal Data.ledger"],
+    "gates": ["G4"]
+  },
+  "invariants": ["sandbox_booking_has_no_live_calls", "ledger_transaction_applies_exactly_once"],
+  "covers": []
+}

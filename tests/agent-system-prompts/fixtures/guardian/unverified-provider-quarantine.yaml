@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "guardian-unverified-provider-quarantine",
+  "name": "Unverified private provider enters trusted-adult vetting",
+  "agent": "guardian",
+  "given": {"listing": {"listing_id": "listing_private_1", "provider_type": "private_unverified", "verification": "unverified"}},
+  "expect": {
+    "output": {"teen_visible": false, "vetting_queue": "trusted_adult", "GuardianVerdict": {"approved": false, "reason_codes": ["provider_vetting_required"]}},
+    "tool_calls": {"broker": 0, "trusted_adult_vetting": 1},
+    "store_reads": ["CKB", "Personal Data"],
+    "store_writes": [],
+    "gates": ["G2"]
+  },
+  "invariants": ["unverified_provider_quarantined"],
+  "covers": ["A1", "ADV-1"]
+}

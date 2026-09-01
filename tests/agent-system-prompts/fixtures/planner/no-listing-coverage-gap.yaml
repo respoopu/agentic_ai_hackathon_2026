@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "planner-no-listing-coverage-gap",
+  "name": "No age-compatible listing is a coverage failure",
+  "agent": "planner",
+  "given": {"declared_age": 14, "matching_listing_ids": []},
+  "expect": {
+    "output": {"outcome": "no_viable_plan", "completion": "failed", "reason_code": "ckb_coverage_gap", "notify": "trusted_adult"},
+    "tool_calls": {},
+    "store_reads": ["CKB", "Personal Data"],
+    "store_writes": [],
+    "gates": []
+  },
+  "invariants": ["no_listing_is_coverage_failure"],
+  "covers": ["ADV-5"]
+}

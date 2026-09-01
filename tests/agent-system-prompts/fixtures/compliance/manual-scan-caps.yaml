@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "compliance-manual-scan-caps",
+  "name": "Manual PoC scan stays off path and within both caps",
+  "agent": "compliance",
+  "given": {"seeded_ckb": true, "manual_trigger": true},
+  "expect": {
+    "output": {"trigger": "manual_poc", "request_path_blocked": false, "listings_scanned": 50, "max_fetches_for_any_domain": 5},
+    "tool_calls": {"scheduled_job": 0, "external_fetch": 5},
+    "store_reads": ["CKB", "Personal Data"],
+    "store_writes": ["CKB.freshness", "Personal Data.plan_live_flags"],
+    "gates": []
+  },
+  "invariants": ["manual_compliance_scan_obeys_caps"],
+  "covers": []
+}

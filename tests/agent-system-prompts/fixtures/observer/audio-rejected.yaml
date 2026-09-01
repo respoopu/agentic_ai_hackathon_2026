@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "observer-audio-rejected",
+  "name": "PoC rejects audio before persistence",
+  "agent": "observer",
+  "given": {"submission": {"booking_id": "booking_1", "mime_type": "audio/mpeg", "channel": "in_app"}},
+  "expect": {
+    "output": {"status": "rejected", "reason": "audio_not_supported_in_poc"},
+    "tool_calls": {"persist_debrief": 0},
+    "store_reads": [],
+    "store_writes": [],
+    "gates": []
+  },
+  "invariants": ["poc_rejects_audio"],
+  "covers": ["A8"]
+}

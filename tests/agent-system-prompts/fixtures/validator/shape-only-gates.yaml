@@ -1,0 +1,22 @@
+{
+  "fixture_version": "2.2",
+  "id": "validator-shape-only-gates",
+  "name": "Detached Validator checks I0 and G1-G4 without content logs",
+  "agent": "validator",
+  "given": {"invocation": "on_edge", "business_agent_calls": 0},
+  "expect": {
+    "output": {"gate_log": [
+      {"gate": "I0", "passed": true, "schema_id": "IntakeResult", "payload_size": 96, "reason_codes": [], "checked_at": "2026-09-01T00:00:00Z"},
+      {"gate": "G1", "passed": true, "schema_id": "Plan|ListingRecord", "payload_size": 420, "reason_codes": [], "checked_at": "2026-09-01T00:00:01Z"},
+      {"gate": "G2", "passed": true, "schema_id": "Plan", "payload_size": 300, "reason_codes": [], "checked_at": "2026-09-01T00:00:02Z"},
+      {"gate": "G3", "passed": true, "schema_id": "GuardianVerdict", "payload_size": 240, "reason_codes": [], "checked_at": "2026-09-01T00:00:03Z"},
+      {"gate": "G4", "passed": true, "schema_id": "BookingRecord", "payload_size": 220, "reason_codes": [], "checked_at": "2026-09-01T00:00:04Z"}
+    ]},
+    "tool_calls": {"business_agent": 0},
+    "store_reads": [],
+    "store_writes": ["gate_log"],
+    "gates": ["I0", "G1", "G2", "G3", "G4"]
+  },
+  "invariants": ["shape_only_gate_log"],
+  "covers": []
+}

@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "planner-ranking-signals-only",
+  "name": "Cold-start seeds and dislikes reorder without filtering",
+  "agent": "planner",
+  "given": {"base_candidates": ["a", "b", "c"], "seeded_candidates": ["b", "a", "c"], "disliked_candidates": ["c", "a", "b"]},
+  "expect": {
+    "output": {"membership_changed": false},
+    "tool_calls": {},
+    "store_reads": ["CKB", "Personal Data"],
+    "store_writes": [],
+    "gates": []
+  },
+  "invariants": ["ranking_signals_preserve_membership"],
+  "covers": ["A9"]
+}
