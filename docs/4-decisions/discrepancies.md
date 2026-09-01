@@ -24,7 +24,7 @@
 
 **All twelve decisions in §D closed on 31 Aug**, and every discrepancy in classes A, B and C with them. §F records the subsequent consistency reviews and their corrections; future mismatches remain defects to fix, not something this status line claims can never exist.
 
-**One row is still open: E1** — the `feat/agent-system-prompts` branch. It is not a decision; **D6** scheduled it. The prompts get re-derived from `architecture.md` §3 once this branch merges to main.
+**No discrepancy row remains open.** E1 was resolved on 1 Sep by regenerating the agent prompts and Python fixtures from `architecture.md` v2.2; OW-03 preserves the completion evidence.
 
 Everything else that remains is work, not argument: the build, the deck, the video, the source-verification list below, and five teenagers.
 
@@ -442,13 +442,13 @@ Brief v1 §7 pre-empts *"don't they already have CCAs?"*, *"won't NYC just build
 
 ## E. Downstream artifacts now out of sync
 
-### E1 · `origin/feat/agent-system-prompts` predates this doc set and diverges from it 🟠 `OPEN — scheduled: re-derive once this branch merges (D6)`
+### E1 · Agent-system prompts predated this doc set 🟢 `RESOLVED — 1 Sep 2026 (OW-03)`
 
-An unmerged branch (10 commits, 25–28 Aug 2026, forked after `eea58dd`) contains ~1,700 lines of real work: six agent system prompts, a normative `shared-protocol.md`, a design spec and plan, and nine test fixtures with a validator.
+Before OW-03, the feature branch contained six pre-v2.2 prompts, a router-centred shared protocol, an obsolete design/plan pair and nine PowerShell-validated fixtures. This section preserves the audit that drove the regeneration.
 
 **It is downstream of these documents, not an input to them.** The source of truth is being set here; the prompts are an output of it. Nothing in this register changes the architecture because of that branch. What follows is a **re-derivation checklist** for whoever realigns it.
 
-Where the branch and [`architecture.md`](../3-system/architecture.md) currently disagree:
+The pre-OW-03 divergences were:
 
 | # | Branch says | These docs say |
 |---|---|---|
@@ -460,9 +460,9 @@ Where the branch and [`architecture.md`](../3-system/architecture.md) currently 
 
 **Item 5 is settled: D7, 31 Aug — the cohort is 13–17, hobby discovery.** The branch's "children / lifelong activity and career exploration" framing is superseded, and the PDPA consent basis follows from the 13–17 boundary (`architecture.md` §8). The other four rows still need re-deriving.
 
-**Also worth noting for whoever picks it up:** the branch's tests are PowerShell (`validate-fixtures.ps1`, `test_validate_fixtures.ps1`) while its own README invokes `python tests/agent-system-prompts/validate_fixtures.py`. The deck says **"Python is strongly recommended"** and judges will run what the README says. Whatever survives re-derivation should be Python.
+The old PowerShell-only validation also silently accepted unknown invariant labels. OW-03 replaced it with dependency-free Python validation on the canonical judge path; unknown invariants now fail.
 
-**Action:** PR #2 has merged. Regenerate the system prompts from [`architecture.md`](../3-system/architecture.md) §3 — where the agent descriptions are already written to be the source text for prompts — rather than editing the old branch in place. Status and acceptance are tracked as **OW-03** in [`outstanding.md`](../5-delivery/outstanding.md).
+**Outcome:** The suite now has five pipeline prompts plus scheduled Compliance and detached Validator, the v2.2 typed protocol/store boundaries, and 25 executable fixtures covering A1-A12 and adversarial scenarios 1-8. The canonical unittest suite passed 34 tests. Completion is recorded as **OW-03** in [`outstanding.md`](../5-delivery/outstanding.md).
 
 ---
 
@@ -478,7 +478,7 @@ Where the branch and [`architecture.md`](../3-system/architecture.md) currently 
 | **D3b** | **B11** — which metric is the headline? | **B15 — first attendance within 30 days at S$0**, including calendar time and teen-side actions, agent vs static baseline. B14 (12-month adherence), B11 and B12 demoted to supporting evidence on the roadmap slide. | `evaluation.md` §3.3, §5, §7. **B11 closes.** Slide 2 and the headline metric now measure the same thing. |
 | **D4** | Is there a live pitch and Q&A? | **Prepare for one regardless, at second priority.** It only happens if we are promoted, so the order is: sharpen the idea → build the deck → prep Q&A *against* the deck. | Objection sheet comes from `project_brief.md` §7, which already answers the three most likely questions. Rehearsal stays item 7 in `deliverables.md` §11.5. |
 | **D5** | Deadline, upload mechanism, formats | **Team settles directly with the organisers.** No doc dependency. | Still gates the final freeze: project files are **one submission only**, no re-uploads. |
-| **D6** | When do we re-derive the system prompts on `feat/agent-system-prompts`? | **After this source-of-truth branch is reviewed and merged to main.** Team owns the merge flow. | E1's re-derivation checklist stands as written. Regenerate from `architecture.md` §3 rather than editing the branch in place. |
+| **D6** | When do we re-derive the system prompts on `feat/agent-system-prompts`? | **After this source-of-truth branch is reviewed and merged to main.** Team owns the merge flow. | Executed as OW-03 on 1 Sep: regenerated from `architecture.md` v2.2; E1 closed with Python fixture evidence. |
 | **D7** | Trusted adult — and who is the user? | **13–17, both ends, enforced at I0.** No adult mode; 18+ is roadmap. Under-13 gets trusted-adult guidance; 18+ gets general-services guidance. A trusted adult is mandatory for every eligible user, because every eligible user is a minor. | `architecture.md` §2 carries the boundary and enforcement; §8 carries consent. Invariant **A11** tests both bounds. **Closes E1 item 5** — the branch's "children / career exploration" framing is definitively wrong. |
 | **D8** | Real integrations, or seed KB + simulated booking? | **Hybrid.** Seed CKB from **real** listings, hand-transcribed, every row carrying `source_url` and a real `verified_at` · Discovery **searches live** over a whitelisted domain set · Broker **sandboxed**, stated on slide 5 · a **cached replay fixture** so the demo never depends on a live call succeeding. No real provider integrations — there is no public booking API for CC courses or ActiveSG, and the payer is a minor. | `architecture.md` §10 confirmed, plus a replay row. **Tripwire below.** |
 | **D9** | Observation channel | **In-app text form, behind a channel-agnostic `DebriefSubmission`.** *Revised 31 Aug — the original decision was a Telegram bot; narrowed after PR review.* The interaction still reads like texting a friend. Audio is roadmap until an STT processor, consent path and deletion test are specified. | `architecture.md` §3.5, §5, §8, §10. **Reversal reasoning below.** The text debrief is a build item; audio is not. |
