@@ -1,6 +1,6 @@
 # Outstanding Work — Hobbi
 
-*Canonical tracker for unfinished validation, integration, build and submission work. Last updated 31 Aug 2026.*
+*Canonical tracker for unfinished validation, integration, build and submission work. Last updated 1 Sep 2026.*
 
 This file answers **what is still open, who owns it, and what “done” means**. The product, architecture, evaluation and source documents retain the reasoning; they link here for status rather than maintaining competing task lists.
 
@@ -14,14 +14,15 @@ This file answers **what is still open, who owns it, and what “done” means**
 - “Done when” is the acceptance test. Activity alone does not close a row.
 - **P0** means submission-critical or immediately blocking; **P1** means important evidence or positioning work that must finish before the affected slide freezes.
 
+**Current evidence policy:** PR #3 integration accepts the facts already present in its seed drafts as provisionally accurate so implementation can proceed. That assumption does not close OW-07–OW-11 or convert unsigned draft rows to `verified`; those checks remain due before the affected slides and final seed artifact freeze.
+
 ## Current backlog
 
 | ID | Priority | Status | Item | Owner | Target | Done when | Detail |
 |---|---|---|---|---|---|---|---|
 | **OW-01** | P0 | **Next** | Interview five teenagers/caregivers | — | Before slide 2 freezes | Interview notes are recorded; the “scene, not class” observation and adult-coordination hypothesis are marked supported, weakened or rejected; the problem statement is updated if needed | [`project_brief.md`](../2-product/project_brief.md) §1.2 · [`sources.md`](../2-product/sources.md) §J items 1 and 8 |
 | **OW-02** | P0 | **Next** | Ask organisers about submission logistics and live Q&A | — | Immediately | Deadline, upload mechanism, accepted formats, live-pitch/Q&A format and team rules are recorded in `deliverables.md` | [`deliverables.md`](../1-requirements/deliverables.md) §12 · [`sources.md`](../2-product/sources.md) §J item 6 |
-| **OW-03** | P0 | **Blocked** — PR #2 merge | Re-derive `origin/feat/agent-system-prompts` | — | After PR #2 merges | Prompts and Python validation fixtures are regenerated from architecture v2.2; the four E1 divergences are gone; tests pass | [`discrepancies.md`](../4-decisions/discrepancies.md) E1 |
-| **OW-04** | P0 | **Blocked** — PR #2 merge | Rebase and integrate `feat/seed-ckb` | — | After PR #2 merges | Branch is rebased onto the merged source of truth; conflicts are resolved against v2.2; seed loader and fixtures follow the CKB contract; branch-scoped “nothing built yet” wording is updated when code lands | [`architecture.md`](../3-system/architecture.md) §§9.3, 11 |
+| **OW-03** | P0 | **Next** | Re-derive `origin/feat/agent-system-prompts` | — | Next integration step | Prompts and Python validation fixtures are regenerated from architecture v2.2; the four E1 divergences are gone; tests pass | [`discrepancies.md`](../4-decisions/discrepancies.md) E1 |
 | **OW-05** | P0 | **Not started** | Build the Hobbi PoC | — | Before demo recording | The canonical environment installs; Intake/Setup, I0, six agents, G1–G4, both stores, two request loops and the longitudinal cycle run through the documented happy and failure paths | [`architecture.md`](../3-system/architecture.md) §§3–11 · [`user_stories.md`](../2-product/user_stories.md) |
 | **OW-06** | P0 | **Not started** | Implement tests, simulation and one-command report | — | Before slide 7 freezes | Family A invariants pass; eligible and boundary profiles stay separate; counterfactual and longitudinal runs execute; `python -m sim.report` emits every reported slide metric with denominators | [`evaluation.md`](../3-system/evaluation.md) §§2–8 |
 | **OW-07** | P1 | **Not started** | Verify “100+ ActiveSG interest groups” | — | Before citing the number | A primary MyActiveSG+ source confirms it, or the number is removed | [`sources.md`](../2-product/sources.md) §J item 2 |
@@ -37,4 +38,8 @@ This file answers **what is still open, who owns it, and what “done” means**
 
 Move closed rows here under a dated heading, preserving their ID, final owner and outcome.
 
-*No tracker rows closed yet.*
+### 1 Sep 2026
+
+| ID | Priority | Final status | Item | Owner | Outcome |
+|---|---|---|---|---|---|
+| **OW-04** | P0 | **Done** | Reconcile and integrate `feat/seed-ckb` through PR #3 | Rayden | Architecture v2.2, stored/hydrated schemas, deterministic build/load boundaries, drafts and fixtures were reconciled; Claude's follow-up review was remediated and independently re-audited; 27 tests passed; PR #3 merged. |

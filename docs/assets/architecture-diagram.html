@@ -431,7 +431,7 @@
 
   <section class="deltas">
     <h2>v2.2 contract checks</h2>
-    <p class="sub">The structural checks that keep the picture synchronized. Full 23-item list in <code>architecture.md</code> §13.</p>
+    <p class="sub">The structural checks that keep the picture synchronized. Full 24-item list in <code>architecture.md</code> §13.</p>
     <ol>
       <li><span class="num">1</span><div><b>Intake and gates are distinct.</b> Deterministic <code>I0</code> enforces ages 13–17; <code>G1–G4</code> validate inter-agent payloads, including Broker → Observer.</div></li>
       <li><span class="num">2</span><div><b>Every writer and reader is visible.</b> Intake/Setup and the build-time seed loader own initial writes; Guardian reads both stores; Compliance writes freshness and dead-listing flags.</div></li>

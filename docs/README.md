@@ -1,6 +1,6 @@
 # Hobbi — Documentation
 
-*Source of truth for the SimplifyNext Agentic AI Hackathon 2026 submission. Last updated 31 Aug 2026.*
+*Source of truth for the SimplifyNext Agentic AI Hackathon 2026 submission. Last updated 1 Sep 2026.*
 
 **Hobbi** helps a 13–17-year-old turn intent into a first session they actually walk into — and then keeps adapting as they do or don't turn up.
 
@@ -16,10 +16,11 @@ The folders carry the order. Numbers are the reading sequence, not a priority ra
 | 2 | **[`2-product/project_brief.md`](./2-product/project_brief.md)** | The problem, the person, the solution argument, the positioning | Writing slides 1–3, 6, 7, 9, 10 |
 | 3 | **[`3-system/architecture.md`](./3-system/architecture.md)** | The system: 5 pipeline agents + Compliance + validation layer, 2 stores, 2 capped request loops + 1 ledger-bounded cycle, state, stack, scope | Writing code, or slide 5 |
 | 4 | **[`3-system/evaluation.md`](./3-system/evaluation.md)** | Metrics, invariants, test data, the counterfactual baseline | Writing tests, or the evaluation slide |
-| 5 | **[`2-product/user_stories.md`](./2-product/user_stories.md)** | Every story mapped to the agent that owns it | Checking a feature has a home |
-| 6 | **[`2-product/sources.md`](./2-product/sources.md)** | Every citation, with reliability marks | **Before any figure goes on a slide** |
-| 7 | **[`4-decisions/discrepancies.md`](./4-decisions/discrepancies.md)** | 33 conflicts between the brief, the diagram and the requirements, and the 12 decisions that closed them | Deciding anything |
-| 8 | **[`5-delivery/outstanding.md`](./5-delivery/outstanding.md)** | Canonical backlog: status, owner, target and acceptance test for every unfinished item | Planning the next piece of work |
+| 5 | **[`3-system/seed-ckb.md`](./3-system/seed-ckb.md)** | The transcription contract for the seed listing set, and what "done" means | Filling the CKB — the one build task with no code dependency |
+| 6 | **[`2-product/user_stories.md`](./2-product/user_stories.md)** | Every story mapped to the agent that owns it | Checking a feature has a home |
+| 7 | **[`2-product/sources.md`](./2-product/sources.md)** | Every citation, with reliability marks | **Before any figure goes on a slide** |
+| 8 | **[`4-decisions/discrepancies.md`](./4-decisions/discrepancies.md)** | 33 conflicts between the brief, the diagram and the requirements, and the 12 decisions that closed them | Deciding anything |
+| 9 | **[`5-delivery/outstanding.md`](./5-delivery/outstanding.md)** | Canonical backlog: status, owner, target and acceptance test for every unfinished item | Planning the next piece of work |
 
 ### The folders
 
@@ -42,7 +43,7 @@ When two documents disagree:
 judging-criteria.pdf  >  deliverables.md  >  architecture.md  >  project_brief.md  >  the diagram
 ```
 
-The diagram is downstream of the spec, never upstream of it. It is **regenerable** — [`assets/architecture-diagram.html`](./assets/architecture-diagram.html) is the source and the PNG is its export. [`architecture.md`](./3-system/architecture.md) §13 is the 23-item synchronization checklist used before slide 5 is updated.
+The diagram is downstream of the spec, never upstream of it. It is **regenerable** — [`assets/architecture-diagram.html`](./assets/architecture-diagram.html) is the source and the PNG is its export. [`architecture.md`](./3-system/architecture.md) §13 is the 24-item synchronization checklist used before slide 5 is updated.
 
 ---
 
@@ -60,9 +61,9 @@ One register row stays open — **E1**, the `feat/agent-system-prompts` branch �
 
 ---
 
-## Nothing is built yet
+## Implementation has started
 
-There is no Hobbi implementation in this repository — `lab/` is unrelated workshop material. Every ✅ in [`user_stories.md`](./2-product/user_stories.md) and the repo layout in [`architecture.md`](./3-system/architecture.md) §11 are **scope, not progress**. Technical Quality is 20% of the score and is the one criterion no slide can earn, so this is the gap that matters most.
+The seed-CKB foundation now exists: typed listing contracts, a deterministic CSV/quarantine builder, an atomic seed loader and request hydrator, sourced draft rows, quarantine fixtures and focused tests. The actual multi-agent Hobbi pipeline is not built yet; `lab/` remains unrelated workshop material. Every ✅ in [`user_stories.md`](./2-product/user_stories.md) still denotes **PoC scope, not completed progress**. Technical Quality is 20% of the score and is the one criterion no slide can earn, so building the end-to-end path remains the gap that matters most.
 
 There is also an unmerged branch, `feat/agent-system-prompts`, carrying ~1,700 lines of earlier agent-prompt work. It predates this doc set and diverges from it — see [`discrepancies.md`](./4-decisions/discrepancies.md) **E1**. These documents are the source of truth; the prompts get re-derived from them, not the other way round.
 

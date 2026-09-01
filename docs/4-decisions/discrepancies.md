@@ -462,7 +462,7 @@ Where the branch and [`architecture.md`](../3-system/architecture.md) currently 
 
 **Also worth noting for whoever picks it up:** the branch's tests are PowerShell (`validate-fixtures.ps1`, `test_validate_fixtures.ps1`) while its own README invokes `python tests/agent-system-prompts/validate_fixtures.py`. The deck says **"Python is strongly recommended"** and judges will run what the README says. Whatever survives re-derivation should be Python.
 
-**Action:** after PR #2 merges, regenerate the system prompts from [`architecture.md`](../3-system/architecture.md) §3 — where the agent descriptions are already written to be the source text for prompts — rather than editing the branch in place. Status and acceptance are tracked as **OW-03** in [`outstanding.md`](../5-delivery/outstanding.md).
+**Action:** PR #2 has merged. Regenerate the system prompts from [`architecture.md`](../3-system/architecture.md) §3 — where the agent descriptions are already written to be the source text for prompts — rather than editing the old branch in place. Status and acceptance are tracked as **OW-03** in [`outstanding.md`](../5-delivery/outstanding.md).
 
 ---
 
@@ -522,4 +522,4 @@ The review's positive link check remains true: every relative documentation link
 
 The second PR review found no reopened decision, but correctly identified consistency drift introduced by the first correction pass. The follow-up standardizes all gate references on **I0 + G1–G4**; adds Intake/Setup and the build-time seed loader to the prose, planned layout and diagram; distinguishes a permitted cap hit from an invariant-breaking cap breach; corrects the remaining evidence, audio, slide, branch and reproduction references; and refreshes the PR description.
 
-The subsequent audit also tightened two items not raised in that review: G1 now specifies its different outbound and return payload checks, and G3/G4 now have explicit `GuardianVerdict` and `BookingRecord` schemas with idempotent ledger fields. The separate `feat/seed-ckb` branch remains a post-merge integration task, not a defect in this documentation branch; its “nothing built yet” wording must be revisited when that code actually lands.
+The subsequent audit also tightened two items not raised in that review: G1 now specifies its different outbound and return payload checks, and G3/G4 now have explicit `GuardianVerdict` and `BookingRecord` schemas with idempotent ledger fields. PR #3 reconciles the former `feat/seed-ckb` follow-up: `ListingRecord` is now the shared stored contract, `Listing` is the teen-relative Planner view, the deterministic build/load seam is executable, and the former “nothing built yet” wording has been retired.

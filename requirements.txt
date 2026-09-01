@@ -1,0 +1,6 @@
+# Runtime. scripts/build_ckb.py deliberately needs none of this — it is stdlib
+# only so anyone can validate the seed sheet on a clean laptop.
+pydantic>=2.7
+langgraph>=0.2
+langchain-aws>=0.2
+boto3>=1.34

@@ -1,12 +1,12 @@
 # User Stories — Hobbi
 
-*Version 2.2 · 31 Aug 2026. Every story names the **component that owns it** and whether it is in the prototype. As of 31 Aug no story is unowned.*
+*Version 2.2 · updated 1 Sep 2026. Every story names the **component that owns it** and whether it is in the prototype. As of 31 Aug no story is unowned.*
 
 Grouped by user. Each row: the story, what Hobbi needs to know, the feature it implies, and the owning component from [`architecture.md`](../3-system/architecture.md) §§2.1–3.
 
-**Build status — nothing is implemented yet.** These marks are *scope*, not progress: ✅ planned for the PoC · 🔶 partial / simulated in the PoC · ⬜ deferred to roadmap.
+**Build status — implementation has started with the seed-CKB foundation.** These marks are *scope*, not progress: ✅ planned for the PoC · 🔶 partial / simulated in the PoC · ⬜ deferred to roadmap.
 
-> There is no Hobbi code in this repository at the time of writing. Every ✅ below is a commitment we have made to ourselves, not a feature that exists. When implementation starts, this column becomes the checklist.
+> Typed listing contracts, the seed builder/loader, source drafts and their focused tests now exist. The multi-agent request path does not. Every ✅ below remains a PoC commitment rather than a claim that the complete story is running.
 
 > A story with no owning agent is a feature nobody is building. That column is the point of this document — it is how we catch a slide promising something the graph cannot do. Two stories sat unowned until 31 Aug; **D1** and **D2** gave both of them state and an owner.
 
