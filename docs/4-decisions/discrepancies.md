@@ -446,7 +446,7 @@ Brief v1 §7 pre-empts *"don't they already have CCAs?"*, *"won't NYC just build
 
 Before OW-03, the feature branch contained six pre-v2.2 prompts, a router-centred shared protocol, an obsolete design/plan pair and nine PowerShell-validated fixtures. This section preserves the audit that drove the regeneration.
 
-**It is downstream of these documents, not an input to them.** The source of truth is being set here; the prompts are an output of it. Nothing in this register changes the architecture because of that branch. What follows is a **re-derivation checklist** for whoever realigns it.
+**It is downstream of these documents, not an input to them.** The prompts are an output of the architecture. The table below is the historical audit OW-03 used; every row has now been resolved in the regenerated prompt and fixture suite.
 
 The pre-OW-03 divergences were:
 
@@ -458,11 +458,11 @@ The pre-OW-03 divergences were:
 | 4 | Store is called **Child Profile** | Store is called **Personal Data** |
 | 5 | Framed as a system for **children**, *"lifelong activity and career-exploration"* | Framed for **13–17-year-olds**, hobby discovery. This one is not cosmetic — it moves the PDPA consent basis (under-13 requires parental consent; 13–17 may self-consent) and it changes the product |
 
-**Item 5 is settled: D7, 31 Aug — the cohort is 13–17, hobby discovery.** The branch's "children / lifelong activity and career exploration" framing is superseded, and the PDPA consent basis follows from the 13–17 boundary (`architecture.md` §8). The other four rows still need re-deriving.
+**All five rows are settled.** D7 fixed the cohort at 13–17 and hobby discovery; OW-03 then regenerated the topology, Observer, store vocabulary and framing from architecture v2.2. The table remains only as the record of what changed.
 
 The old PowerShell-only validation also silently accepted unknown invariant labels. OW-03 replaced it with dependency-free Python validation on the canonical judge path; unknown invariants now fail.
 
-**Outcome:** The suite now has five pipeline prompts plus scheduled Compliance and detached Validator, the v2.2 typed protocol/store boundaries, and 25 executable fixtures covering A1-A12 and adversarial scenarios 1-8. The canonical unittest suite passed 34 tests. Completion is recorded as **OW-03** in [`outstanding.md`](../5-delivery/outstanding.md).
+**Outcome:** The suite now has five pipeline prompts plus scheduled Compliance and detached Validator, the v2.2 typed protocol/store boundaries, and 25 executable fixtures covering A1-A12 and adversarial scenarios 1-8. The fixture validator passed all 25 scenarios and 8 agent-system contract tests passed. Full repository discovery on the current Windows/Blender host remains limited by unchanged seed-CKB `-S` subprocesses being unable to load `Asia/Singapore`; it is not counted as OW-03 acceptance evidence. Completion is recorded as **OW-03** in [`outstanding.md`](../5-delivery/outstanding.md).
 
 ---
 

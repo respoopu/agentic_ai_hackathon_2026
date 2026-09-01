@@ -134,6 +134,20 @@ class AgentPromptContractTests(unittest.TestCase):
         ):
             self.assertFalse((ROOT / relative).exists(), relative)
 
+    def test_e1_completion_language_and_evidence_are_current(self) -> None:
+        discrepancies = (ROOT / "docs/4-decisions/discrepancies.md").read_text(
+            encoding="utf-8"
+        )
+        tracker = (ROOT / "docs/5-delivery/outstanding.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn("re-derivation checklist", discrepancies)
+        self.assertNotIn("other four rows still need re-deriving", discrepancies)
+        self.assertNotIn("canonical unittest suite passed 34 tests", discrepancies)
+        self.assertNotIn("canonical unittest suite passed 34 tests", tracker)
+        self.assertIn("8 agent-system contract tests passed", discrepancies)
+        self.assertIn("Windows zoneinfo", tracker)
+
 
 if __name__ == "__main__":
     unittest.main()
