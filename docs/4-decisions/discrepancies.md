@@ -19,12 +19,12 @@
 | **A** — Brief ↔ Architecture | 4 | 4 | 3 | 11 |
 | **B** — Architecture ↔ Hackathon requirements | 5 | 4 | 2 | 11 |
 | **C** — Brief ↔ Hackathon requirements | 2 | 2 | 6 | 10 |
-| **E** — Downstream artifacts | 0 | 1 | 0 | 1 |
-| | **11** | **11** | **11** | **33** |
+| **E** — Downstream artifacts | 1 | 1 | 0 | 2 |
+| | **12** | **11** | **11** | **34** |
 
 **All twelve decisions in §D closed on 31 Aug**, and every discrepancy in classes A, B and C with them. §F records the subsequent consistency reviews and their corrections; future mismatches remain defects to fix, not something this status line claims can never exist.
 
-**No discrepancy row remains open.** E1 was resolved on 1 Sep by regenerating the agent prompts and Python fixtures from `architecture.md` v2.2; OW-03 preserves the completion evidence.
+**One discrepancy row is open.** E1 was resolved on 1 Sep by regenerating the agent prompts and Python fixtures from `architecture.md` v2.2; OW-03 preserves that completion evidence. The subsequent PR audit opened **E2**, a Broker authorization/idempotency contract mismatch tracked for delivery as **OW-15**.
 
 Everything else that remains is work, not argument: the build, the deck, the video, the source-verification list below, and five teenagers.
 
@@ -463,6 +463,19 @@ The pre-OW-03 divergences were:
 The old PowerShell-only validation also silently accepted unknown invariant labels. OW-03 replaced it with dependency-free Python validation on the canonical judge path; unknown invariants now fail.
 
 **Outcome:** The suite now has five pipeline prompts plus scheduled Compliance and detached Validator, the v2.2 typed protocol/store boundaries, and 25 executable fixtures covering A1-A12 and adversarial scenarios 1-8. The fixture validator passed all 25 scenarios and the agent-system contract tests passed. Repository-wide discovery remains environment-dependent where optional project dependencies are unavailable; it is not counted as OW-03 acceptance evidence. Completion is recorded as **OW-03** in [`outstanding.md`](../5-delivery/outstanding.md).
+
+---
+
+### E2 · Broker authorization and idempotency contracts disagree 🔴 `OPEN — OW-15`
+
+The post-OW-03 PR audit found two coupled design gaps that must close before Broker is implemented:
+
+1. **Authorization is not carried into the booking record.** [`evaluation.md`](../3-system/evaluation.md) A7 says every `BookingRecord` carries a Guardian verdict id, but the authoritative `BookingRecord` schema in [`architecture.md`](../3-system/architecture.md) §5 has no such field. Architecture G3 requires a verdict to be present but does not explicitly require `approved=true` and a matching `plan_id`; the Validator prompt is stricter than the source contract.
+2. **The retry key has no stable lifecycle.** The Broker prompt says to create a unique `ledger_transaction_id` for each item, then relies on seeing the same id to detect a retry. Minting a fresh id after a timeout or crash bypasses that replay branch. G4's current “unique” wording also reads as though a legitimate replay should fail, even though the ledger must apply exactly once per logical commitment.
+
+**Decision required.** Add `guardian_verdict_id` to `BookingRecord`; make G3 require a present, approved verdict matching `plan_id`; define the transaction id as deterministic from the logical commitment or durably reserved before the sandbox call; and define G4 as exactly-once application per transaction id with replay returning the stored record. Then align architecture, shared protocol, prompts and executable fixtures. Delivery and acceptance evidence are tracked as [`OW-15`](../5-delivery/outstanding.md).
+
+The related validation gap—fixture `store_reads`, `store_writes` and `gates` are declared more broadly than they are enforced—is implementation debt rather than a source-contract disagreement. It is tracked separately as [`OW-16`](../5-delivery/outstanding.md).
 
 ---
 
