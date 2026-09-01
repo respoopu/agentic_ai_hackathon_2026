@@ -9,7 +9,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 PROMPTS = ROOT / "docs" / "agent-system-prompts"
 FIXTURES = ROOT / "tests" / "agent-system-prompts" / "fixtures"
@@ -133,6 +132,33 @@ class AgentPromptContractTests(unittest.TestCase):
         result = self.run_fixture_validator({"nested-page-dump.yaml": fixture})
         self.assertNotEqual(0, result.returncode)
         self.assertIn("raw page content field raw_html", result.stdout + result.stderr)
+
+    def test_fixture_forbidden_store_write_is_rejected(self) -> None:
+        fixture = json.loads(
+            (FIXTURES / "planner" / "actionable-thin-plan.yaml").read_text(encoding="utf-8")
+        )
+        fixture["expect"]["store_writes"] = ["Personal Data.preferences"]
+        result = self.run_fixture_validator({"forbidden-write.yaml": fixture})
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("forbidden store_writes", result.stdout + result.stderr)
+
+    def test_fixture_skipped_or_extra_gate_is_rejected(self) -> None:
+        fixture = json.loads(
+            (FIXTURES / "discovery" / "private-cached-replay.yaml").read_text(encoding="utf-8")
+        )
+        fixture["expect"]["gates"] = []
+        result = self.run_fixture_validator({"wrong-gate.yaml": fixture})
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("required scenario gates were skipped", result.stdout + result.stderr)
+
+    def test_intake_permission_boundary_is_enforced(self) -> None:
+        fixture = json.loads(
+            (FIXTURES / "intake" / "age-boundary-matrix.yaml").read_text(encoding="utf-8")
+        )
+        fixture["expect"]["store_reads"] = ["Personal Data"]
+        result = self.run_fixture_validator({"intake-read.yaml": fixture})
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("forbidden store_reads", result.stdout + result.stderr)
 
     def test_non_object_fixture_is_reported_without_crashing(self) -> None:
         result = self.run_fixture_validator({"array.yaml": []})

@@ -13,3 +13,6 @@ __all__ = [
     "hydrate_seed_records",
     "load_seed_records",
 ]
+from src.ckb.store import KnowledgeBase
+
+__all__ = ["KnowledgeBase"]

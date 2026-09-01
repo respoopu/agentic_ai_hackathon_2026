@@ -1,0 +1,39 @@
+[
+  {
+    "listing_id": "DISCOVERY-activesg-yuhua-secondary-field",
+    "title": "Yuhua Secondary School Field",
+    "provider": "Sport Singapore (ActiveSG)",
+    "provider_type": "school",
+    "source_url": "https://www.activesgcircle.gov.sg/facilities/yuhua-secondary-school-field",
+    "verified_at": null,
+    "verified_by": null,
+    "verification": "unverified",
+    "is_fictional": false,
+    "cost_one_off_sgd": "0",
+    "cost_recurring_sgd": "0",
+    "equipment_cost_sgd": "0",
+    "cost_total_first_session": "0",
+    "venue_name": "Yuhua Secondary School Field",
+    "postal_code": "649406",
+    "postal_sector": "64",
+    "planning_area": "Jurong West",
+    "nearest_mrt": null,
+    "age_min": 0,
+    "age_max": 120,
+    "beginner_friendly": true,
+    "join_alone_ok": true,
+    "guest_allowed": true,
+    "commitment": "taster",
+    "schedule": {
+      "kind": "drop_in",
+      "open_hours_note": "Saturday, 3pm–7pm; entry fee free. Outdoor closure may apply during inclement weather.",
+      "weekday_evening_available": false,
+      "weekend_available": true
+    },
+    "vibes": ["sporty"],
+    "in_incumbent_directory": true,
+    "last_seen_at": "2026-09-01T16:00:00+08:00",
+    "freshness_state": "fresh",
+    "notes": "Cached automated Discovery extraction from the official ActiveSG facility page. It remains unverified and requires trusted-adult approval before booking."
+  }
+]

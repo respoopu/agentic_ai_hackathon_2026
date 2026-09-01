@@ -1,0 +1,14 @@
+[
+  {"id":"P01","age":13,"money_total_sgd":0,"hours_per_week":2,"tries_total":3,"max_travel_min":15,"cold_start_vibes":[],"preferred_vibe":"chill"},
+  {"id":"P02","age":14,"money_total_sgd":0,"hours_per_week":6,"tries_total":4,"max_travel_min":30,"cold_start_vibes":["sporty"],"preferred_vibe":"sporty"},
+  {"id":"P03","age":15,"money_total_sgd":0,"hours_per_week":10,"tries_total":4,"max_travel_min":45,"cold_start_vibes":["artistic"],"preferred_vibe":"artistic"},
+  {"id":"P04","age":17,"money_total_sgd":0,"hours_per_week":2,"tries_total":3,"max_travel_min":20,"cold_start_vibes":[],"preferred_vibe":"explorative"},
+  {"id":"P05","age":13,"money_total_sgd":50,"hours_per_week":6,"tries_total":4,"max_travel_min":30,"cold_start_vibes":["chill"],"preferred_vibe":"chill"},
+  {"id":"P06","age":14,"money_total_sgd":100,"hours_per_week":10,"tries_total":5,"max_travel_min":45,"cold_start_vibes":["explorative"],"preferred_vibe":"explorative"},
+  {"id":"P07","age":15,"money_total_sgd":500,"hours_per_week":2,"tries_total":3,"max_travel_min":15,"cold_start_vibes":["sporty","chill"],"preferred_vibe":"sporty"},
+  {"id":"P08","age":16,"money_total_sgd":40,"hours_per_week":6,"tries_total":4,"max_travel_min":30,"cold_start_vibes":[],"preferred_vibe":"artistic"},
+  {"id":"P09","age":17,"money_total_sgd":80,"hours_per_week":10,"tries_total":5,"max_travel_min":45,"cold_start_vibes":["artistic"],"preferred_vibe":"artistic"},
+  {"id":"P10","age":13,"money_total_sgd":20,"hours_per_week":2,"tries_total":3,"max_travel_min":20,"cold_start_vibes":[],"preferred_vibe":"chill"},
+  {"id":"P11","age":16,"money_total_sgd":120,"hours_per_week":6,"tries_total":4,"max_travel_min":30,"cold_start_vibes":["sporty"],"preferred_vibe":"sporty"},
+  {"id":"P12","age":17,"money_total_sgd":500,"hours_per_week":10,"tries_total":6,"max_travel_min":45,"cold_start_vibes":["explorative","artistic"],"preferred_vibe":"explorative"}
+]

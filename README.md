@@ -1,13 +1,63 @@
 # agentic_ai_hackathon_2026
 
-Two things live here.
+## Hobbi backend
 
-**1. The submission — Hobbi.** Our entry for the SimplifyNext Agentic AI Hackathon 2026
-("Design for a World in Transformation"). All project documentation is in
-[`docs/`](docs/) — start at [`docs/README.md`](docs/README.md), which gives the reading
-order, the twelve decisions that are closed, and what is left to build.
+The backend implements architecture v2.2 without changing the merged agent prompts or rebuilding the merged CKB loader:
 
-**2. The workshop lab** (below) — the teaching material the hackathon runs on.
+- strict Pydantic state, plan, approval, booking, event, preference, gate, and token contracts;
+- SQLite Personal Data with consent, approvals, plans, attendance, preferences, optimistic ledger versions, and exactly-once booking transactions;
+- deterministic Intake/I0 and detached G1–G4 validation;
+- Planner, Discovery, Guardian, Broker, Observer, and off-path Compliance components with fail-closed tool boundaries;
+- a bounded LangGraph pipeline with persistent SQLite checkpoints;
+- lazy Bedrock structured-output support, cached Discovery replay, sandbox booking, and a local JSON API;
+- twelve eligible evaluation profiles, a twelve-cycle longitudinal replay, a static counterfactual, and a one-command B1–B15 report.
+
+The canonical CKB sources are the merged transcription sheet, 157 sourced drafts, quarantine fixtures, builder, and loader. The runtime consumes `data/seed_ckb.json` when the existing builder can publish it. It does not silently promote unfinished drafts or invent verification metadata. Evaluation uses an explicitly synthetic catalogue and never presents those rows as real activities.
+
+### Install and verify
+
+Python 3.11 or later is recommended.
+
+```bash
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m unittest discover -s tests -t .
+python -m sim.harness --profiles eligible
+python -m sim.counterfactual
+python -m sim.report
+```
+
+`sim.report` labels every result as simulated, carries numerators and denominators, and leaves B6 unmeasured until an LLM judge and the required human double-score are actually run.
+
+### Run the local API
+
+```bash
+export HOBBI_RUNTIME_DIR=.hobbi
+python -m src.api --port 8080
+curl -s http://127.0.0.1:8080/ \
+  -X POST -H 'content-type: application/json' \
+  -d '{"operation":"health"}'
+```
+
+The single `POST /` endpoint accepts these operations:
+
+| Operation | Purpose |
+|---|---|
+| `health` | Runtime and CKB readiness |
+| `discovery_replay` | Validate a thin Plan at G1 and replay the typed, unverified ActiveSG capture |
+| `intake_and_plan` | Run I0, persist eligible setup, then execute the bounded graph |
+| `attendance` | Reconcile one booking outcome and optional in-app text debrief |
+| `compliance_scan` | Manually scan freshness; `replan_flagged=true` demonstrates the retire → fresh G2/G3 → Broker cascade |
+
+The API and simulation do not need AWS. Live model use is lazy through `src.runtime.structured.invoke_structured`; model IDs are fixed constants and credentials come from the normal AWS chain.
+
+Implementation progress and acceptance evidence are tracked in [`checklist.md`](checklist.md).
+
+## Workshop lab
+
+The original teaching material remains under `lab/`. Hobbi project documentation is in
+[`docs/`](docs/) — start at [`docs/README.md`](docs/README.md) for its reading order.
 
 ---
 

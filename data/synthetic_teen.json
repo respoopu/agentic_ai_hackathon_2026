@@ -1,0 +1,19 @@
+{
+  "teen_id": "synthetic-longitudinal-01",
+  "label": "Synthetic policy replay; not participant evidence",
+  "tries_total": 12,
+  "cycles": [
+    {"month":1,"context":"new term","preferred_vibe":"sporty","static_vibe":"sporty","hobbi_action":"book","attended":true},
+    {"month":2,"context":"new term","preferred_vibe":"sporty","static_vibe":"sporty","hobbi_action":"book","attended":true},
+    {"month":3,"context":"exam week","preferred_vibe":"none","static_vibe":"sporty","hobbi_action":"hold_this_week","attended":false},
+    {"month":4,"context":"interest shift","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"book","attended":false,"debrief":"The activity was not my thing; I want something more creative."},
+    {"month":5,"context":"interest shift","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"book","attended":false},
+    {"month":6,"context":"two no-shows observed","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"replan","attended":true},
+    {"month":7,"context":"recovery","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"book","attended":true},
+    {"month":8,"context":"recovery","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"book","attended":true},
+    {"month":9,"context":"sustained attendance","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"commit","attended":true},
+    {"month":10,"context":"sustained attendance","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"commit","attended":true},
+    {"month":11,"context":"family travel","preferred_vibe":"none","static_vibe":"sporty","hobbi_action":"hold_this_week","attended":false},
+    {"month":12,"context":"return","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"commit","attended":true}
+  ]
+}

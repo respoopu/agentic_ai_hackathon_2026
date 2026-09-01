@@ -8,6 +8,7 @@ credentials
 # ---- environments and caches ------------------------------------------
 lab/.venv/
 .venv/
+.hobbi/
 __pycache__/
 *.pyc
 .DS_Store

@@ -15,7 +15,6 @@ from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_FIXTURES = Path(__file__).resolve().parent / "fixtures"
 PROMPTS = ROOT / "docs" / "agent-system-prompts"
@@ -33,6 +32,73 @@ REQUIRED_AGENTS = {
     "validator",
     "intake",
     "protocol",
+}
+
+# Runtime-enforceable boundaries. Scenario fixtures may exercise any subset;
+# anything outside the set is a contract violation. Intake is explicit here
+# even though it is deterministic application code rather than an agent.
+COMPONENT_BOUNDARIES = {
+    "intake": {
+        "reads": set(),
+        "writes": {"Personal Data.setup"},
+        "gates": {"I0"},
+    },
+    "planner": {
+        "reads": {"CKB", "Personal Data"},
+        "writes": set(),
+        "gates": {"G1", "G2"},
+    },
+    "discovery": {
+        "reads": {"CKB", "external_sources"},
+        "writes": {"CKB", "CKB.ListingRecord"},
+        "gates": {"G1"},
+    },
+    "guardian": {
+        "reads": {"approved_plan", "CKB", "Personal Data"},
+        "writes": set(),
+        "gates": {"G2", "G3"},
+    },
+    "broker": {
+        "reads": {"guardian_passed_plan", "booking_records"},
+        "writes": {"Personal Data.ledger", "booking_records"},
+        "gates": {"G2", "G3", "G4"},
+    },
+    "observer": {
+        "reads": {"AttendanceEvent", "BookingRecord", "DebriefSubmission"},
+        "writes": {
+            "Personal Data.attendance",
+            "Personal Data.ledger",
+            "Personal Data.preferences",
+        },
+        "gates": set(),
+    },
+    "compliance": {
+        "reads": {"CKB", "Personal Data"},
+        "writes": {"CKB.freshness", "Personal Data.plan_live_flags"},
+        "gates": {"G2", "G3"},
+    },
+    "validator": {
+        "reads": set(),
+        "writes": {"gate_log"},
+        "gates": {"I0", "G1", "G2", "G3", "G4"},
+    },
+    "protocol": {"reads": set(), "writes": set(), "gates": set()},
+}
+
+REQUIRED_GATES_BY_FIXTURE = {
+    "broker-actionable-failure-regated": {"G2", "G3"},
+    "broker-duplicate-transaction-replay": {"G4"},
+    "broker-missing-guardian-verdict": {"G3"},
+    "broker-sandbox-idempotent-booking": {"G4"},
+    "compliance-dead-listing-cascade": {"G2", "G3"},
+    "discovery-private-cached-replay": {"G1"},
+    "guardian-two-distinct-checks": {"G3"},
+    "guardian-two-rejections-escalate": {"G3"},
+    "guardian-unverified-provider-quarantine": {"G2"},
+    "intake-age-boundary-matrix": {"I0"},
+    "planner-budget-parental-age-travel": {"G2"},
+    "planner-zero-budget-skipped-cold-start": {"G2"},
+    "validator-shape-only-gates": {"I0", "G1", "G2", "G3", "G4"},
 }
 
 
@@ -381,6 +447,38 @@ def validate_fixture(fixture: Any, source: str) -> list[str]:
         _expect(errors, source, key in fixture["expect"], f"expect missing {key}")
     if errors:
         return errors
+    for key in ("store_reads", "store_writes", "gates"):
+        _expect(
+            errors,
+            source,
+            isinstance(fixture["expect"][key], list),
+            f"expect.{key} must be a list",
+        )
+    if errors:
+        return errors
+    boundary = COMPONENT_BOUNDARIES[fixture["agent"]]
+    for declared_key, allowed_key in (
+        ("store_reads", "reads"),
+        ("store_writes", "writes"),
+        ("gates", "gates"),
+    ):
+        unexpected = set(fixture["expect"][declared_key]) - boundary[allowed_key]
+        _expect(
+            errors,
+            source,
+            not unexpected,
+            f"forbidden {declared_key}: {', '.join(sorted(unexpected))}",
+        )
+    required_gates = REQUIRED_GATES_BY_FIXTURE.get(fixture["id"])
+    if required_gates is not None:
+        _expect(
+            errors,
+            source,
+            set(fixture["expect"]["gates"]) == required_gates,
+            "required scenario gates were skipped or changed",
+        )
+    if errors:
+        return errors
     for name in fixture["invariants"]:
         check = INVARIANTS.get(name)
         if check is None:
@@ -436,9 +534,10 @@ def validate_docs() -> list[str]:
         errors.append(f"{PROMPTS}: missing prompt files: {', '.join(missing)}")
     for path in PROMPTS.glob("*.md"):
         content = path.read_text(encoding="utf-8")
-        if path.name.endswith("-agent.md") or path.name == "discovery-engine.md":
-            if sum(1 for line in content.splitlines() if line.startswith("```")) != 2:
-                errors.append(f"{path}: role prompt must contain exactly one fenced prompt")
+        if (
+            path.name.endswith("-agent.md") or path.name == "discovery-engine.md"
+        ) and sum(1 for line in content.splitlines() if line.startswith("```")) != 2:
+            errors.append(f"{path}: role prompt must contain exactly one fenced prompt")
         for match in re.finditer(r"\]\(([^)]+)\)", content):
             link = match.group(1).split("#", 1)[0]
             if not link or link.startswith(("http://", "https://", "mailto:")):
