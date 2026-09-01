@@ -1,5 +1,16 @@
 # agentic_ai_hackathon_2026
 
+Two things live here.
+
+**1. The submission — Hobbi.** Our entry for the SimplifyNext Agentic AI Hackathon 2026
+("Design for a World in Transformation"). All project documentation is in
+[`docs/`](docs/) — start at [`docs/README.md`](docs/README.md), which gives the reading
+order, the twelve decisions that are closed, and what is left to build.
+
+**2. The workshop lab** (below) — the teaching material the hackathon runs on.
+
+---
+
 Runnable lab for the Agentic AI hackathon workshop: LLM foundations → agents →
 Amazon Bedrock → LangGraph → DeepAgents & the Claude Agent SDK → deploying to
 Bedrock AgentCore.
