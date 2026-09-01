@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "planner-zero-budget-skipped-cold-start",
+  "name": "Eligible teen receives a viable S$0 plan after skipping chips",
+  "agent": "planner",
+  "given": {"declared_age": 13, "seeded_at": null, "ledger": {"money_total_sgd": 0, "money_spent_sgd": 0, "money_committed_sgd": 0}},
+  "expect": {
+    "output": {"plan": {"plan_id": "plan_free", "items": [{"listing_id": "listing_free", "session_at": "2026-09-06T10:00:00+08:00", "cost_sgd": 0}], "total_cost_sgd": 0, "ledger_version": 1}},
+    "tool_calls": {"discovery": 0},
+    "store_reads": ["CKB", "Personal Data"],
+    "store_writes": [],
+    "gates": ["G2"]
+  },
+  "invariants": ["eligible_s0_plan", "skipped_cold_start_supported"],
+  "covers": ["A3", "A10"]
+}

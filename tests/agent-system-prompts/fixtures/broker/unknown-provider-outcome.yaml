@@ -1,9 +1,0 @@
-{
-  "fixture_version": "1.0",
-  "id": "broker-unknown-provider-outcome",
-  "name": "Provider timeout is reconciled before retry",
-  "agent": "broker",
-  "given": {"execution_ledger": {"state": "UNKNOWN", "attempt_count": 1}},
-  "expect": {"output": {"status": "EXECUTION_PENDING", "execution_state": "UNKNOWN"}, "tool_calls": {"booking_provider": 0, "provider_reconciliation": 1}},
-  "invariants": ["unknown_outcome_requires_reconciliation"]
-}

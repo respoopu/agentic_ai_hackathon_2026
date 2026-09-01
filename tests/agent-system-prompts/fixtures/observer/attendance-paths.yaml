@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "observer-attendance-paths",
+  "name": "Attended and did-not-attend events both reach Observer",
+  "agent": "observer",
+  "given": {"booking_id": "booking_1", "events": [{"attended": true}, {"attended": false}]},
+  "expect": {
+    "output": {"paths": {"attended": {"observer_calls": 1, "attendance_written": true, "weight": "primary"}, "did_not_attend": {"observer_calls": 1, "attendance_written": true, "weight": "primary"}}},
+    "tool_calls": {"personal_data_transaction": 2},
+    "store_reads": ["BookingRecord", "AttendanceEvent"],
+    "store_writes": ["Personal Data.attendance", "Personal Data.ledger"],
+    "gates": []
+  },
+  "invariants": ["observer_handles_attended_and_no_show"],
+  "covers": []
+}

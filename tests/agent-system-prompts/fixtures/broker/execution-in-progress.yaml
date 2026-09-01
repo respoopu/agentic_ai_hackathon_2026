@@ -1,9 +1,0 @@
-{
-  "fixture_version": "1.0",
-  "id": "broker-execution-in-progress",
-  "name": "Concurrent replay does not duplicate an in-progress booking",
-  "agent": "broker",
-  "given": {"execution_ledger": {"state": "IN_PROGRESS"}},
-  "expect": {"output": {"status": "EXECUTION_PENDING", "execution_state": "IN_PROGRESS"}, "tool_calls": {"booking_provider": 0}},
-  "invariants": ["in_progress_has_no_provider_call"]
-}

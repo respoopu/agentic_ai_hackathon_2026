@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "observer-dislike-attribution-decay",
+  "name": "Dislikes are attributed, decay and never blocklist",
+  "agent": "observer",
+  "given": {"signals": ["pottery is boring", "the studio was too far", "it was fine"]},
+  "expect": {
+    "output": {"attributions": ["activity", "instance", "unattributed"], "half_life_days": 90, "floor": 0.15, "membership_changed": false, "axis_moves_after_signals": 2},
+    "tool_calls": {"personal_data_transaction": 1},
+    "store_reads": ["DebriefSubmission"],
+    "store_writes": ["Personal Data.preferences"],
+    "gates": []
+  },
+  "invariants": ["dislike_is_attributed_decaying_and_ranking_only"],
+  "covers": []
+}

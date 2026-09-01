@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "planner-actionable-thin-plan",
+  "name": "Discovery cap produces actionable thin plan",
+  "agent": "planner",
+  "given": {"money_total_sgd": 0, "travel_limit_min": 15, "weekday_evening_only": true, "discovery_rounds": 2},
+  "expect": {
+    "output": {"status": "thin_plan", "binding_constraint": "nothing free within 15 minutes on a weekday evening; widening to Saturday opens options"},
+    "tool_calls": {"discovery": 0},
+    "store_reads": ["CKB", "Personal Data"],
+    "store_writes": [],
+    "gates": []
+  },
+  "invariants": ["thin_plan_names_binding_constraint"],
+  "covers": ["ADV-2"]
+}

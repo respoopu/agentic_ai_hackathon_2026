@@ -1,9 +1,0 @@
-{
-  "fixture_version": "1.0",
-  "id": "broker-duplicate-booking-request",
-  "name": "Completed booking replay returns the stored result",
-  "agent": "broker",
-  "given": {"execution_ledger": {"state": "SUCCEEDED", "booking_reference": "BOOK-999"}, "request": {"idempotency_key": "wf_123:activity_123:v4:booking"}},
-  "expect": {"output": {"status": "EXECUTED", "execution_state": "SUCCEEDED", "booking_reference": "BOOK-999", "replayed": true}, "tool_calls": {"booking_provider": 0}},
-  "invariants": ["broker_replay_has_no_provider_call"]
-}

@@ -1,0 +1,24 @@
+{
+  "fixture_version": "2.2",
+  "id": "protocol-store-permissions",
+  "name": "Agent store permissions match architecture v2.2",
+  "agent": "protocol",
+  "given": {},
+  "expect": {
+    "output": {"matrix": {
+      "planner": {"reads": ["CKB", "Personal Data"], "writes": []},
+      "discovery": {"reads": ["CKB", "external_sources"], "writes": ["CKB"]},
+      "guardian": {"reads": ["approved_plan", "CKB", "Personal Data"], "writes": []},
+      "broker": {"reads": ["guardian_passed_plan"], "writes": ["Personal Data.ledger", "booking_records"]},
+      "observer": {"reads": ["AttendanceEvent", "BookingRecord", "DebriefSubmission"], "writes": ["Personal Data.attendance", "Personal Data.ledger", "Personal Data.preferences"]},
+      "compliance": {"reads": ["CKB", "Personal Data"], "writes": ["CKB.freshness", "Personal Data.plan_live_flags"]},
+      "validator": {"reads": ["inter_agent_payload_shape"], "writes": ["gate_log"]}
+    }},
+    "tool_calls": {},
+    "store_reads": [],
+    "store_writes": [],
+    "gates": []
+  },
+  "invariants": ["store_permission_matrix_exact"],
+  "covers": []
+}

@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "guardian-two-distinct-checks",
+  "name": "Guardian separates provider vetting from plan approval",
+  "agent": "guardian",
+  "given": {"plan_id": "plan_approved", "listing_ids": ["listing_verified"], "total_cost_sgd": 12},
+  "expect": {
+    "output": {"checks": ["per_listing_provider_vetting", "per_plan_attendance_spend"], "GuardianVerdict": {"plan_id": "plan_approved", "approved": true, "provider_approval_ids": {}, "attendance_approval_id": "attendance_1", "spend_approval_id": "spend_1", "reason_codes": [], "reviewed_at": "2026-09-01T00:00:00Z"}},
+    "tool_calls": {"trusted_adult": 1},
+    "store_reads": ["approved_plan", "CKB", "Personal Data"],
+    "store_writes": [],
+    "gates": ["G3"]
+  },
+  "invariants": ["guardian_runs_two_distinct_checks"],
+  "covers": []
+}

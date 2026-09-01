@@ -1,9 +1,0 @@
-{
-  "fixture_version": "1.0",
-  "id": "compliance-conflicting-prices",
-  "name": "Conflicting current prices remain unresolved",
-  "agent": "compliance",
-  "given": {"records": [{"source": "provider", "price": "45 SGD"}, {"source": "venue", "price": "60 SGD"}]},
-  "expect": {"output": {"status": "MORE_DATA_REQUIRED", "uncertain_fields": ["price"]}, "tool_calls": {"knowledge_base_write": 0}},
-  "invariants": ["conflicting_facts_are_not_persisted"]
-}

@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "broker-actionable-failure-regated",
+  "name": "Booking failure marks slot unavailable and regates replacement",
+  "agent": "broker",
+  "given": {"booking_record": {"status": "failed", "listing_id": "listing_full"}},
+  "expect": {
+    "output": {"actionable_reason": "venue full on 3 Sep; two alternatives are available the same evening", "slot_marked_unavailable": true, "replacement_path": ["Planner", "G2", "Guardian", "G3", "Broker"]},
+    "tool_calls": {"planner": 1},
+    "store_reads": ["guardian_passed_plan"],
+    "store_writes": ["booking_records"],
+    "gates": ["G2", "G3"]
+  },
+  "invariants": ["booking_failure_rechecks_g2_g3"],
+  "covers": []
+}

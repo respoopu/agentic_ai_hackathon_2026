@@ -1,0 +1,16 @@
+{
+  "fixture_version": "2.2",
+  "id": "guardian-two-rejections-escalate",
+  "name": "Second Guardian rejection escalates with both reasons",
+  "agent": "guardian",
+  "given": {"guardian_rejects_before": 1, "new_reason": "spend_declined"},
+  "expect": {
+    "output": {"guardian_rejects": 2, "outcome": "escalated_to_adult", "reason_codes": ["provider_vetting_declined", "spend_declined"]},
+    "tool_calls": {"guardian_third_attempt": 0},
+    "store_reads": ["CKB", "Personal Data"],
+    "store_writes": [],
+    "gates": ["G3"]
+  },
+  "invariants": ["exactly_two_guardian_rejections_escalate"],
+  "covers": ["ADV-6"]
+}

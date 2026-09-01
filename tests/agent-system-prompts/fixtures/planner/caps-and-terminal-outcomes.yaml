@@ -1,0 +1,25 @@
+{
+  "fixture_version": "2.2",
+  "id": "planner-caps-and-terminal-outcomes",
+  "name": "Counters, cap hits, cap breaches and terminal classifications are exact",
+  "agent": "planner",
+  "given": {"configured_caps": {"MAX_REPLANS": 3, "MAX_DISCOVERY_ROUNDS": 2, "MAX_GUARDIAN_REJECTIONS": 2}},
+  "expect": {
+    "output": {
+      "counters": {"replan_count": 3, "discovery_rounds": 2, "guardian_rejects": 2},
+      "outcomes": [
+        {"case": "booked", "completion": "autonomous_success"},
+        {"case": "hold_this_week", "completion": "autonomous_success"},
+        {"case": "escalated_to_adult", "completion": "designed_checkpoint_success", "cap_hit": true, "cap_breached": false},
+        {"case": "no_viable_plan", "completion": "failed"},
+        {"case": "cap_breached", "completion": "failed", "attempted_counter": 3}
+      ]
+    },
+    "tool_calls": {},
+    "store_reads": [],
+    "store_writes": [],
+    "gates": []
+  },
+  "invariants": ["configured_caps_and_outcomes_exact"],
+  "covers": ["A5"]
+}
