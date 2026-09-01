@@ -318,6 +318,8 @@ class PeerCohort(BaseModel):
     level; suppressed below the k-floor of 5. See architecture.md §9.3 and A12.
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     same_age_band: Literal["none", "few", "some", "many"]
     same_area: bool
     suppressed: bool

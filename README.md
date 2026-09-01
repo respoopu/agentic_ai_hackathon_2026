@@ -1,13 +1,74 @@
 # agentic_ai_hackathon_2026
 
-Two things live here.
+## Hobbi backend
 
-**1. The submission — Hobbi.** Our entry for the SimplifyNext Agentic AI Hackathon 2026
-("Design for a World in Transformation"). All project documentation is in
-[`docs/`](docs/) — start at [`docs/README.md`](docs/README.md), which gives the reading
-order, the twelve decisions that are closed, and what is left to build.
+The backend implements architecture v2.2 without changing the merged agent prompts or rebuilding the merged CKB loader:
 
-**2. The workshop lab** (below) — the teaching material the hackathon runs on.
+- strict Pydantic state, plan, approval, booking, event, preference, gate, and token contracts;
+- SQLite Personal Data with consent, approvals, plans, attendance, preferences, optimistic ledger versions, and exactly-once booking transactions;
+- deterministic Intake/I0 and detached G1–G4 validation;
+- Planner, Discovery, Guardian, Broker, Observer, and off-path Compliance components with fail-closed tool boundaries;
+- a bounded LangGraph pipeline with persistent SQLite checkpoints;
+- an optional, not-yet-production-validated Bedrock structured-output adapter, cached Discovery replay, sandbox booking, and an authenticated local JSON API;
+- twelve eligible runtime profiles and a one-command B1–B15 report that marks unsupported counterfactual metrics unmeasured.
+
+The canonical CKB sources are the merged transcription sheet, 157 sourced drafts, quarantine fixtures, builder, and loader. The runtime consumes `data/seed_ckb.json` when the existing builder can publish it. It does not silently promote unfinished drafts or invent verification metadata. Evaluation uses an explicitly synthetic catalogue and never presents those rows as real activities.
+
+### Install and verify
+
+Python 3.11 or later is required.
+
+```bash
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m unittest discover -s tests -t .
+python -m sim.harness --profiles eligible
+python -m sim.counterfactual
+python -m sim.report
+```
+
+`sim.report` labels every result as simulated and keeps the scope of partial diagnostics visible. B1 lacks first-attempt parse instrumentation; B2 covers booking calls only; B9 is illustrative because its catalogue is authored; B10 covers eligible rather than adversarial runs; and B6 plus B11–B15 remain unmeasured until their required instrumentation, judge, executable baseline, Observer transitions, live-link checks, and attendance evidence exist.
+
+### Run the local API
+
+```bash
+export HOBBI_RUNTIME_DIR=.hobbi
+export HOBBI_GUARDIAN_API_TOKEN='replace-with-a-random-guardian-secret'
+export HOBBI_COMPLIANCE_API_TOKEN='replace-with-a-random-compliance-secret'
+python -m src.api --port 8080
+curl -s http://127.0.0.1:8080/ \
+  -X POST -H 'content-type: application/json' \
+  -d '{"operation":"health"}'
+```
+
+The single `POST /` endpoint accepts these operations:
+
+| Operation | Purpose |
+|---|---|
+| `health` | Runtime and CKB readiness |
+| `discovery_replay` | Operator-authorized G1 replay of the typed, unverified ActiveSG capture |
+| `intake_and_plan` | Trusted-adult-authorized, one-time I0/setup followed by bounded planning |
+| `guardian_approve` | Store provider/attendance/spend approval against one exact Plan, then resume at G2 |
+| `attendance` | Teen-profile-authorized booking outcome and optional in-app text debrief |
+| `compliance_scan` | Operator-authorized, allow-listed, robots-aware freshness scan; denied/transient checks mark stale, while explicit listing 404/410 retires |
+
+Protected operations use `Authorization: Bearer <token>`. Setup returns a one-time `teen_access_token` for that profile. Trusted-adult approval is a separate request and is bound to the exact `plan_id`; paid plans also require an amount ceiling. Setup refuses to replace an existing profile, declared age, or parental rules.
+
+`HOBBI_GUARDIAN_API_TOKEN` is a deployment-wide PoC operator credential, not a teen- or household-specific identity. Plan and teen data ownership checks still apply, but anyone holding that token can act as the trusted-adult operator for every profile in that deployment. Production deployment therefore requires household-scoped identities and authorization in front of this API.
+
+Peer-cohort ranking is implemented only as a privacy-preserving tiebreak seam. The current canonical CKB and simulation catalogue do not populate cohort buckets, so this objective does not affect normal runtime output or any reported metric yet. Agent `ToolGuard` checks are centralized method-entry assertions against declared permissions; they do not mediate every store or CKB call as capability wrappers.
+
+The default runtime executes deterministic typed policies. `src.runtime.structured.invoke_structured` is an optional prompt-backed Bedrock adapter; it is not wired into the default LangGraph and has not been validated against a live AWS account.
+
+The API and simulation do not need AWS. Live model use is lazy through `src.runtime.structured.invoke_structured`; model IDs are fixed constants and credentials come from the normal AWS chain.
+
+Implementation progress and acceptance evidence are tracked in [`checklist.md`](checklist.md).
+
+## Workshop lab
+
+The original teaching material remains under `lab/`. Hobbi project documentation is in
+[`docs/`](docs/) — start at [`docs/README.md`](docs/README.md) for its reading order.
 
 ---
 
