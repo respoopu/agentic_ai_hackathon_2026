@@ -767,7 +767,7 @@ Staying on the taught stack (deck: *"so what you learn from the technical sessio
 
 ### Repo layout
 
-*Target structure. Seed-CKB implementation now exists in `src/schema/`, `src/ckb/`, `scripts/`, `data/` and `tests/`; the agent pipeline remains to be built. `lab/` is unrelated workshop material. New work continues into this shape so every component on the architecture slide is findable as a module.*
+*Target structure. Seed-CKB implementation now exists in `src/schema/`, `src/ckb/`, `scripts/`, `data/` and `tests/`; the agent pipeline remains to be built. New work continues into this shape so every component on the architecture slide is findable as a module.*
 
 ```
 src/
