@@ -180,7 +180,7 @@ All twelve planning profiles declare ages 13–17. They are deliberately chosen 
 
 The **primary persona** (`project_brief.md` §2) is profile 1 and appears in the demo, the slides and the evaluation, so slide 2, the video and the numbers are all visibly about the same person.
 
-**Where the headline number comes from.** **B15** is measured over the subset of eligible planning profiles with `money_total = 0`, in both arms. Each profile advances through as many planning/session cycles as needed until first attendance or the 30-day censor. Report the eligible S$0 denominator, the within-30-day completion rate, and median calendar days / cycles / teen actions among completers. Refused intake cases and non-S$0 profiles never enter this denominator. The longitudinal replay carries the roadmap metrics instead (§6.3).
+**Where the headline number comes from.** **B15** is measured over the subset of eligible planning profiles with `money_total = 0`, in both arms. To compare policies over the same 30-day exposure, each arm receives five weekly exploration opportunities regardless of the profile's longer-horizon `tries_total`; it stops early on first attendance. Report the eligible S$0 denominator, the within-30-day completion rate, and median calendar days / cycles / teen actions among completers. Refused intake cases and non-S$0 profiles never enter this denominator. The longitudinal replay carries the roadmap metrics instead (§6.3).
 
 ### 6.2 Age-boundary matrix — separate from planning metrics
 
@@ -188,7 +188,9 @@ Run declared ages **11, 12, 13, 17, 18 and 19** through I0. Ages 11/12 must term
 
 ### 6.3 The longitudinal replay
 
-One profile, 9–12 months, scripted attendance behaviour including: a strong start, a drop-off, two consecutive no-shows, a recovery, and a sustained commitment. This is both the demo (`architecture.md` §10) and the substrate for the **roadmap** metrics — B11, B12 and B14. It is explicitly *not* where B15 comes from; see §6.1.
+One profile, 12 cycles, with a scripted synthetic **environment** rather than scripted policy results. The input supplies only the cycle date, context, availability and current preferred vibe. The immutable static policy and Hobbi independently select listings from the same synthetic CKB; attendance is then derived by the same rule for both arms (available and selected vibe matches), and Hobbi runs the resulting event through real Broker persistence and Observer adaptation. Plans, no-shows, holds, replans and commitment signals are outputs, never fixture fields.
+
+This is both the demo (`architecture.md` §10) and the substrate for the **roadmap** metrics — B11, B12 and B14. It is explicitly *not* where B15 comes from; see §6.1. All results remain deterministic simulation evidence, not participant outcomes.
 
 ### 6.4 The adversarial set
 

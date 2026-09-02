@@ -55,7 +55,7 @@ python -m sim.counterfactual
 python -m sim.report
 ```
 
-`sim.report` labels every result as simulated and keeps the scope of partial diagnostics visible. B1 lacks first-attempt parse instrumentation; B2 covers booking calls only; B9 is illustrative because its catalogue is authored; B10 covers eligible rather than adversarial runs; and B6 plus B11–B15 remain unmeasured until their required instrumentation, judge, executable baseline, Observer transitions, live-link checks, and attendance evidence exist.
+`sim.report` labels every result as simulated and keeps the scope of partial diagnostics visible. B10 executes all eight adversarial scenarios. B11, B12 and B14 come from a 12-cycle executable Planner→Guardian→Broker→Observer replay against an immutable static policy; B15 runs both policies over the same four eligible S$0 profiles with a 30-day censor. The fixture supplies only synthetic context, availability and preferred vibe—plans, attendance, holds and replans are generated at runtime. These are deterministic policy results, not participant evidence. B1 still lacks live-model first-attempt parse instrumentation; B2 covers booking calls only; B9 remains illustrative because its catalogue is authored; B6 requires an LLM judge plus human double-scoring; and B13 needs a dated live-link sample.
 
 ### Run the local API
 

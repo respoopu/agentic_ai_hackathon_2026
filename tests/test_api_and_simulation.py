@@ -5,6 +5,8 @@ import unittest
 import urllib.error
 from unittest.mock import MagicMock, patch
 
+from sim.adversarial import run_adversarial_set
+from sim.counterfactual import load_longitudinal_scenario
 from sim.counterfactual import run as counterfactual
 from sim.harness import load_profiles, run_eligible_profiles
 from sim.report import rows
@@ -320,9 +322,57 @@ class ApiAndSimulationTests(unittest.TestCase):
         result = run_eligible_profiles()
         self.assertEqual({"numerator": 4, "denominator": 4}, result["metrics"]["s0_viability"])
         comparison = counterfactual()
-        self.assertFalse(comparison["first_attendance"]["measured"])
-        self.assertFalse(comparison["longitudinal"]["measured"])
-        self.assertEqual(2, comparison["longitudinal"]["scripted_holds"])
+        first = comparison["first_attendance"]
+        long = comparison["longitudinal"]
+        self.assertTrue(first["measured"])
+        self.assertEqual((4, 4), (first["hobbi"]["completed"], first["hobbi"]["denominator"]))
+        self.assertEqual((3, 4), (first["static"]["completed"], first["static"]["denominator"]))
+        self.assertEqual(25.0, first["completion_rate_delta_percentage_points"])
+        self.assertTrue(long["measured"])
+        self.assertEqual({"numerator": 2, "denominator": 12}, long["hold_rate"])
+        self.assertEqual(1.0, long["adaptation_latency"]["mean_cycles"])
+        self.assertEqual(
+            {"none", "replan", "try_to_commit", "hold_this_week"},
+            {cycle["observer_action"] for cycle in long["hobbi_cycles"]},
+        )
+
+    def test_counterfactual_fixture_contains_inputs_not_authored_results(self) -> None:
+        scenario = load_longitudinal_scenario()
+        forbidden = {"attended", "hobbi_action", "static_vibe", "selected_listing_id"}
+        self.assertTrue(scenario["cycles"])
+        self.assertTrue(
+            all(not forbidden.intersection(cycle) for cycle in scenario["cycles"])
+        )
+
+    def test_executable_adversarial_set_has_zero_violations(self) -> None:
+        result = run_adversarial_set()
+        self.assertEqual(8, len(result["cases"]))
+        self.assertTrue(all(case["passed"] for case in result["cases"]))
+        self.assertEqual(
+            {"measured": True, "numerator": 0, "denominator": 8},
+            result["constraint_violations"],
+        )
+
+    def test_static_arm_is_immutable_while_hobbi_replans_through_real_gates(self) -> None:
+        long = counterfactual()["longitudinal"]
+        self.assertEqual(
+            1, len({cycle["listing_id"] for cycle in long["static_cycles"]})
+        )
+        self.assertGreater(
+            len({cycle["listing_id"] for cycle in long["hobbi_cycles"]}), 1
+        )
+        self.assertTrue(
+            all(
+                cycle["gate_sequence"] == ["G1", "G2", "G3", "G4"]
+                for cycle in long["hobbi_cycles"]
+            )
+        )
+        self.assertEqual(
+            {"numerator": 8, "denominator": 12}, long["adherence"]["hobbi"]
+        )
+        self.assertEqual(
+            {"numerator": 2, "denominator": 12}, long["adherence"]["static"]
+        )
 
     def test_report_emits_b1_through_b15(self) -> None:
         names = [name for name, _ in rows()]

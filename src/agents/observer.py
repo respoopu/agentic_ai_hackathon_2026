@@ -15,7 +15,7 @@ from src.store.personal_data import PersonalDataStore
 
 
 class ObserverResult(StrictModel):
-    action: Literal["replan", "commit", "hold_this_week"]
+    action: Literal["none", "replan", "try_to_commit", "hold_this_week"]
     persisted: bool
     reason_codes: list[str] = Field(default_factory=list)
     preferences: PreferenceModel
@@ -139,15 +139,35 @@ class Observer:
                         )
         updates.update({"debriefs": debrief_records, "dislikes": dislikes})
         adapted = PreferenceModel.model_validate({**preferences.model_dump(), **updates})
+        lower_debrief = debrief.text.lower() if debrief is not None else ""
+        temporary_pause = not event.attended and any(
+            phrase in lower_debrief
+            for phrase in (
+                "exam week",
+                "family travel",
+                "this week is too busy",
+                "sick this week",
+                "another booking would not help this week",
+            )
+        )
         if len(attendance) >= 2 and not attendance[-1].attended and not attendance[-2].attended:
-            action: Literal["replan", "commit", "hold_this_week"] = "replan"
+            action: Literal["none", "replan", "try_to_commit", "hold_this_week"] = (
+                "replan"
+            )
             reasons = ["two_consecutive_no_shows"]
         elif len(attendance) >= 3 and all(value.attended for value in attendance[-3:]):
-            action = "commit"
+            action = "try_to_commit"
             reasons = ["sustained_repeat_attendance"]
-        else:
+        elif temporary_pause:
             action = "hold_this_week"
-            reasons = ["insufficient_evidence_for_change"]
+            reasons = ["temporary_constraint_no_booking_helpful"]
+        else:
+            action = "none"
+            reasons = [
+                "one_no_show_recorded"
+                if not event.attended
+                else "insufficient_evidence_for_change"
+            ]
         persisted = store.record_outcome(
             teen_id=teen_id,
             event=event,

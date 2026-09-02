@@ -294,6 +294,62 @@ class AgentAndGraphTests(unittest.TestCase):
         self.assertEqual("replan", result.action)
         self.assertEqual(1, self.personal.get_ledger("teen").tries_abandoned)
 
+    def test_observer_distinguishes_no_change_hold_and_try_to_commit(self) -> None:
+        class RecordingStore:
+            def record_outcome(self, **_: object) -> bool:
+                return True
+
+        store = RecordingStore()
+        record = listing_record("observer-actions")
+        one_no_show = Observer().observe(
+            teen_id="teen",
+            event=AttendanceEvent(
+                booking_id="one-no-show", attended=False, occurred_at=NOW
+            ),
+            preferences=PreferenceModel.neutral(NOW),
+            listing=record,
+            store=store,
+        )
+        self.assertEqual("none", one_no_show.action)
+
+        hold = Observer().observe(
+            teen_id="teen",
+            event=AttendanceEvent(
+                booking_id="exam-week", attended=False, occurred_at=NOW
+            ),
+            preferences=PreferenceModel.neutral(NOW),
+            listing=record,
+            debrief=DebriefSubmission(
+                booking_id="exam-week",
+                text="Exam week; another booking would not help this week",
+                channel="in_app",
+                submitted_at=NOW,
+            ),
+            store=store,
+        )
+        self.assertEqual("hold_this_week", hold.action)
+
+        attendance = [
+            AttendanceEvent(
+                booking_id=f"repeat-{index}",
+                attended=True,
+                occurred_at=NOW - timedelta(days=7 * (2 - index)),
+            )
+            for index in range(2)
+        ]
+        commit = Observer().observe(
+            teen_id="teen",
+            event=AttendanceEvent(
+                booking_id="repeat-current", attended=True, occurred_at=NOW
+            ),
+            preferences=PreferenceModel.neutral(NOW).model_copy(
+                update={"attendance": attendance}
+            ),
+            listing=record,
+            store=store,
+        )
+        self.assertEqual("try_to_commit", commit.action)
+
     def test_observer_moves_axis_only_after_second_activity_signal(self) -> None:
         class RecordingStore:
             def record_outcome(self, **_: object) -> bool:
