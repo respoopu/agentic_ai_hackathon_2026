@@ -63,7 +63,9 @@ This produces the generated `data/ckb_shortlist.csv`. Human decisions and
 confirmed canonical fields are kept separately in `data/ckb_attestations.json`,
 so shortlist regeneration cannot erase the sign-off ledger. Rejections need a
 reason. Approvals need complete canonical values; blank values are never
-inferred from hints. Then:
+inferred from hints. Reviewer identity, review date, participation facts and
+cost facts must be recorded on each decision; promotion rejects evidentiary
+defaults. Then:
 
 ```bash
 python3 scripts/promote_ckb_shortlist.py --as-of 2026-09-02
@@ -81,7 +83,9 @@ publication boundary: collection and selection do not write `seed_ckb.csv`.
 
 Teams may still use a shared sheet for simultaneous review: import
 `data/ckb_shortlist.csv`, complete it, and export with the same columns before
-running promotion.
+running promotion. `data/seed_ckb.csv` is generated output owned by the
+promotion command, not a hand-maintained merge target; promotion replaces it.
+Use `--out` with a scratch path when trialling a refresh.
 
 Stdlib only — it runs on a clean laptop with nothing installed. It refuses
 badly-sourced rows and then prints which coverage cells are still empty, named
@@ -136,7 +140,7 @@ copied straight off the page.
 | `title` | The activity name **as written on the page**. Don't improve it. |
 | `provider` | The organisation running it. |
 | `provider_type` | `cc` · `activesg` · `third_space` · `school` · `commercial` · `informal` |
-| `source_url` | The exact URL you read. Not the site's homepage. |
+| `source_url` | The exact page you read. A first-party multi-venue booking or directory page is acceptable only when it explicitly identifies the attested venue, and `review_notes` must say what entry was checked. Not the site's homepage. |
 | `verified_at` | The date **you** opened it, `YYYY-MM-DD`. |
 | `verified_by` | Your name. Not credit — accountability. |
 | `verification` | `verified` once you've seen it. `retired` if it has since died. |
@@ -192,7 +196,7 @@ stable across filters and re-runs.
 | Column | What goes in it |
 |---|---|
 | `vibes` | Pipe-separated from `sporty` `artistic` `chill` `explorative`. **Coverage auditing only** — never shown to a teen, never used to filter. See D10's five rules and invariant A9. |
-| `in_incumbent_directory` | Is it already listed on ActiveSG, Skoop or similar? This is the only way **B9** (long-tail coverage ≥ 40%) can be computed, and B9 is what backs *"we are not Skoop with an LLM."* |
+| `in_incumbent_directory` | Is it already listed in a cross-provider or cross-category consumer discovery/booking directory such as ActiveSG or Skoop? First-party provider calendars such as NLB LibCal are source systems, not incumbent discovery directories. Record this per row. This is the only way **B9** (long-tail coverage ≥ 40%) can be computed, and B9 is what backs *"we are not Skoop with an LLM."* |
 | `notes` | Anything a teammate needs. Tag exactly one row `#demo-retire` — that's the listing Compliance kills on camera for adversarial scenario 4. |
 
 ---

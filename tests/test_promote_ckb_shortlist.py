@@ -84,13 +84,11 @@ class PromoteShortlistTests(unittest.TestCase):
         reviewed = apply_attestations(
             [row],
             {
-                "defaults": {
-                    "reviewed_at": "2026-09-02",
-                    "reviewed_by": "Human Reviewer",
-                },
                 "decisions": {
                     "WEB-real-1": {
                         "review_decision": "approve",
+                        "reviewed_at": "2026-09-02",
+                        "reviewed_by": "Human Reviewer",
                         "review_notes": "Source checked.",
                     }
                 },
@@ -99,17 +97,13 @@ class PromoteShortlistTests(unittest.TestCase):
         self.assertEqual("approve", reviewed[0]["review_decision"])
         self.assertEqual("Human Reviewer", reviewed[0]["reviewed_by"])
 
-    def test_attestation_defaults_only_fill_blank_source_values(self) -> None:
+    def test_non_evidentiary_defaults_only_fill_blank_source_values(self) -> None:
         row = approved_row()
-        row.update(reviewed_by="Row Reviewer", confirmed_join_alone_ok="no")
+        row.update(research_batch="Row batch")
         reviewed = apply_attestations(
             [row],
             {
-                "defaults": {
-                    "reviewed_by": "Default Reviewer",
-                    "confirmed_join_alone_ok": "yes",
-                    "confirmed_guest_allowed": "yes",
-                },
+                "defaults": {"research_batch": "Default batch", "source_note": "web"},
                 "decisions": {
                     "WEB-real-1": {
                         "review_decision": "approve",
@@ -119,9 +113,23 @@ class PromoteShortlistTests(unittest.TestCase):
             },
         )
 
-        self.assertEqual("Row Reviewer", reviewed[0]["reviewed_by"])
-        self.assertEqual("no", reviewed[0]["confirmed_join_alone_ok"])
-        self.assertEqual("yes", reviewed[0]["confirmed_guest_allowed"])
+        self.assertEqual("Row batch", reviewed[0]["research_batch"])
+        self.assertEqual("web", reviewed[0]["source_note"])
+
+    def test_evidentiary_fields_cannot_be_attestation_defaults(self) -> None:
+        with self.assertRaisesRegex(SignoffError, "must be recorded per decision"):
+            apply_attestations(
+                [approved_row()],
+                {
+                    "defaults": {"confirmed_join_alone_ok": "yes"},
+                    "decisions": {
+                        "WEB-real-1": {
+                            "review_decision": "approve",
+                            "review_notes": "Source checked.",
+                        }
+                    },
+                },
+            )
 
     def test_attestation_ledger_rejects_unknown_candidates(self) -> None:
         with self.assertRaisesRegex(SignoffError, "unknown candidates"):

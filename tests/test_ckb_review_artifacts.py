@@ -10,6 +10,43 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class CkbReviewArtifactTests(unittest.TestCase):
+    def test_attestations_record_evidence_per_decision(self) -> None:
+        payload = json.loads(
+            (ROOT / "data" / "ckb_attestations.json").read_text(encoding="utf-8")
+        )
+        self.assertFalse(payload.get("defaults"))
+        required = {
+            "cost_recurring_sgd",
+            "equipment_cost_sgd",
+            "beginner_friendly",
+            "join_alone_ok",
+            "guest_allowed",
+            "in_incumbent_directory",
+        }
+        for candidate_id, decision in payload["decisions"].items():
+            self.assertTrue(decision.get("reviewed_at"), candidate_id)
+            self.assertTrue(decision.get("reviewed_by"), candidate_id)
+            if decision["review_decision"] == "approve":
+                self.assertTrue(
+                    required.issubset(decision.get("confirmed", {})), candidate_id
+                )
+
+    def test_shared_provenance_pages_are_explicitly_scoped(self) -> None:
+        payload = json.loads(
+            (ROOT / "data" / "ckb_attestations.json").read_text(encoding="utf-8")
+        )
+        decisions = payload["decisions"]
+        for candidate_id in ("WEB-jw-table-tennis", "WEB-bishan-table-tennis"):
+            self.assertIn(
+                "selectable venue",
+                decisions[candidate_id]["review_notes"].lower(),
+                candidate_id,
+            )
+        self.assertIn(
+            "directory entry",
+            decisions["WEB-bishan-swim"]["review_notes"].lower(),
+        )
+
     def test_public_candidate_capture_is_compact_unverified_and_nonfictional(self) -> None:
         payload = json.loads(
             (ROOT / "data" / "draft_social_candidates.json").read_text(

@@ -64,6 +64,7 @@ CONFIRMED_TO_SEED = {
     "confirmed_vibes": "vibes",
     "confirmed_in_incumbent_directory": "in_incumbent_directory",
 }
+EVIDENTIARY_FIELDS = {"reviewed_at", "reviewed_by", *CONFIRMED_TO_SEED}
 
 
 class SignoffError(ValueError):
@@ -79,6 +80,12 @@ def apply_attestations(
     defaults = payload.get("defaults", {})
     if not isinstance(defaults, dict):
         raise SignoffError("attestation defaults must be an object")
+    defaulted_evidence = EVIDENTIARY_FIELDS.intersection(defaults)
+    if defaulted_evidence:
+        raise SignoffError(
+            "attestation evidence must be recorded per decision: "
+            f"{sorted(defaulted_evidence)}"
+        )
     decisions = payload["decisions"]
     output: list[dict[str, str]] = []
     seen: set[str] = set()

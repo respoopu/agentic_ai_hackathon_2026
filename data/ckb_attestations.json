@@ -1,121 +1,317 @@
 {
   "schema_version": "1.0",
   "attestation": "Rayden confirmed that the shortlisted public sources had been opened and verified on 2 September 2026.",
-  "defaults": {
-    "reviewed_at": "2026-09-02",
-    "reviewed_by": "respoopu",
-    "confirmed_cost_recurring_sgd": "0",
-    "confirmed_equipment_cost_sgd": "0",
-    "confirmed_beginner_friendly": "yes",
-    "confirmed_join_alone_ok": "yes",
-    "confirmed_guest_allowed": "yes",
-    "confirmed_in_incumbent_directory": "no"
-  },
   "decisions": {
     "SOC-018834cf70a1": {
       "review_decision": "approve",
       "review_notes": "Public organiser post checked; ticket price, venue and event time confirmed.",
-      "confirmed": {"title": "Jurong Spring-Gek Poh Mid-Autumn Festival 2026", "provider": "Jurong Spring and Gek Poh Grassroots Organisations", "provider_type": "cc", "venue": "Jurong Spring Community Club", "postal_code": "649296", "planning_area": "Jurong West", "nearest_mrt": "Lakeside", "cost_one_off_sgd": "2", "age_min": "0", "age_max": "120", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-26T18:00", "vibes": "artistic|chill|explorative"}
+      "confirmed": {"title": "Jurong Spring-Gek Poh Mid-Autumn Festival 2026", "provider": "Jurong Spring and Gek Poh Grassroots Organisations", "provider_type": "cc", "venue": "Jurong Spring Community Club", "postal_code": "649296", "planning_area": "Jurong West", "nearest_mrt": "Lakeside", "cost_one_off_sgd": "2", "age_min": "0", "age_max": "120", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-26T18:00", "vibes": "artistic|chill|explorative", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
     "SOC-d523db6c4892": {
       "review_decision": "approve",
       "review_notes": "Public organiser post checked; community-hub location, ticket price and event time confirmed.",
-      "confirmed": {"title": "Gek Poh Mid-Autumn Celebration", "provider": "Gek Poh Central Residents' Network", "provider_type": "cc", "venue": "Community Hub opposite Block 272D", "postal_code": "644272", "planning_area": "Jurong West", "nearest_mrt": "Pioneer", "cost_one_off_sgd": "4", "age_min": "0", "age_max": "120", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-20T18:00", "vibes": "artistic|chill"}
+      "confirmed": {"title": "Gek Poh Mid-Autumn Celebration", "provider": "Gek Poh Central Residents' Network", "provider_type": "cc", "venue": "Community Hub opposite Block 272D", "postal_code": "644272", "planning_area": "Jurong West", "nearest_mrt": "Pioneer", "cost_one_off_sgd": "4", "age_min": "0", "age_max": "120", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-20T18:00", "vibes": "artistic|chill", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
     "SOC-18a92663f872": {
       "review_decision": "approve",
       "review_notes": "Public organiser post checked; open-field venue, ticket price and event time confirmed.",
-      "confirmed": {"title": "Boon Lay Mid-Autumn Festival 2026", "provider": "Boon Lay Grassroots Organisations", "provider_type": "cc", "venue": "Open field between Blocks 619 and 630 Jurong West Street 65", "postal_code": "640619", "planning_area": "Jurong West", "nearest_mrt": "Pioneer", "cost_one_off_sgd": "4", "age_min": "0", "age_max": "120", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-27T18:30", "vibes": "artistic|chill"}
+      "confirmed": {"title": "Boon Lay Mid-Autumn Festival 2026", "provider": "Boon Lay Grassroots Organisations", "provider_type": "cc", "venue": "Open field between Blocks 619 and 630 Jurong West Street 65", "postal_code": "640619", "planning_area": "Jurong West", "nearest_mrt": "Pioneer", "cost_one_off_sgd": "4", "age_min": "0", "age_max": "120", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-27T18:30", "vibes": "artistic|chill", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
-    "SOC-ed3a485bc3a6": {"review_decision": "reject", "review_notes": "Competition deadline post does not identify a physical activity venue."},
-    "SOC-d18a467f7098": {"review_decision": "reject", "review_notes": "Confirmed event venue is Ayer Rajah CC, outside the proposed Jurong West area."},
+    "SOC-ed3a485bc3a6": {
+      "review_decision": "reject",
+      "review_notes": "Competition deadline post does not identify a physical activity venue.",
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "SOC-d18a467f7098": {
+      "review_decision": "reject",
+      "review_notes": "Confirmed event venue is Ayer Rajah CC, outside the proposed Jurong West area.",
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
     "SOC-9a65d4ada9e4": {
       "review_decision": "approve",
       "review_notes": "Public organiser post checked; visitor ticket is S$5 (the separate vendor fee is excluded).",
-      "confirmed": {"title": "Green Carnival 2026", "provider": "Boon Lay Grassroots Organisations", "provider_type": "cc", "venue": "Block 238 Boon Lay Drive Multi-Purpose Hall", "postal_code": "640238", "planning_area": "Jurong West", "nearest_mrt": "Lakeside", "cost_one_off_sgd": "5", "age_min": "0", "age_max": "120", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-20T10:00", "vibes": "explorative|chill"}
+      "confirmed": {"title": "Green Carnival 2026", "provider": "Boon Lay Grassroots Organisations", "provider_type": "cc", "venue": "Block 238 Boon Lay Drive Multi-Purpose Hall", "postal_code": "640238", "planning_area": "Jurong West", "nearest_mrt": "Lakeside", "cost_one_off_sgd": "5", "age_min": "0", "age_max": "120", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-20T10:00", "vibes": "explorative|chill", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
     "SOC-6a5912702e28": {
       "review_decision": "approve",
       "review_notes": "Official onePA listing checked; free public board-game session confirmed. #demo-retire",
-      "confirmed": {"title": "Boon Lay Mind Cafe", "provider": "Boon Lay CCC and CSN", "provider_type": "cc", "venue": "Boon Lay Community Club Multi-Purpose Hall", "postal_code": "649882", "planning_area": "Jurong West", "nearest_mrt": "Lakeside", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-20T14:00", "vibes": "chill"}
+      "confirmed": {"title": "Boon Lay Mind Cafe", "provider": "Boon Lay CCC and CSN", "provider_type": "cc", "venue": "Boon Lay Community Club Multi-Purpose Hall", "postal_code": "649882", "planning_area": "Jurong West", "nearest_mrt": "Lakeside", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-20T14:00", "vibes": "chill", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
     "SOC-3d17dc53efab": {
       "review_decision": "approve",
       "review_notes": "Public organiser post checked; the 9 September beginner mooncake session is the canonical option; other priced sessions remain in the source.",
-      "confirmed": {"title": "Mooncake Making Workshop", "provider": "Boon Lay Community Club", "provider_type": "cc", "venue": "Boon Lay Community Club Culinary Studio #02-03", "postal_code": "649882", "planning_area": "Jurong West", "nearest_mrt": "Lakeside", "cost_one_off_sgd": "20", "age_min": "0", "age_max": "120", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-09T10:30", "vibes": "artistic|explorative"}
+      "confirmed": {"title": "Mooncake Making Workshop", "provider": "Boon Lay Community Club", "provider_type": "cc", "venue": "Boon Lay Community Club Culinary Studio #02-03", "postal_code": "649882", "planning_area": "Jurong West", "nearest_mrt": "Lakeside", "cost_one_off_sgd": "20", "age_min": "0", "age_max": "120", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-09T10:30", "vibes": "artistic|explorative", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
-    "SOC-8ec02d0e04ae": {"review_decision": "reject", "review_notes": "The public post does not state participant cost, so the row cannot claim free or paid access."},
-    "SOC-955f66e9de58": {"review_decision": "reject", "review_notes": "The stated age range is 7-12 and does not overlap Hobbi's 13-17 target."},
+    "SOC-8ec02d0e04ae": {
+      "review_decision": "reject",
+      "review_notes": "The public post does not state participant cost, so the row cannot claim free or paid access.",
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "SOC-955f66e9de58": {
+      "review_decision": "reject",
+      "review_notes": "The stated age range is 7-12 and does not overlap Hobbi's 13-17 target.",
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
     "NLB-5971829": {
       "review_decision": "approve",
       "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.",
-      "confirmed": {"title": "Puzzle It Out! A Jigsaw Puzzle Pop-Up", "provider": "National Library Board", "provider_type": "third_space", "venue": "Jurong West Library", "postal_code": "648346", "planning_area": "Jurong West", "nearest_mrt": "Boon Lay", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-10-01T10:00", "vibes": "chill"}
+      "confirmed": {"title": "Puzzle It Out! A Jigsaw Puzzle Pop-Up", "provider": "National Library Board", "provider_type": "third_space", "venue": "Jurong West Library", "postal_code": "648346", "planning_area": "Jurong West", "nearest_mrt": "Boon Lay", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-10-01T10:00", "vibes": "chill", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
     "NLB-5914829": {
       "review_decision": "approve",
       "review_notes": "NLB event page checked; free teen outreach session and venue confirmed.",
-      "confirmed": {"title": "MOLLY Weekend Outreach at Jurong West Sports Centre", "provider": "National Library Board", "provider_type": "third_space", "venue": "Jurong West Sports Centre", "postal_code": "648965", "planning_area": "Jurong West", "nearest_mrt": "Pioneer", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-20T09:00", "vibes": "chill|explorative"}
+      "confirmed": {"title": "MOLLY Weekend Outreach at Jurong West Sports Centre", "provider": "National Library Board", "provider_type": "third_space", "venue": "Jurong West Sports Centre", "postal_code": "648965", "planning_area": "Jurong West", "nearest_mrt": "Pioneer", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-20T09:00", "vibes": "chill|explorative", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
     "FTP-yuhua-secondary-school-field": {
-      "review_decision": "approve", "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.",
-      "confirmed": {"title": "Weekend free play at Yuhua Secondary School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Yuhua Secondary School Field", "postal_code": "649406", "planning_area": "Jurong West", "nearest_mrt": "Lakeside", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes"}
+      "review_decision": "approve",
+      "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.",
+      "confirmed": {"title": "Weekend free play at Yuhua Secondary School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Yuhua Secondary School Field", "postal_code": "649406", "planning_area": "Jurong West", "nearest_mrt": "Lakeside", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
     "FTP-xingnan-primary-school-field": {
-      "review_decision": "approve", "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.",
-      "confirmed": {"title": "Weekend free play at Xingnan Primary School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Xingnan Primary School Field", "postal_code": "649036", "planning_area": "Jurong West", "nearest_mrt": "Pioneer", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm; Sunday 9am-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes"}
+      "review_decision": "approve",
+      "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.",
+      "confirmed": {"title": "Weekend free play at Xingnan Primary School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Xingnan Primary School Field", "postal_code": "649036", "planning_area": "Jurong West", "nearest_mrt": "Pioneer", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm; Sunday 9am-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
     "FTP-lakeside-primary-school-field": {
-      "review_decision": "approve", "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.",
-      "confirmed": {"title": "Weekend free play at Lakeside Primary School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Lakeside Primary School Field", "postal_code": "618310", "planning_area": "Jurong West", "nearest_mrt": "Lakeside", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm; Sunday 9am-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes"}
+      "review_decision": "approve",
+      "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.",
+      "confirmed": {"title": "Weekend free play at Lakeside Primary School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Lakeside Primary School Field", "postal_code": "618310", "planning_area": "Jurong West", "nearest_mrt": "Lakeside", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm; Sunday 9am-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
-    "WEB-nanyang-dance-fitness-2026": {"review_decision": "reject", "review_notes": "Valid event, but excluded from this seed because its free weekday-evening recurrence would invalidate the agreed demo scenario boundary."},
-    "WEB-jw-activegroove": {"review_decision": "reject", "review_notes": "The official page was unavailable during reconciliation and did not support current opening status."},
+    "WEB-nanyang-dance-fitness-2026": {
+      "review_decision": "reject",
+      "review_notes": "Valid event, but excluded from this seed because its free weekday-evening recurrence would invalidate the agreed demo scenario boundary.",
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "WEB-jw-activegroove": {
+      "review_decision": "reject",
+      "review_notes": "The official page was unavailable during reconciliation and did not support current opening status.",
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
     "WEB-jw-swim": {
-      "review_decision": "approve", "review_notes": "Official facility and ActiveSG rates checked; conservative weekend child rate used.",
-      "confirmed": {"title": "Recreational swim at Jurong West Swimming Complex", "provider": "Sport Singapore", "provider_type": "activesg", "venue": "Jurong West Swimming Complex", "postal_code": "648965", "planning_area": "Jurong West", "nearest_mrt": "Pioneer", "cost_one_off_sgd": "1.00", "age_min": "1", "age_max": "17", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Daily 7am-10pm; check live closures before travel", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "sporty|chill", "in_incumbent_directory": "yes"}
+      "review_decision": "approve",
+      "review_notes": "Official facility and ActiveSG rates checked; conservative weekend child rate used.",
+      "confirmed": {"title": "Recreational swim at Jurong West Swimming Complex", "provider": "Sport Singapore", "provider_type": "activesg", "venue": "Jurong West Swimming Complex", "postal_code": "648965", "planning_area": "Jurong West", "nearest_mrt": "Pioneer", "cost_one_off_sgd": "1.00", "age_min": "1", "age_max": "17", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Daily 7am-10pm; check live closures before travel", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "sporty|chill", "in_incumbent_directory": "yes", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
     "WEB-jw-gym": {
-      "review_decision": "approve", "review_notes": "Official facility and ActiveSG student rates checked.",
-      "confirmed": {"title": "ActiveGYM session at Jurong West Sport Centre", "provider": "Sport Singapore", "provider_type": "activesg", "venue": "Jurong West ActiveSG Gym", "postal_code": "648965", "planning_area": "Jurong West", "nearest_mrt": "Pioneer", "cost_one_off_sgd": "1.50", "age_min": "12", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Daily 7am-10pm; check live closures before travel", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes"}
+      "review_decision": "approve",
+      "review_notes": "Official facility and ActiveSG student rates checked.",
+      "confirmed": {"title": "ActiveGYM session at Jurong West Sport Centre", "provider": "Sport Singapore", "provider_type": "activesg", "venue": "Jurong West ActiveSG Gym", "postal_code": "648965", "planning_area": "Jurong West", "nearest_mrt": "Pioneer", "cost_one_off_sgd": "1.50", "age_min": "12", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Daily 7am-10pm; check live closures before travel", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
     "WEB-jurong-central-board-games": {
-      "review_decision": "approve", "review_notes": "Official NParks page checked; free life-sized games and 24-hour park access confirmed. Postal identifies the park's public McDonald's-side entry point.",
-      "confirmed": {"title": "Life-sized board games at Jurong Central Park", "provider": "National Parks Board", "provider_type": "informal", "venue": "Jurong Central Park", "postal_code": "649849", "planning_area": "Jurong West", "nearest_mrt": "Boon Lay", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Open 24 hours", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "chill|explorative"}
+      "review_decision": "approve",
+      "review_notes": "Official NParks page checked; free life-sized games and 24-hour park access confirmed. Postal identifies the park's public McDonald's-side entry point.",
+      "confirmed": {"title": "Life-sized board games at Jurong Central Park", "provider": "National Parks Board", "provider_type": "informal", "venue": "Jurong Central Park", "postal_code": "649849", "planning_area": "Jurong West", "nearest_mrt": "Boon Lay", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Open 24 hours", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "chill|explorative", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
     "WEB-jw-park-connector-walk": {
-      "review_decision": "approve", "review_notes": "Official NParks route checked; free 2.2km walking/jogging route and lit hours confirmed. Postal identifies the Jurong Central Park start point.",
-      "confirmed": {"title": "Walk or jog the Jurong West Park Connector", "provider": "National Parks Board", "provider_type": "informal", "venue": "Jurong West Park Connector at Jurong Central Park", "postal_code": "649849", "planning_area": "Jurong West", "nearest_mrt": "Boon Lay", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Public route; lighting operates 7pm-7am", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "sporty|explorative"}
+      "review_decision": "approve",
+      "review_notes": "Official NParks route checked; free 2.2km walking/jogging route and lit hours confirmed. Postal identifies the Jurong Central Park start point.",
+      "confirmed": {"title": "Walk or jog the Jurong West Park Connector", "provider": "National Parks Board", "provider_type": "informal", "venue": "Jurong West Park Connector at Jurong Central Park", "postal_code": "649849", "planning_area": "Jurong West", "nearest_mrt": "Boon Lay", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Public route; lighting operates 7pm-7am", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "sporty|explorative", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
-    "WEB-jw-park-connector-cycle": {"review_decision": "reject", "review_notes": "Duplicate venue and access facts are already represented by the walking/jogging connector row; excluded to avoid inflating coverage."},
+    "WEB-jw-park-connector-cycle": {
+      "review_decision": "reject",
+      "review_notes": "Duplicate venue and access facts are already represented by the walking/jogging connector row; excluded to avoid inflating coverage.",
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
     "WEB-jw-table-tennis": {
-      "review_decision": "approve", "review_notes": "Official ActiveSG venue and rate pages checked; citizen/PR peak table rate used conservatively.",
-      "confirmed": {"title": "Table tennis at Jurong West Sport Centre", "provider": "Sport Singapore", "provider_type": "activesg", "venue": "Jurong West Sports Hall", "postal_code": "648965", "planning_area": "Jurong West", "nearest_mrt": "Pioneer", "cost_one_off_sgd": "3.20", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Book a live table slot through ActiveSG", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "sporty|chill", "in_incumbent_directory": "yes"}
+      "review_decision": "approve",
+      "review_notes": "Official ActiveSG multi-venue table-tennis booking page checked; Jurong West Sports Hall appears as a selectable venue, and the citizen/PR peak table rate was used conservatively.",
+      "confirmed": {"title": "Table tennis at Jurong West Sport Centre", "provider": "Sport Singapore", "provider_type": "activesg", "venue": "Jurong West Sports Hall", "postal_code": "648965", "planning_area": "Jurong West", "nearest_mrt": "Pioneer", "cost_one_off_sgd": "3.20", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Book a live table slot through ActiveSG", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "sporty|chill", "in_incumbent_directory": "yes", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
     },
-    "WEB-jurong-spring-sip": {"review_decision": "reject", "review_notes": "Official page did not expose a specific current activity schedule or access terms for this location."},
-    "WEB-gek-poh-sip": {"review_decision": "reject", "review_notes": "Official page did not expose a specific current activity schedule or access terms for this location."},
-
-    "NLB-5971096": {"review_decision": "approve", "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.", "confirmed": {"title": "Sewing Starter Session at Punggol Library MakeIT", "provider": "National Library Board", "provider_type": "third_space", "venue": "Punggol Library MakeIT, Level 4", "postal_code": "828629", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-12T15:00", "vibes": "artistic|explorative"}},
-    "NLB-5972408": {"review_decision": "approve", "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.", "confirmed": {"title": "Board Games B.F.F.", "provider": "National Library Board", "provider_type": "third_space", "venue": "Punggol Library Programme Room, Level 5", "postal_code": "828629", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-28T14:00", "vibes": "chill"}},
-    "NLB-5972410": {"review_decision": "approve", "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.", "confirmed": {"title": "SDO Digital Literacy", "provider": "National Library Board", "provider_type": "third_space", "venue": "Punggol Library Programme Room, Level 5", "postal_code": "828629", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-15T10:00", "vibes": "explorative"}},
-    "NLB-5972258": {"review_decision": "approve", "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.", "confirmed": {"title": "Read Together, Grow Together", "provider": "National Library Board", "provider_type": "third_space", "venue": "Punggol Library Teenspace, Level 3", "postal_code": "828629", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-19T13:00", "vibes": "chill|artistic"}},
-    "NLB-5971444": {"review_decision": "approve", "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.", "confirmed": {"title": "Access Bazaar", "provider": "National Library Board", "provider_type": "third_space", "venue": "Punggol Library Atrium, Level 1", "postal_code": "828629", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-06T10:00", "vibes": "explorative|chill"}},
-    "NLB-5971694": {"review_decision": "approve", "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.", "confirmed": {"title": "Shape Videos That Stick at Punggol Library MakeIT", "provider": "National Library Board", "provider_type": "third_space", "venue": "Punggol Library MakeIT, Level 4", "postal_code": "828629", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-25T17:30", "vibes": "artistic|explorative"}},
-    "FTP-waterway-primary-school-field": {"review_decision": "approve", "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.", "confirmed": {"title": "Weekend free play at Waterway Primary School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Waterway Primary School Field", "postal_code": "828802", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm; Sunday 9am-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes"}},
-    "FTP-punggol-cove-primary-school-field": {"review_decision": "approve", "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.", "confirmed": {"title": "Weekend free play at Punggol Cove Primary School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Punggol Cove Primary School Field", "postal_code": "828674", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm; Sunday 9am-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes"}},
-    "FTP-northshore-primary-school-field": {"review_decision": "approve", "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.", "confirmed": {"title": "Weekend free play at Northshore Primary School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Northshore Primary School Field", "postal_code": "828671", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm; Sunday 9am-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes"}},
-    "FTP-horizon-primary-school-field": {"review_decision": "approve", "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.", "confirmed": {"title": "Weekend free play at Horizon Primary School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Horizon Primary School Field", "postal_code": "828819", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm; Sunday 9am-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes"}},
-
-    "SOC-9e5207ac2f21": {"review_decision": "approve", "review_notes": "Public organiser post checked; free youth programme, age range, two dates and Bishan CC venue confirmed.", "confirmed": {"title": "Discover the Leader in You", "provider": "Bishan East-Sin Ming Youth Network", "provider_type": "cc", "venue": "Bishan Community Club Seminar Room 1, Level 4", "postal_code": "579799", "planning_area": "Bishan", "nearest_mrt": "Bishan", "cost_one_off_sgd": "0", "age_min": "17", "age_max": "24", "commitment": "short_course", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-08T09:00|2026-09-09T09:00", "vibes": "explorative"}},
-    "SOC-0aba77286349": {"review_decision": "reject", "review_notes": "Confirmed venue is Beatty Secondary School in Toa Payoh, not Bishan as proposed."},
-    "SOC-3e25b195fc62": {"review_decision": "reject", "review_notes": "Registration reminder does not identify the event venue, so a canonical location cannot be confirmed."},
-    "NLB-5914786": {"review_decision": "approve", "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.", "confirmed": {"title": "Verse and Vibes Pop-up: A Poetry Buffet", "provider": "National Library Board", "provider_type": "third_space", "venue": "Bishan Library Foyer, Level 1", "postal_code": "579841", "planning_area": "Bishan", "nearest_mrt": "Bishan", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-11T13:00", "vibes": "artistic|chill"}},
-    "NLB-5912430": {"review_decision": "approve", "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.", "confirmed": {"title": "Happy Planet! Give Your Tote Bag a Second Life", "provider": "National Library Board", "provider_type": "third_space", "venue": "Bishan Library Programme Zone, Level 2", "postal_code": "579841", "planning_area": "Bishan", "nearest_mrt": "Bishan", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-12-05T10:30", "vibes": "artistic|explorative"}},
-    "FTP-ai-tong-primary-school-field": {"review_decision": "approve", "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.", "confirmed": {"title": "Weekend free play at Ai Tong School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Ai Tong School Field", "postal_code": "579646", "planning_area": "Bishan", "nearest_mrt": "Bright Hill", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm; Sunday 9am-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes"}},
-    "WEB-bishan-nature-walk": {"review_decision": "approve", "review_notes": "Official NParks guide checked; free easy self-guided route and 24-hour park access confirmed. Postal identifies the official Carpark A entry point.", "confirmed": {"title": "Self-guided nature walk at Bishan-Ang Mo Kio Park", "provider": "National Parks Board", "provider_type": "informal", "venue": "Bishan-Ang Mo Kio Park, Carpark A entry", "postal_code": "569932", "planning_area": "Bishan", "nearest_mrt": "Bishan", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Open 24 hours; easy 6km route takes about 2 hours", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "explorative|chill|sporty"}},
-    "WEB-bishan-sport-centre": {"review_decision": "approve", "review_notes": "Official facility and ActiveSG student rates checked.", "confirmed": {"title": "ActiveGYM session at Bishan Sport Centre", "provider": "Sport Singapore", "provider_type": "activesg", "venue": "Bishan ActiveSG Gym", "postal_code": "579783", "planning_area": "Bishan", "nearest_mrt": "Bishan", "cost_one_off_sgd": "1.50", "age_min": "12", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Daily 7am-10pm; check live closures before travel", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes"}},
-    "WEB-bishan-swim": {"review_decision": "approve", "review_notes": "Official pool directory and ActiveSG rates checked; conservative weekend child rate used.", "confirmed": {"title": "Recreational swim at Bishan Swimming Complex", "provider": "Sport Singapore", "provider_type": "activesg", "venue": "Bishan Swimming Complex", "postal_code": "579778", "planning_area": "Bishan", "nearest_mrt": "Bishan", "cost_one_off_sgd": "0.60", "age_min": "1", "age_max": "17", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Check current pool hours and closures before travel", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "sporty|chill", "in_incumbent_directory": "yes"}},
-    "WEB-bishan-table-tennis": {"review_decision": "approve", "review_notes": "Official ActiveSG venue and rate pages checked; citizen/PR peak table rate used conservatively.", "confirmed": {"title": "Table tennis at Bishan Sport Hall", "provider": "Sport Singapore", "provider_type": "activesg", "venue": "Bishan Sport Hall", "postal_code": "579783", "planning_area": "Bishan", "nearest_mrt": "Bishan", "cost_one_off_sgd": "3.20", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Book a live table slot through ActiveSG", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "sporty|chill", "in_incumbent_directory": "yes"}},
-
-    "WEB-luggage-market": {"review_decision": "approve", "review_notes": "Organiser and Aperia pages checked; weekly Sunday thrift market, visitor access, venue and hours confirmed.", "confirmed": {"title": "Browse The Luggage Market at Aperia Mall", "provider": "The Luggage Market", "provider_type": "commercial", "venue": "Aperia Mall Level 1 Atrium", "postal_code": "339511", "planning_area": "Kallang", "nearest_mrt": "Lavender", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Every Sunday 11am-6pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "chill|explorative"}}
+    "WEB-jurong-spring-sip": {
+      "review_decision": "reject",
+      "review_notes": "Official page did not expose a specific current activity schedule or access terms for this location.",
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "WEB-gek-poh-sip": {
+      "review_decision": "reject",
+      "review_notes": "Official page did not expose a specific current activity schedule or access terms for this location.",
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "NLB-5971096": {
+      "review_decision": "approve",
+      "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.",
+      "confirmed": {"title": "Sewing Starter Session at Punggol Library MakeIT", "provider": "National Library Board", "provider_type": "third_space", "venue": "Punggol Library MakeIT, Level 4", "postal_code": "828629", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-12T15:00", "vibes": "artistic|explorative", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "NLB-5972408": {
+      "review_decision": "approve",
+      "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.",
+      "confirmed": {"title": "Board Games B.F.F.", "provider": "National Library Board", "provider_type": "third_space", "venue": "Punggol Library Programme Room, Level 5", "postal_code": "828629", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-28T14:00", "vibes": "chill", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "NLB-5972410": {
+      "review_decision": "approve",
+      "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.",
+      "confirmed": {"title": "SDO Digital Literacy", "provider": "National Library Board", "provider_type": "third_space", "venue": "Punggol Library Programme Room, Level 5", "postal_code": "828629", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-15T10:00", "vibes": "explorative", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "NLB-5972258": {
+      "review_decision": "approve",
+      "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.",
+      "confirmed": {"title": "Read Together, Grow Together", "provider": "National Library Board", "provider_type": "third_space", "venue": "Punggol Library Teenspace, Level 3", "postal_code": "828629", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-19T13:00", "vibes": "chill|artistic", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "NLB-5971444": {
+      "review_decision": "approve",
+      "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.",
+      "confirmed": {"title": "Access Bazaar", "provider": "National Library Board", "provider_type": "third_space", "venue": "Punggol Library Atrium, Level 1", "postal_code": "828629", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-06T10:00", "vibes": "explorative|chill", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "NLB-5971694": {
+      "review_decision": "approve",
+      "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.",
+      "confirmed": {"title": "Shape Videos That Stick at Punggol Library MakeIT", "provider": "National Library Board", "provider_type": "third_space", "venue": "Punggol Library MakeIT, Level 4", "postal_code": "828629", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-25T17:30", "vibes": "artistic|explorative", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "FTP-waterway-primary-school-field": {
+      "review_decision": "approve",
+      "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.",
+      "confirmed": {"title": "Weekend free play at Waterway Primary School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Waterway Primary School Field", "postal_code": "828802", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm; Sunday 9am-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "FTP-punggol-cove-primary-school-field": {
+      "review_decision": "approve",
+      "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.",
+      "confirmed": {"title": "Weekend free play at Punggol Cove Primary School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Punggol Cove Primary School Field", "postal_code": "828674", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm; Sunday 9am-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "FTP-northshore-primary-school-field": {
+      "review_decision": "approve",
+      "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.",
+      "confirmed": {"title": "Weekend free play at Northshore Primary School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Northshore Primary School Field", "postal_code": "828671", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm; Sunday 9am-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "FTP-horizon-primary-school-field": {
+      "review_decision": "approve",
+      "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.",
+      "confirmed": {"title": "Weekend free play at Horizon Primary School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Horizon Primary School Field", "postal_code": "828819", "planning_area": "Punggol", "nearest_mrt": "Punggol", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm; Sunday 9am-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "SOC-9e5207ac2f21": {
+      "review_decision": "approve",
+      "review_notes": "Public organiser post checked; free youth programme, age range, two dates and Bishan CC venue confirmed.",
+      "confirmed": {"title": "Discover the Leader in You", "provider": "Bishan East-Sin Ming Youth Network", "provider_type": "cc", "venue": "Bishan Community Club Seminar Room 1, Level 4", "postal_code": "579799", "planning_area": "Bishan", "nearest_mrt": "Bishan", "cost_one_off_sgd": "0", "age_min": "17", "age_max": "24", "commitment": "short_course", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-08T09:00|2026-09-09T09:00", "vibes": "explorative", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "SOC-0aba77286349": {
+      "review_decision": "reject",
+      "review_notes": "Confirmed venue is Beatty Secondary School in Toa Payoh, not Bishan as proposed.",
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "SOC-3e25b195fc62": {
+      "review_decision": "reject",
+      "review_notes": "Registration reminder does not identify the event venue, so a canonical location cannot be confirmed.",
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "NLB-5914786": {
+      "review_decision": "approve",
+      "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.",
+      "confirmed": {"title": "Verse and Vibes Pop-up: A Poetry Buffet", "provider": "National Library Board", "provider_type": "third_space", "venue": "Bishan Library Foyer, Level 1", "postal_code": "579841", "planning_area": "Bishan", "nearest_mrt": "Bishan", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-09-11T13:00", "vibes": "artistic|chill", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "NLB-5912430": {
+      "review_decision": "approve",
+      "review_notes": "NLB event page checked; teen eligibility, free entry and session date confirmed.",
+      "confirmed": {"title": "Happy Planet! Give Your Tote Bag a Second Life", "provider": "National Library Board", "provider_type": "third_space", "venue": "Bishan Library Programme Zone, Level 2", "postal_code": "579841", "planning_area": "Bishan", "nearest_mrt": "Bishan", "cost_one_off_sgd": "0", "age_min": "13", "age_max": "17", "commitment": "one_off", "schedule_kind": "fixed_dates", "fixed_dates": "2026-12-05T10:30", "vibes": "artistic|explorative", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "FTP-ai-tong-primary-school-field": {
+      "review_decision": "approve",
+      "review_notes": "Official ActiveSG facility page checked; public weekend access and venue confirmed.",
+      "confirmed": {"title": "Weekend free play at Ai Tong School Field", "provider": "Sport Singapore", "provider_type": "school", "venue": "Ai Tong School Field", "postal_code": "579646", "planning_area": "Bishan", "nearest_mrt": "Bright Hill", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Saturday 3pm-7pm; Sunday 9am-7pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "WEB-bishan-nature-walk": {
+      "review_decision": "approve",
+      "review_notes": "Official NParks guide checked; free easy self-guided route and 24-hour park access confirmed. Postal identifies the official Carpark A entry point.",
+      "confirmed": {"title": "Self-guided nature walk at Bishan-Ang Mo Kio Park", "provider": "National Parks Board", "provider_type": "informal", "venue": "Bishan-Ang Mo Kio Park, Carpark A entry", "postal_code": "569932", "planning_area": "Bishan", "nearest_mrt": "Bishan", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Open 24 hours; easy 6km route takes about 2 hours", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "explorative|chill|sporty", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "WEB-bishan-sport-centre": {
+      "review_decision": "approve",
+      "review_notes": "Official facility and ActiveSG student rates checked.",
+      "confirmed": {"title": "ActiveGYM session at Bishan Sport Centre", "provider": "Sport Singapore", "provider_type": "activesg", "venue": "Bishan ActiveSG Gym", "postal_code": "579783", "planning_area": "Bishan", "nearest_mrt": "Bishan", "cost_one_off_sgd": "1.50", "age_min": "12", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Daily 7am-10pm; check live closures before travel", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "sporty", "in_incumbent_directory": "yes", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "WEB-bishan-swim": {
+      "review_decision": "approve",
+      "review_notes": "Official ActiveSG swimming-pool directory entry for Bishan Swimming Complex and the ActiveSG rates page checked; conservative weekend child rate used.",
+      "confirmed": {"title": "Recreational swim at Bishan Swimming Complex", "provider": "Sport Singapore", "provider_type": "activesg", "venue": "Bishan Swimming Complex", "postal_code": "579778", "planning_area": "Bishan", "nearest_mrt": "Bishan", "cost_one_off_sgd": "0.60", "age_min": "1", "age_max": "17", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Check current pool hours and closures before travel", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "sporty|chill", "in_incumbent_directory": "yes", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "WEB-bishan-table-tennis": {
+      "review_decision": "approve",
+      "review_notes": "Official ActiveSG multi-venue table-tennis booking page checked; Bishan Sport Hall appears as a selectable venue, and the citizen/PR peak table rate was used conservatively.",
+      "confirmed": {"title": "Table tennis at Bishan Sport Hall", "provider": "Sport Singapore", "provider_type": "activesg", "venue": "Bishan Sport Hall", "postal_code": "579783", "planning_area": "Bishan", "nearest_mrt": "Bishan", "cost_one_off_sgd": "3.20", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Book a live table slot through ActiveSG", "weekday_evening_available": "yes", "weekend_available": "yes", "vibes": "sporty|chill", "in_incumbent_directory": "yes", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    },
+    "WEB-luggage-market": {
+      "review_decision": "approve",
+      "review_notes": "Organiser and Aperia pages checked; weekly Sunday thrift market, visitor access, venue and hours confirmed.",
+      "confirmed": {"title": "Browse The Luggage Market at Aperia Mall", "provider": "The Luggage Market", "provider_type": "commercial", "venue": "Aperia Mall Level 1 Atrium", "postal_code": "339511", "planning_area": "Kallang", "nearest_mrt": "Lavender", "cost_one_off_sgd": "0", "age_min": "0", "age_max": "120", "commitment": "taster", "schedule_kind": "drop_in", "open_hours_note": "Every Sunday 11am-6pm", "weekday_evening_available": "no", "weekend_available": "yes", "vibes": "chill|explorative", "cost_recurring_sgd": "0", "equipment_cost_sgd": "0", "beginner_friendly": "yes", "join_alone_ok": "yes", "guest_allowed": "yes", "in_incumbent_directory": "no"},
+      "reviewed_at": "2026-09-02",
+      "reviewed_by": "respoopu"
+    }
   }
 }
