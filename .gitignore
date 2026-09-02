@@ -9,6 +9,11 @@ credentials
 __pycache__/
 *.pyc
 .DS_Store
+frontend/node_modules/
+frontend/.next/
+frontend/test-results/
+frontend/playwright-report/
+frontend/*.tsbuildinfo
 
 # ---- the deck ----------------------------------------------------------
 # Remove this line if you want the .pptx tracked in the repo.

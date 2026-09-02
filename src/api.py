@@ -27,8 +27,19 @@ from src.agents.observer import Observer
 from src.ckb.store import KnowledgeBase
 from src.graph import HobbiRuntime
 from src.intake import SetupInput, setup
+from src.schema.api import (
+    ActivityPlanView,
+    AdaptationView,
+    AdultSummaryView,
+    ApprovalRequirements,
+    BookingView,
+    PlanView,
+    PreferenceChange,
+    PreparationView,
+)
 from src.schema.events import AttendanceEvent, DebriefSubmission
-from src.schema.plan import IntakeResult
+from src.schema.plan import IntakeResult, Plan
+from src.schema.preferences import PreferenceModel
 from src.schema.state import HobbiState
 from src.store.personal_data import (
     PersonalDataError,
@@ -193,6 +204,131 @@ class HobbiService:
             "outcome": None,
         }
 
+    def _plan_view(self, plan: Plan) -> PlanView:
+        activities: list[ActivityPlanView] = []
+        for item in plan.items:
+            listing = self.ckb.get(item.listing_id)
+            if listing is None or listing.verification == "retired":
+                raise ValueError(f"plan listing is unavailable: {item.listing_id}")
+            activities.append(
+                ActivityPlanView(
+                    listing_id=listing.listing_id,
+                    title=listing.title,
+                    organiser=listing.provider,
+                    provider_type=listing.provider_type,
+                    venue_name=listing.venue_name,
+                    planning_area=listing.planning_area,
+                    nearest_mrt=listing.nearest_mrt,
+                    source_url=str(listing.source_url),
+                    verification=listing.verification,
+                    verified_at=listing.verified_at,
+                    freshness_state=listing.freshness_state,
+                    age_min=max(13, listing.age_min),
+                    age_max=min(17, listing.age_max),
+                    beginner_friendly=listing.beginner_friendly,
+                    join_alone_ok=listing.join_alone_ok,
+                    guest_allowed=listing.guest_allowed,
+                    commitment=listing.commitment,
+                    schedule_kind=listing.schedule.kind,
+                    schedule_note=listing.schedule.open_hours_note,
+                    session_flexible=listing.schedule.kind == "drop_in",
+                    session_at=item.session_at,
+                    duration_hours=item.duration_hours,
+                    cost_sgd=item.cost_sgd,
+                )
+            )
+        return PlanView(
+            plan_id=plan.plan_id,
+            activities=activities,
+            total_cost_sgd=plan.total_cost_sgd,
+            thin=plan.thin,
+            binding_constraint=plan.binding_constraint,
+        )
+
+    def _approval_requirements(self, plan: Plan) -> ApprovalRequirements:
+        provider_listing_ids = []
+        for item in plan.items:
+            listing = self.ckb.get(item.listing_id)
+            if listing is None:
+                raise ValueError(f"plan listing is unavailable: {item.listing_id}")
+            if listing.verification != "verified":
+                provider_listing_ids.append(item.listing_id)
+        return ApprovalRequirements(
+            provider_listing_ids=provider_listing_ids,
+            spend_required=plan.total_cost_sgd > 0,
+            spend_ceiling_sgd=(plan.total_cost_sgd if plan.total_cost_sgd > 0 else None),
+        )
+
+    def _booking_views(self, state: HobbiState) -> list[BookingView]:
+        plan = state.get("approved_plan")
+        if plan is None:
+            return []
+        activities = {
+            activity.listing_id: activity for activity in self._plan_view(plan).activities
+        }
+        views: list[BookingView] = []
+        for record in state.get("booking_records", []):
+            activity = activities[record.listing_id]
+            views.append(
+                BookingView(
+                    booking_id=record.booking_id,
+                    status=record.status,
+                    activity=activity,
+                    preparation=PreparationView(
+                        meet=activity.venue_name,
+                        bring="Water and any equipment named by the organiser",
+                        people_come_alone=activity.join_alone_ok,
+                        guest_allowed=activity.guest_allowed,
+                    ),
+                    adult_summary=AdultSummaryView(
+                        organiser=activity.organiser,
+                        venue=activity.venue_name,
+                        timing=activity.session_at,
+                        timing_note=activity.schedule_note,
+                        source_url=activity.source_url,
+                    ),
+                )
+            )
+        return views
+
+    @staticmethod
+    def _adaptation_view(
+        before: PreferenceModel,
+        after: PreferenceModel,
+        *,
+        action: str,
+        reason_codes: list[str],
+        persisted: bool,
+    ) -> AdaptationView:
+        changes: list[PreferenceChange] = []
+        for axis_name in (
+            "indoor_outdoor",
+            "team_solo",
+            "contact_noncontact",
+            "intensity",
+            "competitive_social",
+        ):
+            old = getattr(before, axis_name)
+            new = getattr(after, axis_name)
+            if old != new:
+                changes.append(
+                    PreferenceChange(
+                        axis=axis_name,
+                        before_value=old.value,
+                        after_value=new.value,
+                        before_confidence=old.confidence,
+                        after_confidence=new.confidence,
+                        evidence=new.provenance,
+                    )
+                )
+        return AdaptationView(
+            action=action,
+            reason_codes=reason_codes,
+            preference_changes=changes,
+            dislikes_recorded=max(0, len(after.dislikes) - len(before.dislikes)),
+            persisted=persisted,
+        )
+
     def handle(
         self, payload: dict[str, Any], *, authorization: str | None = None
     ) -> dict[str, Any]:
@@ -250,6 +386,13 @@ class HobbiService:
                 )
                 response["state"] = _jsonable(final)
                 response["teen_access_token"] = teen_access_token
+                if final.get("approved_plan") is not None:
+                    response["plan_view"] = _jsonable(
+                        self._plan_view(final["approved_plan"])
+                    )
+                    response["approval_requirements"] = _jsonable(
+                        self._approval_requirements(final["approved_plan"])
+                    )
                 response["ok"] = final["outcome"] not in {
                     "no_viable_plan",
                     "cap_breached",
@@ -286,6 +429,11 @@ class HobbiService:
                 "ok": final["outcome"] not in {"no_viable_plan", "cap_breached"},
                 "state": _jsonable(final),
             }
+            if final.get("approved_plan") is not None:
+                response["plan_view"] = _jsonable(
+                    self._plan_view(final["approved_plan"])
+                )
+            response["bookings"] = _jsonable(self._booking_views(final))
             if not response["ok"]:
                 response["notification_required"] = ["trusted_adult"]
             return response
@@ -309,7 +457,39 @@ class HobbiService:
                 listing=listing,
                 debrief=submission,
             )
-            return {"ok": True, "result": _jsonable(result)}
+            adaptation = self._adaptation_view(
+                snapshot["preferences"],
+                result.preferences,
+                action=result.action,
+                reason_codes=result.reason_codes,
+                persisted=result.persisted,
+            )
+            return {
+                "ok": True,
+                "result": _jsonable(result),
+                "adaptation": _jsonable(adaptation),
+            }
+        if operation == "next_plan":
+            teen_id = str(payload["teen_id"])
+            self._require_profile(teen_id, authorization)
+            next_state = self._state_for_existing_profile(
+                teen_id, f"next:{teen_id}:{secrets.token_hex(8)}"
+            )
+            final = self.runtime.invoke(next_state)
+            response = {
+                "ok": final["outcome"] not in {"no_viable_plan", "cap_breached"},
+                "state": _jsonable(final),
+            }
+            if final.get("approved_plan") is not None:
+                response["plan_view"] = _jsonable(
+                    self._plan_view(final["approved_plan"])
+                )
+                response["approval_requirements"] = _jsonable(
+                    self._approval_requirements(final["approved_plan"])
+                )
+            if not response["ok"]:
+                response["notification_required"] = ["trusted_adult"]
+            return response
         if operation == "compliance_scan":
             self._require_role(self.compliance_token, authorization, "compliance")
             result = Compliance().scan(
@@ -341,7 +521,7 @@ class HobbiService:
             "error": "unknown_operation",
             "action": (
                 "use health, discovery_replay, intake_and_plan, guardian_approve, "
-                "attendance, or compliance_scan"
+                "attendance, next_plan, or compliance_scan"
             ),
         }
 

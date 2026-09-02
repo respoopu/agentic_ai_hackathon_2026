@@ -1,5 +1,49 @@
 # agentic_ai_hackathon_2026
 
+## Run the Hobbi demo
+
+The responsive frontend drives the real Python API through setup, planning,
+trusted-adult approval, sandbox booking, attendance, debrief and an adapted next
+plan. Python 3.11 or later and Node.js 20.9 or later are required.
+
+```bash
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
+npm --prefix frontend install
+python scripts/run_demo.py
+```
+
+Open [http://127.0.0.1:3000](http://127.0.0.1:3000). The runner starts both
+services, loads `.env` when present and otherwise creates a temporary local
+trusted-adult key. It never sends that key to browser code. Each new journey
+uses a fresh synthetic profile, and every booking is clearly labelled as a
+sandbox action; no provider is contacted and no payment is made.
+
+The browser contract is generated from the Pydantic display models and committed
+at `contracts/frontend-api.openapi.json`. The Next.js server routes use that
+contract as a protective layer over the agent-facing `POST /` API: the Guardian
+credential remains server-only and the returned teen token is held in an
+HttpOnly, same-site cookie.
+
+To verify the frontend:
+
+```bash
+python scripts/export_frontend_contract.py --check
+npm --prefix frontend run contract:types
+npm --prefix frontend run typecheck
+npm --prefix frontend test
+npm --prefix frontend run build
+npx --prefix frontend playwright install chromium  # first run only
+npm --prefix frontend run test:e2e
+```
+
+`frontend/app` contains the page and same-origin server routes;
+`frontend/components` contains the journey UI; `frontend/lib` contains generated
+types and the server/browser clients. `scripts/run_demo.py` is the one-command
+launcher, while `scripts/export_frontend_contract.py` regenerates the API
+contract from `src/schema/api.py`.
+
 ## Hobbi backend
 
 The backend implements architecture v2.2 without changing the merged agent prompts or rebuilding the merged CKB loader:
@@ -80,9 +124,10 @@ The single `POST /` endpoint accepts these operations:
 | `intake_and_plan` | Trusted-adult-authorized, one-time I0/setup followed by bounded planning |
 | `guardian_approve` | Store provider/attendance/spend approval against one exact Plan, then resume at G2 |
 | `attendance` | Teen-profile-authorized booking outcome and optional in-app text debrief |
+| `next_plan` | Teen-profile-authorized next-cycle planning after attendance evidence is recorded |
 | `compliance_scan` | Operator-authorized, allow-listed, robots-aware freshness scan; denied/transient checks mark stale, while explicit listing 404/410 retires |
 
-Protected operations use `Authorization: Bearer <token>`. Setup returns a one-time `teen_access_token` for that profile. Trusted-adult approval is a separate request and is bound to the exact `plan_id`; paid plans also require an amount ceiling. Setup refuses to replace an existing profile, declared age, or parental rules.
+Protected operations use `Authorization: Bearer <token>`. Setup returns a one-time `teen_access_token` for that profile. Trusted-adult approval is a separate request and is bound to the exact `plan_id`; paid plans also require an amount ceiling. Setup refuses to replace an existing profile, declared age, or parental rules. Planning responses also include a display-ready `plan_view` and `approval_requirements`; approval adds sandbox `bookings`, and attendance adds an `adaptation` view. The original typed state remains available for agent/runtime integrations.
 
 `HOBBI_GUARDIAN_API_TOKEN` is a deployment-wide PoC operator credential, not a teen- or household-specific identity. Plan and teen data ownership checks still apply, but anyone holding that token can act as the trusted-adult operator for every profile in that deployment. Production deployment therefore requires household-scoped identities and authorization in front of this API.
 

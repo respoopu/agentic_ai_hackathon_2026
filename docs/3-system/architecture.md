@@ -733,10 +733,28 @@ The deck's "Boiling Ocean" failure mode and the Effectiveness rubric band ("**fu
 | **Discovery** | Live web search over a whitelisted domain set, **plus a cached replay fixture captured from a real run** | Full crawl + ToS negotiation |
 | **Broker** | Sandboxed — real booking records and confirmations, no live transactions | Real provider APIs |
 | **Compliance** | Manually-triggered scan + a demonstrated retire→replan cascade | Deployed scheduler |
-| **Observer** | Attendance events fed by the simulation harness; **in-app text debrief form** | Local/approved audio transcription and messaging adapters behind the same `DebriefSubmission` contract |
-| **Longitudinal loop** | **Simulation harness** replaying 9–12 months of one synthetic teen | Real users over real months |
+| **Observer** | Attendance events from the local frontend and simulation harness; **in-app text debrief form** | Local/approved audio transcription and messaging adapters behind the same `DebriefSubmission` contract |
+| **Longitudinal loop** | One attended/missed session and adapted next plan in the frontend; **simulation harness** replaying 9–12 months of one synthetic teen | Real users over real months |
 
 **The cached replay is not optional (D8).** Requirement 8.4.1 is that the submitted solution *"can run as demonstrated in the video."* A live search that 404s during judging — or a site that changed the week before — costs Technical Quality *and* Effectiveness. So Discovery's live path is real, one real run is captured to `data/discovery_replay.json`, and the demo path runs from the fixture. Both are reproducible; only one depends on the network being cooperative on the day.
+
+### Local demo interface
+
+The Next.js frontend is a narrow presentation layer over the real Python runtime,
+not a mocked parallel implementation. A generated OpenAPI 3.1 contract at
+`contracts/frontend-api.openapi.json` defines five same-origin browser actions:
+health, first plan, exact-plan approval, attendance/debrief and next-cycle plan.
+The canonical Pydantic models in `src/schema/api.py` generate its component
+schemas, and TypeScript types are generated from the committed contract.
+
+The browser receives display-ready plan, approval, booking and adaptation views,
+not the complete `HobbiState`. A Next.js server route translates each browser
+action to the existing `POST /` operation. The deployment-wide PoC Guardian
+credential stays in that server layer; the teen profile token is returned only
+as an HttpOnly, same-site cookie. This is still a local-demo boundary, not a
+replacement for the household-scoped production authorization tracked by OW-18.
+Drop-in listings expose their real opening-hours note rather than presenting the
+Planner's logical placeholder timestamp as a provider appointment.
 
 ### The simulation harness *(required build item — Discrepancy B8)*
 
@@ -761,28 +779,31 @@ Staying on the taught stack (deck: *"so what you learn from the technical sessio
 | **Access** | `ChatBedrockConverse` | Unified message shape, LangChain-native, token usage on every response — which Loop Discipline and Token Cost Per Run both need |
 | **Model** | **Claude Haiku 4.5** (global profile) default; **Sonnet 4.5** for Planner and Guardian if reasoning quality demands it | Model ids read from a constant, never built |
 | **Memory** | SQLite-backed LangGraph checkpointer + `thread_id` | Persists the 12-month thread across process restarts; `InMemorySaver` is test-only |
-| **Deploy** | Local first (`POST localhost:8080`); `@app.entrypoint` seam ready for AgentCore | The entrypoint is the seam a UI calls |
-| **Interface** | Own front end / CLI + the simulation harness | No framework required |
+| **Deploy** | Local Python API (`POST localhost:8080`) behind same-origin Next.js server routes; `@app.entrypoint` seam ready for AgentCore | The server layer keeps PoC operator credentials out of browser code |
+| **Interface** | Next.js 16 + React 19 + generated TypeScript API types; simulation harness for longitudinal evidence | One restrained plan→check→book→learn journey |
 | **Guardrails** | Per-agent `allowed_tools` allow-list; region-verified model access; caps in state | `allowed_tools` is a security boundary, not a convenience |
 
 ### Repo layout
 
-*Target structure. Seed-CKB implementation now exists in `src/schema/`, `src/ckb/`, `scripts/`, `data/` and `tests/`; the agent pipeline remains to be built. New work continues into this shape so every component on the architecture slide is findable as a module.*
+*Implemented structure. Every component on the architecture slide and every demo boundary is findable as a module.*
 
 ```
 src/
   agents/      planner.py  discovery.py  guardian.py  broker.py  observer.py  compliance.py
   ckb/         seed_loader.py            # validates built artifact + request hydration
   validation/  orchestrator.py         # the gate checks of §3.7
-  schema/      state.py  listing.py  preferences.py  plan.py  events.py  gates.py
+  schema/      state.py  listing.py  preferences.py  plan.py  events.py  gates.py  api.py
   intake.py                            # deterministic I0 + setup/seed writes
   graph.py                             # nodes, edges, routers, caps
   constants.py                         # MODEL_ID, all MAX_* caps
 data/          seed_ckb.json  synthetic_teen.json  discovery_replay.json
 scripts/       build_ckb.py              # CSV + quarantine → immutable seed artifact
+               run_demo.py               # starts Python + Next.js with one command
+               export_frontend_contract.py
 sim/           harness.py  counterfactual.py  report.py
-tests/         test_caps.py  test_s0_plan.py  test_guardian_vetting.py  test_schema.py
-               test_age_boundary.py  test_peer_cohort.py  test_cold_start.py  test_seed_ckb.py
+contracts/     frontend-api.openapi.json # generated browser contract
+frontend/      app/  components/  lib/  e2e/
+tests/         Python unit, contract, integration and real-CKB smoke coverage
 docs/
 README.md      run instructions + purpose of every file
 requirements.txt
