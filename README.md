@@ -25,6 +25,10 @@ python scripts/promote_ckb_shortlist.py --as-of 2026-09-02
 python scripts/build_ckb.py --check-urls --as-of 2026-09-02T12:00:00+08:00
 ```
 
+These commands reproduce the 2 Sep 2026 snapshot. Its first fixed-date session
+is 6 Sep 2026 at 10:00 Asia/Singapore, so refresh and re-attest the catalogue
+before using it for a later demo; see `docs/3-system/seed-ckb.md`.
+
 The collector reads public Telegram previews only, never joins or bypasses private/login-gated groups, and stores compact excerpts rather than page dumps. Instagram and Facebook pages are lead sources; stable official organiser pages are preferred as evidence. Promotion fails closed if any shortlist row is pending, a rejection lacks a reason, a reviewer is an automated actor, or an approved row fails the merged builder’s canonical validation.
 
 To prove that the actual agents and LangGraph can plan from the canonical artifact without importing the synthetic evaluation catalogue, run:

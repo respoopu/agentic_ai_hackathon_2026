@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import subprocess
+import sys
+import tempfile
 import unittest
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from scripts.promote_ckb_shortlist import (
@@ -53,6 +57,27 @@ def approved_row() -> dict[str, str]:
 
 
 class PromoteShortlistTests(unittest.TestCase):
+    def test_cli_accepts_date_only_as_of_as_singapore_time(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "seed.csv"
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(root / "scripts" / "promote_ckb_shortlist.py"),
+                    "--as-of",
+                    "2026-09-02",
+                    "--out",
+                    str(output),
+                ],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+
     def test_attestation_ledger_overlays_generated_shortlist(self) -> None:
         row = approved_row()
         row.update(review_decision="", reviewed_at="", reviewed_by="")
@@ -73,6 +98,30 @@ class PromoteShortlistTests(unittest.TestCase):
         )
         self.assertEqual("approve", reviewed[0]["review_decision"])
         self.assertEqual("Human Reviewer", reviewed[0]["reviewed_by"])
+
+    def test_attestation_defaults_only_fill_blank_source_values(self) -> None:
+        row = approved_row()
+        row.update(reviewed_by="Row Reviewer", confirmed_join_alone_ok="no")
+        reviewed = apply_attestations(
+            [row],
+            {
+                "defaults": {
+                    "reviewed_by": "Default Reviewer",
+                    "confirmed_join_alone_ok": "yes",
+                    "confirmed_guest_allowed": "yes",
+                },
+                "decisions": {
+                    "WEB-real-1": {
+                        "review_decision": "approve",
+                        "review_notes": "Source checked.",
+                    }
+                },
+            },
+        )
+
+        self.assertEqual("Row Reviewer", reviewed[0]["reviewed_by"])
+        self.assertEqual("no", reviewed[0]["confirmed_join_alone_ok"])
+        self.assertEqual("yes", reviewed[0]["confirmed_guest_allowed"])
 
     def test_attestation_ledger_rejects_unknown_candidates(self) -> None:
         with self.assertRaisesRegex(SignoffError, "unknown candidates"):

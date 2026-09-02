@@ -105,6 +105,22 @@ fail the build.
 `data/seed_ckb.json` is the corresponding validated runtime artifact plus the
 10 visibly fictional quarantine rows.
 
+### Snapshot validity and refresh
+
+The committed seed is a reproducible **2 Sep 2026 snapshot**, not a permanent
+live catalogue. Its earliest fixed-date session is **6 Sep 2026 at 10:00
+Asia/Singapore**. After that session begins, promotion against the current
+shortlist intentionally fails because the canonical builder rejects past
+fixed dates. The 30-day freshness gate also requires the 2 Sep attestations to
+be checked again before an October demo.
+
+Before a demo after 6 Sep, refresh the candidate captures and shortlist,
+re-check every promoted source as a named human, update the attestation ledger
+with current schedules and `reviewed_at` values, then rerun promotion and the
+builder. For an exact historical reproduction of this committed snapshot, use
+the documented `--as-of 2026-09-02` promotion command and the timezone-qualified
+builder command above.
+
 ---
 
 ## 3. The columns

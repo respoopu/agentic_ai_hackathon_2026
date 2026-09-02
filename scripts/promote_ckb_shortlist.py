@@ -17,9 +17,16 @@ from datetime import datetime
 from pathlib import Path
 
 try:
-    from scripts.build_ckb import COLUMNS, ROOT, SG_TZ, RowError, parse_row
+    from scripts.build_ckb import (
+        COLUMNS,
+        ROOT,
+        SG_TZ,
+        RowError,
+        parse_as_of,
+        parse_row,
+    )
 except ModuleNotFoundError:  # Direct ``python scripts/...`` execution.
-    from build_ckb import COLUMNS, ROOT, SG_TZ, RowError, parse_row
+    from build_ckb import COLUMNS, ROOT, SG_TZ, RowError, parse_as_of, parse_row
 
 DEFAULT_SHORTLIST = ROOT / "data" / "ckb_shortlist.csv"
 DEFAULT_ATTESTATIONS = ROOT / "data" / "ckb_attestations.json"
@@ -82,7 +89,10 @@ def apply_attestations(
             output.append(dict(source))
             continue
         seen.add(candidate_id)
-        merged = {**source, **{key: str(value) for key, value in defaults.items()}}
+        merged = dict(source)
+        for key, value in defaults.items():
+            if not str(merged.get(key, "") or "").strip():
+                merged[key] = str(value)
         confirmed = attestation.get("confirmed", {})
         if not isinstance(confirmed, dict):
             raise SignoffError(f"{candidate_id}: confirmed must be an object")
@@ -205,7 +215,7 @@ def main() -> int:
     parser.add_argument("--shortlist", type=Path, default=DEFAULT_SHORTLIST)
     parser.add_argument("--attestations", type=Path, default=DEFAULT_ATTESTATIONS)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
-    parser.add_argument("--as-of", type=datetime.fromisoformat)
+    parser.add_argument("--as-of", type=parse_as_of)
     args = parser.parse_args()
     as_of = args.as_of or datetime.now(SG_TZ)
     try:
