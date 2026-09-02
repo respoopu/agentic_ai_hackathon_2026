@@ -41,10 +41,11 @@ The longitudinal cycle advances once per attendance event and stops when `tries_
 - Request-scoped `Listing` extends `ListingRecord` with `travel_min_home`, `travel_min_school`, optional `peer_cohort` and expanded `next_sessions`. These teen-relative fields must never persist into the shared record.
 - `SessionRequest`: `goal`, `requested_at`.
 - `IntakeResult`: `eligible`, reason (`eligible`, `under_13` or `adult_mode_unavailable`), and nullable referral (`trusted_adult` or `general_activity_services`).
-- `PlanItem`: `listing_id`, `session_at`, `cost_sgd`.
-- `Plan`: `plan_id`, non-empty `items`, `total_cost_sgd`, `ledger_version`.
+- `PlanItem`: `listing_id`, `session_at`, `cost_sgd`, `duration_hours`.
+- `Plan`: `plan_id`, non-empty `items`, `total_cost_sgd`, `ledger_version`, `thin`, and `binding_constraint` whenever `thin` is true.
 - `GuardianVerdict`: `verdict_id`, `plan_id`, `approved`, listing-id keyed `provider_approval_ids`, `attendance_approval_id`, `spend_approval_id`, `reason_codes`, `reviewed_at`.
 - `BookingRecord`: `booking_id`, `plan_id`, `listing_id`, `guardian_verdict_id`, `status` (`booked` or `failed`), stable `ledger_transaction_id` when booked, `committed_sgd`, `committed_hours`, `created_at`.
+- `CommitEvidence`: non-empty duplicate-free `transaction_ids`, `ledger_version_before`, `ledger_version_after` (exactly one greater), `transaction_rows` equal to the transaction count, and `replayed`.
 - `AttendanceEvent`: `booking_id`, `attended`, `occurred_at`.
 - `DebriefRecord`: `booking_id`, `text`, `submitted_at`.
 - `DebriefSubmission`: `booking_id`, text, channel and submission time. The PoC accepts only `channel="in_app"` and has no audio field.

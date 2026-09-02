@@ -432,12 +432,15 @@ class PlanItem(BaseModel):
     listing_id:        str
     session_at:        datetime
     cost_sgd:          Decimal
+    duration_hours:    float            # source of BookingRecord.committed_hours
 
 class Plan(BaseModel):
     plan_id:           str
     items:             list[PlanItem]
     total_cost_sgd:    Decimal
     ledger_version:    int              # optimistic-concurrency token read by Planner
+    thin:              bool             # Discovery cap reached with a thin candidate set
+    binding_constraint: str | None      # required whenever thin is true
 
 class GuardianVerdict(BaseModel):
     verdict_id:              str
@@ -459,6 +462,14 @@ class BookingRecord(BaseModel):
     committed_sgd:         Decimal
     committed_hours:       float
     created_at:            datetime
+
+class CommitEvidence(BaseModel):
+    """Durable proof G4 reads instead of trusting Broker control flow."""
+    transaction_ids:       list[str]     # one per logical commitment, no duplicates
+    ledger_version_before: int
+    ledger_version_after:  int           # exactly before + 1 for the committed Plan
+    transaction_rows:      int           # durable rows found; equals len(transaction_ids)
+    replayed:              bool          # true when an exact replay returned stored records
 
 class GateResult(BaseModel):
     gate:              Literal["I0", "G1", "G2", "G3", "G4"]

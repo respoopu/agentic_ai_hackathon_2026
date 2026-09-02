@@ -491,7 +491,7 @@ Ranked by marks-per-hour, given the rubric.
 
 ## 12. Organiser questions and resolved ambiguities
 
-Rayden confirmed on 2 Sep 2026 that the organiser response has been received. The authoritative operational instructions remain with the team's registration materials; this section no longer represents an open repository dependency.
+Rayden confirmed on 2 Sep 2026 that the organiser response has been received, so these are no longer open research questions. The authoritative instructions still live with the team's registration materials rather than in this repository: transcribing the confirmed deadline, upload mechanism, accepted formats and presentation format into this section is a precondition of the **OW-14** submission freeze.
 
 | # | Issue | Impact | Ask |
 |---|---|---|---|
