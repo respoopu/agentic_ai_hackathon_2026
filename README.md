@@ -55,7 +55,9 @@ python -m sim.counterfactual
 python -m sim.report
 ```
 
-`sim.report` labels every result as simulated and keeps the scope of partial diagnostics visible. B1 lacks first-attempt parse instrumentation; B2 covers booking calls only; B9 is illustrative because its catalogue is authored; B10 covers eligible rather than adversarial runs; and B6 plus B11–B15 remain unmeasured until their required instrumentation, judge, executable baseline, Observer transitions, live-link checks, and attendance evidence exist.
+`sim.report` labels every result as simulated and keeps the scope of partial diagnostics visible. B10 reports both the eight-case adversarial set and the 12-profile eligible runtime diagnostic. B11 and B14 come from a 12-cycle executable production-component replay against an immutable static policy; B15 runs both policies over the same four eligible S$0 profiles and applies its 30-day censor to the planned session date, not the request date. Planner and G1 execute directly once per simulated cycle; G2–G4 execute inside LangGraph after the harness auto-issues synthetic per-Plan approvals. The fixture supplies environment inputs, while plans, attendance and replan results are generated at runtime.
+
+The B12 row is intentionally narrower: it proves that the deterministic text-classifier hold branch is reachable twice, not that 16.7% is a behavioral hold rate or that two bookings were prevented. Observer runs after a booked session in this harness, so the hold is a post-session next-cycle decision; production scheduling that suppresses the next booking remains follow-up work. All results are deterministic policy evidence, not participant evidence. B1 still lacks live-model first-attempt parse instrumentation; B2 covers booking calls only; B9 remains illustrative because its catalogue is authored; B6 requires an LLM judge plus human double-scoring; and B13 needs a dated live-link sample.
 
 ### Run the local API
 

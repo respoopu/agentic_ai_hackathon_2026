@@ -48,7 +48,14 @@ class Planner:
         max_item_cost = Decimal(str(limits.get("max_item_cost_sgd", ledger.money_remaining_sgd)))
         max_items = min(int(limits.get("max_items", 3)), ledger.tries_remaining)
         eligible: list[Listing] = []
-        binding_counts = {"money": 0, "travel": 0, "time": 0, "age": 0, "rules": 0}
+        binding_counts = {
+            "money": 0,
+            "travel": 0,
+            "time": 0,
+            "schedule": 0,
+            "age": 0,
+            "rules": 0,
+        }
         for listing in listings:
             if listing.listing_id in unavailable or listing.verification == "retired":
                 continue
@@ -65,6 +72,9 @@ class Planner:
             duration = (listing.schedule.duration_min or 60) / 60
             if duration > ledger.hours_remaining:
                 binding_counts["time"] += 1
+                continue
+            if limits.get("weekday_evening_only") and not listing.schedule.is_weekday_evening():
+                binding_counts["schedule"] += 1
                 continue
             if "verified_only" in rules and listing.verification != "verified":
                 binding_counts["rules"] += 1

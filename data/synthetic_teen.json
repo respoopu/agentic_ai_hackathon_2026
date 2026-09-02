@@ -1,19 +1,26 @@
 {
   "teen_id": "synthetic-longitudinal-01",
-  "label": "Synthetic policy replay; not participant evidence",
-  "tries_total": 12,
+  "label": "Synthetic environment inputs; policy outputs are generated at runtime",
+  "profile": {
+    "age": 15,
+    "money_total_sgd": 0,
+    "hours_per_week": 2,
+    "tries_total": 12,
+    "max_travel_min": 30,
+    "cold_start_vibes": ["sporty"]
+  },
   "cycles": [
-    {"month":1,"context":"new term","preferred_vibe":"sporty","static_vibe":"sporty","hobbi_action":"book","attended":true},
-    {"month":2,"context":"new term","preferred_vibe":"sporty","static_vibe":"sporty","hobbi_action":"book","attended":true},
-    {"month":3,"context":"exam week","preferred_vibe":"none","static_vibe":"sporty","hobbi_action":"hold_this_week","attended":false},
-    {"month":4,"context":"interest shift","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"book","attended":false,"debrief":"The activity was not my thing; I want something more creative."},
-    {"month":5,"context":"interest shift","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"book","attended":false},
-    {"month":6,"context":"two no-shows observed","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"replan","attended":true},
-    {"month":7,"context":"recovery","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"book","attended":true},
-    {"month":8,"context":"recovery","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"book","attended":true},
-    {"month":9,"context":"sustained attendance","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"commit","attended":true},
-    {"month":10,"context":"sustained attendance","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"commit","attended":true},
-    {"month":11,"context":"family travel","preferred_vibe":"none","static_vibe":"sporty","hobbi_action":"hold_this_week","attended":false},
-    {"month":12,"context":"return","preferred_vibe":"artistic","static_vibe":"sporty","hobbi_action":"commit","attended":true}
+    {"day": 0, "month": 1, "context": "new term", "preferred_vibe": "sporty", "available": true},
+    {"day": 28, "month": 2, "context": "new term", "preferred_vibe": "sporty", "available": true},
+    {"day": 56, "month": 3, "context": "exam week", "preferred_vibe": null, "available": false, "debrief_text": "Exams run for two weeks, so I need a pause."},
+    {"day": 84, "month": 4, "context": "interest shift", "preferred_vibe": "artistic", "available": true},
+    {"day": 112, "month": 5, "context": "interest shift", "preferred_vibe": "artistic", "available": true, "debrief_text": "This activity was not my thing."},
+    {"day": 140, "month": 6, "context": "recovery", "preferred_vibe": "artistic", "available": true},
+    {"day": 168, "month": 7, "context": "recovery", "preferred_vibe": "artistic", "available": true},
+    {"day": 196, "month": 8, "context": "sustained attendance", "preferred_vibe": "artistic", "available": true},
+    {"day": 224, "month": 9, "context": "sustained attendance", "preferred_vibe": "artistic", "available": true},
+    {"day": 252, "month": 10, "context": "sustained attendance", "preferred_vibe": "artistic", "available": true},
+    {"day": 280, "month": 11, "context": "family travel", "preferred_vibe": null, "available": false, "debrief_text": "Family travel means I need a pause."},
+    {"day": 308, "month": 12, "context": "return", "preferred_vibe": "artistic", "available": true}
   ]
 }

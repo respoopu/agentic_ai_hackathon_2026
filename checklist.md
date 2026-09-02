@@ -4,6 +4,8 @@ Branch: `codex/backend-implementation`
 Base: `origin/main` at `ba44bb5`
 Scope: implement `OW-05`, `OW-06`, `OW-15`, and `OW-16` without rebuilding the merged CKB or changing the merged agent prompts; any acceptance gap without executable evidence remains open.
 
+Merged baseline: PR #4 and PR #5 are on `main`; the post-merge suite passes 140 tests. Active follow-up work is tracked in the appended OW-06 section on branch `codex/ow-06-executable-evaluation`.
+
 ## How this checklist is maintained
 
 Each task moves through `Planned` → `Implemented` → `Reviewed` → `Reconciled`.
@@ -99,10 +101,10 @@ Each task moves through `Planned` → `Implemented` → `Reviewed` → `Reconcil
 
 | Done | ID | Task | Status | Acceptance and evidence |
 |---|---|---|---|---|
-| [x] | F-01 | Run focused tests after each implementation group and the complete canonical test suite at the end. | Reconciled | Post-follow-up suite currently passes 98 tests, including authority, paid-plan checkpoints, adaptation, durable evidence, robots/transient-network, availability, structured-payload, and regression cases. |
+| [x] | F-01 | Run focused tests after each implementation group and the complete canonical test suite at the end. | Reconciled | PR #4 passed its 98-test post-follow-up suite; after PR #5 merged, the clean `main` baseline passes 140 tests. |
 | [x] | F-02 | Run the eligible simulation, counterfactual, one-command report, and local API smoke test. | Reconciled | All three modules exit 0; health reports empty-CKB readiness false, protected access returns 401, oversized input returns 413, and malformed JSON returns 400 without internal details. |
 | [x] | F-03 | Perform a final code review for correctness, authorization, privacy, concurrency, loop bounds, error handling, and accidental scope drift. | Reconciled | Both Claude review passes were independently checked; the initial blocker/high findings and follow-up R-1 regression were corrected, while partial capabilities and unsupported evaluation claims are explicitly scoped. |
-| [x] | F-04 | Reconcile code, tests, README, tracker status, and this checklist with architecture v2.2 and merged prompt contracts. | Reconciled | `OW-05` and `OW-16` are code-complete pending merge; `OW-06` stays open for missing evaluation instrumentation/counterfactuals, and `OW-15` source-document closure stays open because merged prompts remain final. |
+| [x] | F-04 | Reconcile code, tests, README, tracker status, and this checklist with architecture v2.2 and merged prompt contracts. | Reconciled | PR #4 merged and closed `OW-05` and `OW-16`; `OW-06` remains active for executable evaluation, while `OW-15` still needs narrow source-contract reconciliation. |
 | [x] | F-05 | Inspect the complete diff and repository for secrets, generated junk, and unrelated changes. | Reconciled | Secret scan is clean; ignored runtime/venv artifacts are absent from the diff; no merged prompt or CKB source-data file changed. |
 | [x] | F-06 | Commit and push `codex/backend-implementation`, then open a PR to `main` with summary, validation evidence, risks, and scope boundaries. | Reconciled | Opened [PR #4](https://github.com/respoopu/agentic_ai_hackathon_2026/pull/4) to `main`; its description records validation evidence and the CKB/prompt boundaries. |
 
@@ -147,5 +149,32 @@ Base: merged `main` after PR #4
 | [x] | CKB-06 | Build and commit `data/seed_ckb.json` with the merged builder; reconcile quarantine, freshness, URL, provenance, provider, vibe, regional, and long-tail coverage. | Reconciled | The committed artifact contains 35 real plus 10 quarantine rows. All 12 coverage gates pass: 4 areas with Jurong West densest, 2 free weekday evenings/7 free weekends there, 60% long-tail, 24/35 free, full provider/vibe spread and fresh provenance. |
 | [x] | CKB-07 | Make health readiness require usable sourced non-fictional rows, not merely any CKB record, and add regression coverage. | Reconciled | Health now reports total, usable real, verified real, unverified real, fictional and unusable counts. Empty, quarantine-only and retired-only stores are not ready; a sourced unverified real row is ready for the Guardian flow. |
 | [x] | CKB-08 | Add a clean-runtime real-row planning smoke test that imports no synthetic evaluation catalogue. | Reconciled | A clean subprocess loads the committed canonical artifact, reports real-planning readiness, calls the normal intake/agent/LangGraph path, reaches the trusted-adult checkpoint with canonical IDs and proves `sim.catalogue` was never imported. |
-| [x] | CKB-09 | Run CKB URL checks, focused tests, full tests, clean-runtime/API smoke, and a final provenance/privacy/copyright review. | Reconciled | All 125 tests and changed-file Ruff checks pass. All 12 CKB gates and Pydantic conformance pass. URL checking found no dead links; one ActiveSG booking URL returned expected bot-blocking HTTP 403 and had already been opened by the human reviewer. Public-only compact excerpts contain no secrets or personal data. |
+| [x] | CKB-09 | Run CKB URL checks, focused tests, full tests, clean-runtime/API smoke, and a final provenance/privacy/copyright review. | Reconciled | PR #5 initially passed 125 tests; its merged review follow-ups raise the clean `main` baseline to 140 passing tests. All 12 CKB gates and Pydantic conformance pass. URL checking found no dead links; one ActiveSG booking URL returned expected bot-blocking HTTP 403 and had already been opened by the human reviewer. Public-only compact excerpts contain no secrets or personal data. |
 | [x] | CKB-10 | Reconcile `README.md`, `seed-ckb.md`, `outstanding.md`, and this checklist; then commit, push, and open a PR to `main`. | Reconciled | README includes the canonical real-agent smoke command; the seed runbook records the attestation ledger and final counts; OW-17 is closed in the tracker; PR #5 is the publication unit to `main`. |
+
+## 11. OW-06 executable evaluation follow-up
+
+Branch: `codex/ow-06-executable-evaluation`
+Base: merged `main` after PR #5
+
+| Done | ID | Task | Status | Acceptance and evidence |
+|---|---|---|---|---|
+| [x] | EV-01 | Sync the merged baseline and reconcile stale tracker/checklist evidence. | Reconciled | Branch created from clean `origin/main` at `8d0287e`; the baseline passes 140 tests and `sim.report` runs. The tracker now distinguishes the attested CKB from unrelated open slide claims. |
+| [x] | EV-02 | Replace hand-authored Hobbi/static outcomes with a shared synthetic environment and executable policies. | Reconciled | `data/synthetic_teen.json` contains profile/environment inputs and optional debrief text. A recursive guard rejects authored attendance, action, selected-listing or static-result keys anywhere in the fixture. Both policies use the same catalogue and attendance rule. |
+| [x] | EV-03 | Execute longitudinal Hobbi cycles through Planner, Guardian, Broker and Observer persistence. | Reconciled | Planner and G1 execute directly as production components; synthetic exact-Plan approvals permit G2–G4 to execute in LangGraph. Broker and Observer persistence retain listing, planned session, attendance, action, reason, causal replan source and ledger-version evidence. |
+| [x] | EV-04 | Execute the immutable static baseline and compute B11, B12, B14 and B15 with explicit populations. | Reconciled | B11 resolves its one genuine two-no-show trigger in the immediately following instructed cycle; B12 is labelled 2/12 text-branch reachability, not a behavioral rate; B14 is 8/12 vs 2/12; B15 is 4/4 vs 3/4 and censors on planned session dates (median day 7, not request day 0). |
+| [x] | EV-05 | Instrument the adversarial constraint rate and any other deterministic-path metrics that can be measured honestly. | Reconciled | Eight one-to-one executable adversarial assertions report 0/8; the thin-plan case now exercises a specific schedule constraint, suppressed peers compete against another listing, retired verification is named precisely, and exceptions count as failures. B10 also retains the eligible-runtime 0/12 diagnostic. |
+| [x] | EV-06 | Update tests, report output, README/evaluation guidance and evidence labels. | Reconciled | Tests pin recursive fixture guarding, optional/empty report values, planned-session censoring, causal replans, hold streak isolation, attendance accumulation/provenance, adversarial exceptions and orchestration boundaries. Docs separate synthetic policy evidence, branch reachability and participant/live evidence. |
+| [x] | EV-07 | Run focused/full verification and perform final correctness/evidence review. | Reconciled | Claude's PR review was independently reproduced and reconciled. The post-review suite passes 149 tests; all 25 architecture fixtures, simulation commands, changed-file Ruff and whitespace checks pass. OW-23 records the intentionally deferred structured hold/scheduler integration. |
+
+## 12. PR #7 review remediation
+
+| Done | ID | Review finding | Status | Reconciliation evidence |
+|---|---|---|---|---|
+| [x] | ER-01 | Optional metric values and empty S$0 populations could crash the report. | Reconciled | Optional values render as `n/a`; an empty S$0 cohort returns denominator zero and no delta; focused tests exercise both paths. |
+| [x] | ER-02 | Attendance was recorded before `PlanItem.session_at`, invalidating B15 dates and censoring. | Reconciled | Attendance now occurs at the planned session time; B15 uses `session_day`, excludes day-35 completions and reports the denominator rather than nondiscriminating medians. |
+| [x] | ER-03 | Temporary holds could become two-no-show replans and contaminate the next streak. | Reconciled | Temporary pause is evaluated first; current and immediately prior held events cannot trigger disengagement. Two-week holds and hold→genuine-no-show are tested. |
+| [x] | ER-04 | Positive attendance did not accumulate and lower-ranked debrief evidence could overwrite it. | Reconciled | Repeated same-direction attendance raises value/confidence to schema caps; provenance ordering prevents debrief-over-attendance replacement. The late sporty snap-back is gone. |
+| [x] | ER-05 | B11 credited unrelated later listing changes; B12 overstated a phrase-matched post-session branch. | Reconciled | B11 only credits the immediately following cycle carrying the matching replan instruction. B12 is labelled deterministic branch reachability; OW-23 tracks typed classification and pre-booking scheduler behavior. |
+| [x] | ER-06 | B10 dropped the eligible diagnostic, tolerated crashes and included weak/ambiguous assertions. | Reconciled | Report includes 0/8 adversarial and 0/12 eligible populations; crashes count as violations; schedule and peer checks now exercise competing behavior; retired verification is named precisely. |
+| [x] | ER-07 | Combined gate labels obscured that Planner/G1 run outside LangGraph and approvals are synthetic. | Reconciled | Cycle evidence separates direct Planner/G1 execution from in-graph G2–G4 and labels per-Plan approvals as synthetic; README and evaluation methodology match. |

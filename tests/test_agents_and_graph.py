@@ -15,10 +15,10 @@ from src.agents.planner import Planner
 from src.ckb.store import KnowledgeBase
 from src.graph import HobbiRuntime
 from src.intake import SetupInput, setup
-from src.schema.events import AttendanceEvent, DebriefSubmission
+from src.schema.events import AttendanceEvent, DebriefRecord, DebriefSubmission
 from src.schema.listing import PeerCohort
 from src.schema.plan import BudgetLedger, IntakeResult, Plan, PlanItem, SessionRequest
-from src.schema.preferences import DislikeSignal, PreferenceModel
+from src.schema.preferences import Axis, DislikeSignal, PreferenceModel
 from src.schema.state import HobbiState
 from src.store.personal_data import PersonalDataStore
 from tests.helpers import NOW, hydrated, listing_record
@@ -293,6 +293,163 @@ class AgentAndGraphTests(unittest.TestCase):
         )
         self.assertEqual("replan", result.action)
         self.assertEqual(1, self.personal.get_ledger("teen").tries_abandoned)
+
+    def test_observer_distinguishes_no_change_hold_and_try_to_commit(self) -> None:
+        class RecordingStore:
+            def record_outcome(self, **_: object) -> bool:
+                return True
+
+        store = RecordingStore()
+        record = listing_record("observer-actions")
+        one_no_show = Observer().observe(
+            teen_id="teen",
+            event=AttendanceEvent(
+                booking_id="one-no-show", attended=False, occurred_at=NOW
+            ),
+            preferences=PreferenceModel.neutral(NOW),
+            listing=record,
+            store=store,
+        )
+        self.assertEqual("none", one_no_show.action)
+
+        hold = Observer().observe(
+            teen_id="teen",
+            event=AttendanceEvent(
+                booking_id="exam-week", attended=False, occurred_at=NOW
+            ),
+            preferences=PreferenceModel.neutral(NOW),
+            listing=record,
+            debrief=DebriefSubmission(
+                booking_id="exam-week",
+                text="Exam week; another booking would not help this week",
+                channel="in_app",
+                submitted_at=NOW,
+            ),
+            store=store,
+        )
+        self.assertEqual("hold_this_week", hold.action)
+
+        attendance = [
+            AttendanceEvent(
+                booking_id=f"repeat-{index}",
+                attended=True,
+                occurred_at=NOW - timedelta(days=7 * (2 - index)),
+            )
+            for index in range(2)
+        ]
+        commit = Observer().observe(
+            teen_id="teen",
+            event=AttendanceEvent(
+                booking_id="repeat-current", attended=True, occurred_at=NOW
+            ),
+            preferences=PreferenceModel.neutral(NOW).model_copy(
+                update={"attendance": attendance}
+            ),
+            listing=record,
+            store=store,
+        )
+        self.assertEqual("try_to_commit", commit.action)
+
+    def test_observer_temporary_holds_break_the_no_show_streak(self) -> None:
+        class RecordingStore:
+            def record_outcome(self, **_: object) -> bool:
+                return True
+
+        prior = AttendanceEvent(
+            booking_id="exam-one",
+            attended=False,
+            occurred_at=NOW - timedelta(days=7),
+        )
+        preferences = PreferenceModel.neutral(NOW).model_copy(
+            update={
+                "attendance": [prior],
+                "debriefs": [
+                    DebriefRecord(
+                        booking_id="exam-one",
+                        text="Exams run for two weeks, so I need a pause",
+                        submitted_at=prior.occurred_at,
+                    )
+                ],
+            }
+        )
+        second_hold = Observer().observe(
+            teen_id="teen",
+            event=AttendanceEvent(
+                booking_id="exam-two", attended=False, occurred_at=NOW
+            ),
+            preferences=preferences,
+            debrief=DebriefSubmission(
+                booking_id="exam-two",
+                text="This week is too busy; I still need a pause",
+                channel="in_app",
+                submitted_at=NOW,
+            ),
+            store=RecordingStore(),
+        )
+        self.assertEqual("hold_this_week", second_hold.action)
+
+        genuine_no_show = Observer().observe(
+            teen_id="teen",
+            event=AttendanceEvent(
+                booking_id="after-exams", attended=False, occurred_at=NOW
+            ),
+            preferences=preferences,
+            store=RecordingStore(),
+        )
+        self.assertEqual("none", genuine_no_show.action)
+
+    def test_observer_accumulates_attendance_without_debrief_downgrade(self) -> None:
+        class RecordingStore:
+            def record_outcome(self, **_: object) -> bool:
+                return True
+
+        record = listing_record("repeat-sport", vibes=["sporty"])
+        attended_axis = Axis(
+            value=0.6,
+            confidence=0.75,
+            provenance="attendance",
+            updated_at=NOW - timedelta(days=7),
+        )
+        repeated = Observer().observe(
+            teen_id="teen",
+            event=AttendanceEvent(
+                booking_id="repeat-sport", attended=True, occurred_at=NOW
+            ),
+            preferences=PreferenceModel.neutral(NOW).model_copy(
+                update={"intensity": attended_axis}
+            ),
+            listing=record,
+            store=RecordingStore(),
+        )
+        self.assertAlmostEqual(0.7, repeated.preferences.intensity.value)
+        self.assertAlmostEqual(0.8, repeated.preferences.intensity.confidence)
+
+        prior_dislike = DislikeSignal(
+            axis="vibe:sporty",
+            listing_id="earlier-sport",
+            attribution="activity",
+            strength=0.6,
+            recorded_at=NOW - timedelta(days=7),
+        )
+        debrief = Observer().observe(
+            teen_id="teen",
+            event=AttendanceEvent(
+                booking_id="negative-sport", attended=False, occurred_at=NOW
+            ),
+            preferences=PreferenceModel.neutral(NOW).model_copy(
+                update={"intensity": attended_axis, "dislikes": [prior_dislike]}
+            ),
+            listing=record,
+            debrief=DebriefSubmission(
+                booking_id="negative-sport",
+                text="This activity was not my thing",
+                channel="in_app",
+                submitted_at=NOW,
+            ),
+            store=RecordingStore(),
+        )
+        self.assertEqual("attendance", debrief.preferences.intensity.provenance)
+        self.assertEqual(attended_axis.value, debrief.preferences.intensity.value)
 
     def test_observer_moves_axis_only_after_second_activity_signal(self) -> None:
         class RecordingStore:
