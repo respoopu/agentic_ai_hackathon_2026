@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from datetime import date
 
 from scripts.select_ckb_shortlist import (
     _age_overlaps_target,
@@ -34,12 +35,34 @@ class ShortlistSelectionTests(unittest.TestCase):
         self.assertEqual("Jurong West", area)
         self.assertIn("hint only", evidence)
 
+    def test_single_candidate_area_hint_is_preserved_for_human_review(self) -> None:
+        row = {
+            "source_name": "Regional source",
+            "title_hint": "Community workshop",
+            "venue_hint": "",
+            "postal_hint": "",
+            "area_hints": "Punggol",
+            "excerpt_or_notes": "",
+        }
+        area, evidence = infer_area(row)
+        self.assertEqual("Punggol", area)
+        self.assertIn("hint only", evidence)
+
     def test_parses_iso_and_social_dates(self) -> None:
         self.assertEqual(
             ["2026-09-20", "2026-10-03"],
             [
                 value.isoformat()
                 for value in _parse_hint_dates("2026-09-20T10:00 | 3 October 2026")
+            ],
+        )
+
+    def test_yearless_dates_use_the_requested_refresh_year(self) -> None:
+        self.assertEqual(
+            ["2027-09-20"],
+            [
+                value.isoformat()
+                for value in _parse_hint_dates("20 Sep", as_of=date(2027, 1, 4))
             ],
         )
 
@@ -81,8 +104,10 @@ class ShortlistSelectionTests(unittest.TestCase):
         self.assertTrue(_age_overlaps_target("aged 17-24"))
         self.assertTrue(_age_overlaps_target("all ages"))
         self.assertTrue(_age_overlaps_target("aged 12 and above"))
+        self.assertTrue(_age_overlaps_target("ages 12+"))
         self.assertTrue(_age_overlaps_target("suitable for everyone"))
         self.assertFalse(_age_overlaps_target("aged 7-12"))
+        self.assertFalse(_age_overlaps_target("aged 7-12 (2026)"))
         self.assertFalse(_age_overlaps_target("aged 60"))
 
     def test_verified_commercial_supplement_is_not_lost_to_area_quotas(self) -> None:

@@ -19,7 +19,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_QUEUE = ROOT / "data" / "ckb_review_queue.csv"
 DEFAULT_OUT = ROOT / "data" / "ckb_shortlist.csv"
-AS_OF = date(2026, 9, 2)
 
 AREA_QUOTAS = {"Jurong West": 25, "Punggol": 10, "Bishan": 10}
 SUPPLEMENTAL_IDS = {"WEB-luggage-market"}
@@ -164,6 +163,7 @@ SHORTLIST_COLUMNS = [
     "provider_hint",
     "venue_hint",
     "postal_hint",
+    "area_hints",
     "date_hints",
     "time_hints",
     "cost_hints",
@@ -224,6 +224,13 @@ def infer_area(row: dict[str, str]) -> tuple[str | None, str]:
     channel = LOCAL_CHANNEL_HINTS.get(row.get("source_name", ""))
     if channel:
         return channel, "local source-channel hint only; venue may differ"
+    hinted_areas = {
+        value.strip()
+        for value in row.get("area_hints", "").split("|")
+        if value.strip() in AREA_QUOTAS
+    }
+    if len(hinted_areas) == 1:
+        return hinted_areas.pop(), "candidate area hint only; venue may differ"
     return None, "no target-area evidence"
 
 
@@ -236,7 +243,8 @@ def hobby_buckets(row: dict[str, str]) -> list[str]:
     return buckets or ["unclassified"]
 
 
-def _parse_hint_dates(value: str) -> list[date]:
+def _parse_hint_dates(value: str, *, as_of: date | None = None) -> list[date]:
+    reference_date = as_of or date.today()
     parsed: list[date] = []
     for iso in re.findall(r"\b20\d{2}-\d{2}-\d{2}", value):
         try:
@@ -250,7 +258,7 @@ def _parse_hint_dates(value: str) -> list[date]:
         month = MONTHS.get(month_value.lower())
         if month is None:
             continue
-        year = int(year_value) if year_value else AS_OF.year
+        year = int(year_value) if year_value else reference_date.year
         if year < 100:
             year += 2000
         try:
@@ -260,7 +268,10 @@ def _parse_hint_dates(value: str) -> list[date]:
     return parsed
 
 
-def automated_flags(row: dict[str, str], area_evidence: str) -> list[str]:
+def automated_flags(
+    row: dict[str, str], area_evidence: str, *, as_of: date | None = None
+) -> list[str]:
+    reference_date = as_of or date.today()
     text = f"{row.get('title_hint', '')} {row.get('excerpt_or_notes', '')}".lower()
     flags: list[str] = []
     if any(
@@ -275,8 +286,8 @@ def automated_flags(row: dict[str, str], area_evidence: str) -> list[str]:
         flags.append("official_source_says_unavailable")
     if not _age_overlaps_target(row.get("age_hints", "")):
         flags.append("stated_age_outside_13_17")
-    dates = _parse_hint_dates(row.get("date_hints", ""))
-    if dates and max(dates) < AS_OF:
+    dates = _parse_hint_dates(row.get("date_hints", ""), as_of=reference_date)
+    if dates and max(dates) < reference_date:
         flags.append("all_detected_dates_expired")
     elif not dates:
         flags.append("date_requires_confirmation")
@@ -293,11 +304,14 @@ def _age_overlaps_target(value: str) -> bool:
     lowered = value.lower()
     if not value or "all ages" in lowered or "everyone" in lowered:
         return True
-    numbers = [int(number) for number in re.findall(r"\d{1,3}", value)]
+    numbers = [
+        int(number) for number in re.findall(r"(?<!\d)\d{1,3}(?!\d)", value)
+    ]
     if not numbers:
         return True
     age_min = min(numbers)
-    age_max = 120 if re.search(r"\b(?:and above|or older|\+)\b", lowered) else max(numbers)
+    open_ended = re.search(r"\b(?:and above|or older)\b|\d{1,3}\s*\+", lowered)
+    age_max = 120 if open_ended else max(numbers)
     return age_min <= 17 and age_max >= 13
 
 
@@ -312,7 +326,7 @@ def candidate_score(row: dict[str, str], flags: list[str], area_evidence: str) -
     return score
 
 
-def load_candidates(path: Path) -> list[dict[str, str]]:
+def load_candidates(path: Path, *, as_of: date | None = None) -> list[dict[str, str]]:
     with path.open(encoding="utf-8", newline="") as handle:
         rows = list(csv.DictReader(handle))
     prepared: list[dict[str, str]] = []
@@ -321,7 +335,7 @@ def load_candidates(path: Path) -> list[dict[str, str]]:
         if area is None:
             continue
         buckets = hobby_buckets(row)
-        flags = automated_flags(row, area_evidence)
+        flags = automated_flags(row, area_evidence, as_of=as_of)
         disqualifying = {
             "closed_or_cancelled_text",
             "all_detected_dates_expired",
@@ -436,8 +450,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--queue", type=Path, default=DEFAULT_QUEUE)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument("--as-of", type=date.fromisoformat, default=date.today())
     args = parser.parse_args()
-    rows = select_shortlist(load_candidates(args.queue))
+    rows = select_shortlist(load_candidates(args.queue, as_of=args.as_of))
     write_shortlist(rows, args.out)
     areas = Counter(row["proposed_area"] for row in rows)
     sources = Counter(row["source_kind"] for row in rows)

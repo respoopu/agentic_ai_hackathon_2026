@@ -93,7 +93,11 @@ def _candidate_key(row: dict[str, str]) -> str:
             and urlsplit(normalized).netloc not in {"t.me", "telegram.me"}
         ]
         if external_registration_urls:
-            return f"registration:{external_registration_urls[0]}"
+            event_identity = "|".join(
+                row.get(field, "").strip().casefold()
+                for field in ("title_hint", "date_hints", "area_hints")
+            )
+            return f"registration:{external_registration_urls[0]}#event:{event_identity}"
     return source_url
 
 

@@ -19,7 +19,7 @@ The canonical CKB is now demo-ready. Its reproducible queue combines 157 merged 
 ```bash
 python scripts/fetch_public_social_candidates.py
 python scripts/build_ckb_review_queue.py
-python scripts/select_ckb_shortlist.py
+python scripts/select_ckb_shortlist.py --as-of 2026-09-02
 # Human decisions and confirmed fields are recorded in data/ckb_attestations.json.
 python scripts/promote_ckb_shortlist.py --as-of 2026-09-02
 python scripts/build_ckb.py --check-urls --as-of 2026-09-02T12:00:00+08:00

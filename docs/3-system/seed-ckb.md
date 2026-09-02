@@ -56,7 +56,7 @@ The current pipeline does the research collation and shortlist selection first:
 ```bash
 python3 scripts/fetch_public_social_candidates.py
 python3 scripts/build_ckb_review_queue.py
-python3 scripts/select_ckb_shortlist.py
+python3 scripts/select_ckb_shortlist.py --as-of 2026-09-02
 ```
 
 This produces the generated `data/ckb_shortlist.csv`. Human decisions and

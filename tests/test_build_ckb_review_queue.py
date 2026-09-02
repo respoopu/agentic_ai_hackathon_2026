@@ -149,6 +149,37 @@ class ReviewQueueTests(unittest.TestCase):
         self.assertEqual(1, len(rows))
         self.assertEqual(1, summary["duplicates_removed"])
 
+    def test_distinct_social_events_can_share_a_programme_registration_link(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            draft = root / "draft.csv"
+            draft.write_text("listing_id,source_url\n", encoding="utf-8")
+            social = root / "social.json"
+            candidates = []
+            for number, title, event_date in (
+                (1, "Punggol trial", "20 September 2026"),
+                (2, "Bukit Canberra trial", "27 September 2026"),
+            ):
+                candidates.append(
+                    {
+                        "candidate_id": f"SOC-{number}",
+                        "source_name": "Programme",
+                        "source_url": f"https://t.me/programme/{number}",
+                        "registration_urls": ["https://go.gov.sg/standing-link"],
+                        "title_hint": title,
+                        "detected": {"dates": [event_date]},
+                        "area_hints": [],
+                        "topic_hints": [],
+                    }
+                )
+            social.write_text(json.dumps({"candidates": candidates}), encoding="utf-8")
+            rows, summary = build_queue([draft], social)
+
+        self.assertEqual(2, len(rows))
+        self.assertEqual(0, summary["duplicates_removed"])
+
 
 if __name__ == "__main__":
     unittest.main()
