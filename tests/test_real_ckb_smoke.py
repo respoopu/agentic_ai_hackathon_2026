@@ -15,21 +15,27 @@ class RealCkbSmokeTests(unittest.TestCase):
 import json
 import sys
 import tempfile
+from datetime import datetime
+from pathlib import Path
 
 from src.api import HobbiService
-from tests.helpers import NOW, listing_record
+from src.ckb.seed_loader import load_seed_records
 from tests.test_intake_and_gates import consents
 
 assert "sim.catalogue" not in sys.modules
+root = Path.cwd()
+records = load_seed_records(root / "data" / "seed_ckb.json")
+real_ids = {
+    record.listing_id
+    for record in records
+    if not record.is_fictional and record.verification != "retired"
+}
 with tempfile.TemporaryDirectory() as directory:
-    service = HobbiService(directory, guardian_token="guardian-smoke-token")
+    service = HobbiService(
+        directory, guardian_token="guardian-smoke-token", seed_artifact=None
+    )
     try:
-        service.ckb.seed(
-            [
-                listing_record("real-source-smoke-a"),
-                listing_record("real-source-smoke-b"),
-            ]
-        )
+        service.ckb.seed(records)
         health = service.handle({"operation": "health"})
         response = service.handle(
             {
@@ -40,7 +46,7 @@ with tempfile.TemporaryDirectory() as directory:
                     "declared_age": 15,
                     "request": {
                         "goal": "try a sourced nearby hobby",
-                        "requested_at": NOW.isoformat(),
+                        "requested_at": datetime.fromisoformat("2026-09-02T12:00:00+08:00").isoformat(),
                     },
                     "ledger": {
                         "money_total_sgd": 0,
@@ -60,6 +66,7 @@ with tempfile.TemporaryDirectory() as directory:
             "ready": health["ready_for_real_planning"],
             "outcome": response["state"]["outcome"],
             "item_ids": item_ids,
+            "all_items_are_canonical": set(item_ids) <= real_ids,
             "synthetic_imported": "sim.catalogue" in sys.modules,
         }))
     finally:
@@ -76,9 +83,8 @@ with tempfile.TemporaryDirectory() as directory:
         result = json.loads(completed.stdout)
         self.assertTrue(result["ready"])
         self.assertEqual("escalated_to_adult", result["outcome"])
-        self.assertEqual(
-            ["real-source-smoke-a", "real-source-smoke-b"], result["item_ids"]
-        )
+        self.assertTrue(result["item_ids"])
+        self.assertTrue(result["all_items_are_canonical"])
         self.assertFalse(result["synthetic_imported"])
 
 

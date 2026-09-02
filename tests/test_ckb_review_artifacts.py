@@ -30,9 +30,9 @@ class CkbReviewArtifactTests(unittest.TestCase):
             encoding="utf-8", newline=""
         ) as handle:
             rows = list(csv.DictReader(handle))
-        self.assertEqual(45, len(rows))
+        self.assertEqual(46, len(rows))
         self.assertEqual(
-            {"Jurong West": 25, "Punggol": 10, "Bishan": 10},
+            {"Jurong West": 25, "Punggol": 10, "Bishan": 10, "Kallang": 1},
             dict(Counter(row["proposed_area"] for row in rows)),
         )
         self.assertEqual(
@@ -40,7 +40,7 @@ class CkbReviewArtifactTests(unittest.TestCase):
                 "public_telegram_candidate": 13,
                 "merged_nlb_draft": 10,
                 "merged_activesg_draft": 8,
-                "public_web_candidate": 14,
+                "public_web_candidate": 15,
             },
             dict(Counter(row["source_kind"] for row in rows)),
         )

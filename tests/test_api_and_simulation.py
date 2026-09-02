@@ -43,7 +43,9 @@ class ApiAndSimulationTests(unittest.TestCase):
 
     def test_empty_ckb_is_explicitly_not_ready_and_fails_planning(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            service = HobbiService(temporary, guardian_token=GUARDIAN_TOKEN)
+            service = HobbiService(
+                temporary, guardian_token=GUARDIAN_TOKEN, seed_artifact=None
+            )
             try:
                 health = service.handle({"operation": "health"})
                 self.assertFalse(health["ready_for_real_planning"])
@@ -81,7 +83,7 @@ class ApiAndSimulationTests(unittest.TestCase):
 
     def test_health_ignores_fictional_and_retired_rows_for_real_readiness(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            service = HobbiService(temporary)
+            service = HobbiService(temporary, seed_artifact=None)
             try:
                 fictional = listing_record(
                     "fictional", verification="unverified", provider_type="private_unverified"
@@ -100,7 +102,7 @@ class ApiAndSimulationTests(unittest.TestCase):
 
     def test_health_accepts_sourced_unverified_real_row_for_guardian_flow(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            service = HobbiService(temporary)
+            service = HobbiService(temporary, seed_artifact=None)
             try:
                 service.ckb.seed([listing_record("real-unverified", verification="unverified")])
                 health = service.handle({"operation": "health"})
@@ -117,6 +119,7 @@ class ApiAndSimulationTests(unittest.TestCase):
                 temporary,
                 guardian_token=GUARDIAN_TOKEN,
                 compliance_token=COMPLIANCE_TOKEN,
+                seed_artifact=None,
             )
             try:
                 service.ckb.seed([listing_record("api-free")])
@@ -235,6 +238,7 @@ class ApiAndSimulationTests(unittest.TestCase):
                 temporary,
                 guardian_token=GUARDIAN_TOKEN,
                 compliance_token=COMPLIANCE_TOKEN,
+                seed_artifact=None,
             )
             try:
                 service.ckb.seed(

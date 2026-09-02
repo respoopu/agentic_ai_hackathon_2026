@@ -109,6 +109,7 @@ class HobbiService:
         *,
         guardian_token: str | None = None,
         compliance_token: str | None = None,
+        seed_artifact: str | Path | None = ROOT / "data" / "seed_ckb.json",
     ) -> None:
         directory = Path(runtime_dir)
         directory.mkdir(parents=True, exist_ok=True)
@@ -116,9 +117,9 @@ class HobbiService:
         self.guardian_token = guardian_token or os.getenv("HOBBI_GUARDIAN_API_TOKEN", "")
         self.compliance_token = compliance_token or os.getenv("HOBBI_COMPLIANCE_API_TOKEN", "")
         self.ckb = KnowledgeBase(directory / "ckb.sqlite")
-        seed_artifact = ROOT / "data" / "seed_ckb.json"
-        if seed_artifact.exists() and not self.ckb.all():
-            self.ckb.seed_from_artifact(seed_artifact)
+        artifact = Path(seed_artifact) if seed_artifact is not None else None
+        if artifact is not None and artifact.exists() and not self.ckb.all():
+            self.ckb.seed_from_artifact(artifact)
         self.runtime = HobbiRuntime(
             personal_data=self.personal_data,
             ckb=self.ckb,

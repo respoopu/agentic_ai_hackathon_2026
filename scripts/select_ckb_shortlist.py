@@ -22,6 +22,7 @@ DEFAULT_OUT = ROOT / "data" / "ckb_shortlist.csv"
 AS_OF = date(2026, 9, 2)
 
 AREA_QUOTAS = {"Jurong West": 25, "Punggol": 10, "Bishan": 10}
+SUPPLEMENTAL_IDS = {"WEB-luggage-market"}
 SOURCE_QUOTAS = {
     "Jurong West": {
         "public_telegram_candidate": 10,
@@ -55,6 +56,7 @@ EXPLICIT_AREA_PATTERNS = {
         r"\bpunggol (?:coast|place|drive|field|way|waterway|library)\b",
     ),
     "Bishan": (r"\bbishan\b", r"\b579799\b", r"\b579778\b"),
+    "Kallang": (r"\baperia mall\b", r"\b339511\b", r"\bkallang avenue\b"),
 }
 
 # Source pages do not expose URA planning areas. These exact facility mappings
@@ -399,6 +401,13 @@ def select_shortlist(rows: list[dict[str, str]]) -> list[dict[str, str]]:
                 "expand the public candidate pool"
             )
         selected.extend(area_selected)
+
+    supplements = [row for row in rows if row["candidate_id"] in SUPPLEMENTAL_IDS]
+    found = {row["candidate_id"] for row in supplements}
+    missing = SUPPLEMENTAL_IDS - found
+    if missing:
+        raise ValueError(f"missing supplemental shortlist rows: {sorted(missing)}")
+    selected.extend(sorted(supplements, key=lambda row: row["candidate_id"]))
 
     output: list[dict[str, str]] = []
     for rank, row in enumerate(selected, start=1):

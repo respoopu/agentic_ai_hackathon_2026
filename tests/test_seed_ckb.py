@@ -6,7 +6,7 @@ import unittest
 from datetime import date, datetime, time
 from pathlib import Path
 
-from scripts.build_ckb import coverage
+from scripts.build_ckb import coverage, is_weekday_evening, is_weekend
 
 try:
     from pydantic import ValidationError
@@ -89,7 +89,9 @@ class HydrationTests(unittest.TestCase):
             first_session=date(2026, 9, 5),
             num_sessions=3,
         )
-        sessions = expand_next_sessions(schedule, as_of=datetime(2026, 9, 1))
+        sessions = expand_next_sessions(
+            schedule, as_of=datetime(2026, 9, 1, tzinfo=SG_TZ)
+        )
         self.assertEqual(
             [
                 datetime(2026, 9, 5, 10, 0, tzinfo=SG_TZ),
@@ -139,7 +141,7 @@ class HydrationTests(unittest.TestCase):
             self.record,
             travel_min_home=12,
             travel_min_school=8,
-            as_of=datetime(2026, 9, 1),
+            as_of=datetime(2026, 9, 1, tzinfo=SG_TZ),
         )
         self.assertEqual(12, listing.travel_min_home)
         self.assertEqual(8, listing.travel_min_school)
@@ -151,11 +153,28 @@ class HydrationTests(unittest.TestCase):
                 self.record,
                 travel_min_home=-1,
                 travel_min_school=8,
-                as_of=datetime(2026, 9, 1),
+                as_of=datetime(2026, 9, 1, tzinfo=SG_TZ),
             )
 
 
 class CoverageTests(unittest.TestCase):
+    def test_fixed_date_events_count_toward_time_window_coverage(self) -> None:
+        saturday = {
+            "schedule": {
+                "kind": "fixed_dates",
+                "fixed_dates": ["2026-09-05T10:00+08:00"],
+            }
+        }
+        friday_evening = {
+            "schedule": {
+                "kind": "fixed_dates",
+                "fixed_dates": ["2026-09-04T18:00+08:00"],
+            }
+        }
+        self.assertTrue(is_weekend(saturday))
+        self.assertFalse(is_weekday_evening(saturday))
+        self.assertTrue(is_weekday_evening(friday_evening))
+
     def test_quarantine_only_seed_is_not_complete(self) -> None:
         payload = json.loads((ROOT / "data" / "quarantine_listings.json").read_text())
         results = coverage(payload["listings"])
@@ -163,9 +182,9 @@ class CoverageTests(unittest.TestCase):
 
     def test_empty_real_seed_does_not_pass_freshness(self) -> None:
         payload = json.loads((ROOT / "data" / "quarantine_listings.json").read_text())
-        results = dict(
-            (label, passed) for label, passed, _ in coverage(payload["listings"])
-        )
+        results = {
+            label: passed for label, passed, _ in coverage(payload["listings"])
+        }
         self.assertFalse(results["freshness · verified within 30 days"])
 
     def test_drop_in_availability_is_explicit(self) -> None:

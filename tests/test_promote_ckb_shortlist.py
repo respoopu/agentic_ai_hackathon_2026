@@ -4,7 +4,11 @@ import unittest
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from scripts.promote_ckb_shortlist import SignoffError, validate_and_promote
+from scripts.promote_ckb_shortlist import (
+    SignoffError,
+    apply_attestations,
+    validate_and_promote,
+)
 
 AS_OF = datetime(2026, 9, 2, tzinfo=ZoneInfo("Asia/Singapore"))
 
@@ -49,6 +53,34 @@ def approved_row() -> dict[str, str]:
 
 
 class PromoteShortlistTests(unittest.TestCase):
+    def test_attestation_ledger_overlays_generated_shortlist(self) -> None:
+        row = approved_row()
+        row.update(review_decision="", reviewed_at="", reviewed_by="")
+        reviewed = apply_attestations(
+            [row],
+            {
+                "defaults": {
+                    "reviewed_at": "2026-09-02",
+                    "reviewed_by": "Human Reviewer",
+                },
+                "decisions": {
+                    "WEB-real-1": {
+                        "review_decision": "approve",
+                        "review_notes": "Source checked.",
+                    }
+                },
+            },
+        )
+        self.assertEqual("approve", reviewed[0]["review_decision"])
+        self.assertEqual("Human Reviewer", reviewed[0]["reviewed_by"])
+
+    def test_attestation_ledger_rejects_unknown_candidates(self) -> None:
+        with self.assertRaisesRegex(SignoffError, "unknown candidates"):
+            apply_attestations(
+                [approved_row()],
+                {"decisions": {"WEB-not-shortlisted": {"review_decision": "reject"}}},
+            )
+
     def test_promotes_only_complete_human_approved_rows(self) -> None:
         rejected = {
             "candidate_id": "SOC-reject",

@@ -5,6 +5,17 @@
   "notes": "Compact research leads from public official pages. Every field remains a hint until a human checks the linked source and signs off the shortlist.",
   "candidates": [
     {
+      "candidate_id": "WEB-luggage-market",
+      "source_name": "The Luggage Market",
+      "source_url": "https://www.booktlm.com/",
+      "registration_urls": [],
+      "title_hint": "Browse The Luggage Market at Aperia Mall",
+      "excerpt": "The organiser lists a weekly Sunday thrift market at Aperia Mall Level 1, 12 Kallang Avenue, with more than 60 booths and secondhand fashion for visitors to browse.",
+      "detected": {"dates": [], "times": ["Sundays 11am-6pm"], "costs": ["Free visitor admission"], "ages": ["all ages"], "postal_codes": ["339511"]},
+      "area_hints": ["Kallang"],
+      "topic_hints": ["thrifting", "sustainable fashion", "market", "self-guided"]
+    },
+    {
       "candidate_id": "WEB-jw-park-connector-cycle",
       "source_name": "NParks",
       "source_url": "https://pcn.nparks.gov.sg/jurong-west-pc/",

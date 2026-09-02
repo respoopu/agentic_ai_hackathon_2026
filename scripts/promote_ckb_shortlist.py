@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import tempfile
 from collections.abc import Iterable
 from datetime import datetime
@@ -21,6 +22,7 @@ except ModuleNotFoundError:  # Direct ``python scripts/...`` execution.
     from build_ckb import COLUMNS, ROOT, SG_TZ, RowError, parse_row
 
 DEFAULT_SHORTLIST = ROOT / "data" / "ckb_shortlist.csv"
+DEFAULT_ATTESTATIONS = ROOT / "data" / "ckb_attestations.json"
 DEFAULT_OUT = ROOT / "data" / "seed_ckb.csv"
 DECISIONS = {"approve", "reject"}
 NON_HUMAN_REVIEWERS = {"agent", "automation", "bot", "claude", "codex", "script"}
@@ -59,6 +61,49 @@ CONFIRMED_TO_SEED = {
 
 class SignoffError(ValueError):
     """Raised when the human review sheet is incomplete or inconsistent."""
+
+
+def apply_attestations(
+    rows: Iterable[dict[str, str]], payload: object
+) -> list[dict[str, str]]:
+    """Overlay the human sign-off ledger without mutating the generated shortlist."""
+    if not isinstance(payload, dict) or not isinstance(payload.get("decisions"), dict):
+        raise SignoffError("attestations must contain a decisions object")
+    defaults = payload.get("defaults", {})
+    if not isinstance(defaults, dict):
+        raise SignoffError("attestation defaults must be an object")
+    decisions = payload["decisions"]
+    output: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for source in rows:
+        candidate_id = source.get("candidate_id", "").strip()
+        attestation = decisions.get(candidate_id)
+        if not isinstance(attestation, dict):
+            output.append(dict(source))
+            continue
+        seen.add(candidate_id)
+        merged = {**source, **{key: str(value) for key, value in defaults.items()}}
+        confirmed = attestation.get("confirmed", {})
+        if not isinstance(confirmed, dict):
+            raise SignoffError(f"{candidate_id}: confirmed must be an object")
+        merged.update(
+            {
+                f"confirmed_{key}": str(value)
+                for key, value in confirmed.items()
+            }
+        )
+        merged.update(
+            {
+                key: str(value)
+                for key, value in attestation.items()
+                if key != "confirmed"
+            }
+        )
+        output.append(merged)
+    unknown = set(decisions) - seen
+    if unknown:
+        raise SignoffError(f"attestations contain unknown candidates: {sorted(unknown)}")
+    return output
 
 
 def _reviewer_is_human(value: str) -> bool:
@@ -158,13 +203,17 @@ def write_seed(rows: list[dict[str, str]], path: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--shortlist", type=Path, default=DEFAULT_SHORTLIST)
+    parser.add_argument("--attestations", type=Path, default=DEFAULT_ATTESTATIONS)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--as-of", type=datetime.fromisoformat)
     args = parser.parse_args()
     as_of = args.as_of or datetime.now(SG_TZ)
     try:
         with args.shortlist.open(encoding="utf-8", newline="") as handle:
-            rows, summary = validate_and_promote(csv.DictReader(handle), as_of=as_of)
+            shortlist = list(csv.DictReader(handle))
+        payload = json.loads(args.attestations.read_text(encoding="utf-8"))
+        reviewed = apply_attestations(shortlist, payload)
+        rows, summary = validate_and_promote(reviewed, as_of=as_of)
     except SignoffError as exc:
         parser.error(str(exc))
     write_seed(rows, args.out)

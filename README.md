@@ -12,20 +12,28 @@ The backend implements architecture v2.2 without changing the merged agent promp
 - an optional, not-yet-production-validated Bedrock structured-output adapter, cached Discovery replay, sandbox booking, and an authenticated local JSON API;
 - twelve eligible runtime profiles and a one-command B1–B15 report that marks unsupported counterfactual metrics unmeasured.
 
-The CKB research queue now combines the 157 merged NLB/ActiveSG drafts with public community previews and official organiser, park and sport pages. The deterministic shortlist contains 45 candidates across Jurong West, Punggol and Bishan. These remain review candidates: the runtime consumes `data/seed_ckb.json` only after a named human checks and attests every promoted field. Evaluation uses an explicitly synthetic catalogue and never presents those rows as real activities.
+The canonical CKB is now demo-ready. Its reproducible queue combines 157 merged NLB/ActiveSG drafts with public community previews and official organiser, park, sport and thrifting pages. Rayden attested the 46-row shortlist: 35 complete real activities were promoted, 11 incomplete or unsuitable leads were retained as documented rejections, and 10 clearly fictional rows remain isolated for the Guardian/quarantine demo. Evaluation uses a separate explicitly synthetic catalogue and never presents those rows as real activities.
 
-### Build and attest the real CKB
+### Rebuild and verify the real CKB
 
 ```bash
 python scripts/fetch_public_social_candidates.py
 python scripts/build_ckb_review_queue.py
 python scripts/select_ckb_shortlist.py
-# Open data/ckb_shortlist.csv, follow each source URL, and complete every review field.
+# Human decisions and confirmed fields are recorded in data/ckb_attestations.json.
 python scripts/promote_ckb_shortlist.py --as-of 2026-09-02
 python scripts/build_ckb.py --check-urls --as-of 2026-09-02T12:00:00+08:00
 ```
 
 The collector reads public Telegram previews only, never joins or bypasses private/login-gated groups, and stores compact excerpts rather than page dumps. Instagram and Facebook pages are lead sources; stable official organiser pages are preferred as evidence. Promotion fails closed if any shortlist row is pending, a rejection lacks a reason, a reviewer is an automated actor, or an approved row fails the merged builder’s canonical validation.
+
+To prove that the actual agents and LangGraph can plan from the canonical artifact without importing the synthetic evaluation catalogue, run:
+
+```bash
+.venv/bin/python -m unittest tests.test_real_ckb_smoke -v
+```
+
+The smoke starts a clean runtime, loads `data/seed_ckb.json`, checks `ready_for_real_planning=true`, calls the normal `intake_and_plan` operation, and reaches the trusted-adult checkpoint with only sourced canonical listing IDs.
 
 ### Install and verify
 

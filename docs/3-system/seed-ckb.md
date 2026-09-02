@@ -1,25 +1,23 @@
 # Seed CKB — the transcription contract
 
-*Version 1.2 · 2 Sep 2026 · owner: Codex (pipeline), named human reviewers (attestation)*
+*Version 1.3 · 2 Sep 2026 · owner: Codex (pipeline), Rayden / `respoopu` (attestation)*
 
-Hobbi is a very good librarian standing in an empty library. Every agent in
-[`architecture.md`](./architecture.md) reasons *about* activities. The schema,
-builder, loader boundary, quarantine fixtures and 157 sourced drafts now exist;
-the committed build artifact still has zero real rows until selected candidates
-are completed and promoted into `data/seed_ckb.csv`. The reproducible review
-queue now contains 355 unique candidates and its deterministic shortlist has 45
-rows across Jurong West, Punggol and Bishan.
+Every agent in [`architecture.md`](./architecture.md) reasons *about* activities.
+The schema, builder, loader boundary, quarantine fixtures and canonical artifact
+now exist. The reproducible review queue contains 356 unique candidates and its
+deterministic shortlist has 46 rows: 25 Jurong West, 10 Punggol, 10 Bishan and
+one verified commercial thrifting supplement in Kallang. Human attestation
+promoted 35 complete real rows and retained 11 documented rejections;
+`data/seed_ckb.json` combines those with 10 fictional quarantine fixtures.
 
-> **Integration assumption (1 Sep).** For PR #3 reconciliation, the factual
-> content already present in the draft files is accepted as provisionally
-> accurate. This avoids blocking schema and loader work on another research
-> pass. It does **not** invent missing fields or relabel an unsigned row as
-> `verified`; slide-facing claims and final rows still follow the vetting tasks
-> in [`outstanding.md`](../5-delivery/outstanding.md).
+> **Historical integration assumption (1 Sep).** PR #3 treated draft facts as
+> provisional so schema work could proceed. The 2 Sep attestation supersedes
+> that assumption for the 35 promoted rows only; the remaining drafts are still
+> unsigned and must not be presented as canonical activities.
 
-**The job:** about 45 real activities for 13–17 year olds, transcribed by hand
-from pages someone actually opened, plus 10 invented ones for the vetting demo.
-Four people, one evening. No code required to take part.
+**Delivered:** 35 real activities usable by at least one 13–17 year old,
+transcribed from pages a named human opened, plus 10 invented rows for the
+vetting demo.
 
 **Why it is not just plumbing:**
 
@@ -28,8 +26,8 @@ Four people, one evening. No code required to take part.
    nobody has gathered them in one place."* The proof of that is gathering them.
    Which is why they must be real: a judge clicking a dead link during Q&A costs
    more than the row was worth, and [`sources.md`](../2-product/sources.md) opens
-   with a retraction of our own headline statistic. That posture and 45
-   unverified listings cannot coexist.
+   with a retraction of our own headline statistic. That posture and an
+   unverified runtime catalogue cannot coexist.
 3. The best demo moment only works if the data is built for it. Adversarial
    scenario 2 — *"nothing free within 15 minutes on a weekday evening, but
    widening to Saturday opens 6 options"* — is only true if the CKB genuinely
@@ -61,10 +59,11 @@ python3 scripts/build_ckb_review_queue.py
 python3 scripts/select_ckb_shortlist.py
 ```
 
-This produces `data/ckb_shortlist.csv`. A human opens every linked source and
-fills `review_decision`, all applicable `confirmed_*` fields, `reviewed_at`,
-`reviewed_by`, and `review_notes`. Rejections need a reason. Approvals need
-complete canonical values; blank values are never inferred from hints. Then:
+This produces the generated `data/ckb_shortlist.csv`. Human decisions and
+confirmed canonical fields are kept separately in `data/ckb_attestations.json`,
+so shortlist regeneration cannot erase the sign-off ledger. Rejections need a
+reason. Approvals need complete canonical values; blank values are never
+inferred from hints. Then:
 
 ```bash
 python3 scripts/promote_ckb_shortlist.py --as-of 2026-09-02
@@ -102,9 +101,9 @@ from an **unchecked** one (403, timeout — several government sites block
 automated requests, which is not the same as being broken). Only dead links
 fail the build.
 
-`data/seed_ckb.csv` still ships with the header and three skipped worked
-examples covering the schedule shapes. The promotion command replaces those
-examples only after the shortlist is fully attested.
+`data/seed_ckb.csv` contains the 35 promoted real rows. The committed
+`data/seed_ckb.json` is the corresponding validated runtime artifact plus the
+10 visibly fictional quarantine rows.
 
 ---
 

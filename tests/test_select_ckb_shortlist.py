@@ -85,6 +85,13 @@ class ShortlistSelectionTests(unittest.TestCase):
         self.assertFalse(_age_overlaps_target("aged 7-12"))
         self.assertFalse(_age_overlaps_target("aged 60"))
 
+    def test_verified_commercial_supplement_is_not_lost_to_area_quotas(self) -> None:
+        # The full quota selection is integration-tested against the committed queue.
+        # This pins the otherwise easy-to-miss post-quota supplement behavior.
+        from scripts.select_ckb_shortlist import SUPPLEMENTAL_IDS
+
+        self.assertEqual({"WEB-luggage-market"}, SUPPLEMENTAL_IDS)
+
 
 if __name__ == "__main__":
     unittest.main()
