@@ -1,0 +1,203 @@
+{
+  "version": "1.0",
+  "policy": {
+    "public_only": true,
+    "private_groups_excluded": true,
+    "login_bypass_forbidden": true,
+    "candidate_status": "unverified",
+    "notes": "Social sources are discovery leads. A stable organiser or registration page is preferred as canonical evidence, and a named human must review every promoted row."
+  },
+  "sources": [
+    {
+      "source_id": "telegram-bishan-connects",
+      "name": "Bishan Connects",
+      "platform": "telegram",
+      "mode": "public_preview",
+      "url": "https://t.me/s/bishancc",
+      "area_hints": ["Bishan"],
+      "topic_hints": ["arts", "sport", "workshops", "youth", "community"]
+    },
+    {
+      "source_id": "telegram-gek-poh-central",
+      "name": "Gek Poh Central Residents' Network",
+      "platform": "telegram",
+      "mode": "public_preview",
+      "url": "https://t.me/s/gekpohcentral",
+      "area_hints": ["Jurong West"],
+      "topic_hints": ["arts", "sport", "workshops", "community"]
+    },
+    {
+      "source_id": "telegram-taman-jurong",
+      "name": "Taman Jurong Kakis",
+      "platform": "telegram",
+      "mode": "public_preview",
+      "url": "https://t.me/s/TamanJurongCC",
+      "area_hints": ["Jurong West"],
+      "topic_hints": ["community", "performances", "workshops", "wellbeing"]
+    },
+    {
+      "source_id": "telegram-one-boon-lay",
+      "name": "OneBoonLay",
+      "platform": "telegram",
+      "mode": "public_preview",
+      "url": "https://t.me/s/oneboonlay",
+      "area_hints": ["Jurong West"],
+      "topic_hints": ["community", "arts", "performances", "workshops", "youth"]
+    },
+    {
+      "source_id": "telegram-nparks-buzz",
+      "name": "NParks Buzz",
+      "platform": "telegram",
+      "mode": "public_preview",
+      "url": "https://t.me/s/nparksbuzz",
+      "area_hints": ["Jurong West", "Punggol", "Bishan"],
+      "topic_hints": ["nature", "walking", "gardening", "volunteering"]
+    },
+    {
+      "source_id": "telegram-team-nila",
+      "name": "Home of Team Nila",
+      "platform": "telegram",
+      "mode": "public_preview",
+      "url": "https://t.me/s/Teamnila",
+      "area_hints": ["Punggol"],
+      "topic_hints": ["sport", "volunteering", "youth"]
+    },
+    {
+      "source_id": "telegram-bagus-together",
+      "name": "BAGUS Together",
+      "platform": "telegram",
+      "mode": "public_preview",
+      "url": "https://t.me/s/bagustogether",
+      "area_hints": ["Punggol"],
+      "topic_hints": ["youth", "coding", "volunteering", "cycling", "community"]
+    },
+    {
+      "source_id": "telegram-open-jio",
+      "name": "OPEN JIO",
+      "platform": "telegram",
+      "mode": "public_preview",
+      "url": "https://t.me/s/openjio",
+      "area_hints": [],
+      "topic_hints": ["youth", "books", "arts", "community", "wellbeing"]
+    },
+    {
+      "source_id": "telegram-alpha-fitness",
+      "name": "Alpha Fitness Workouts",
+      "platform": "telegram",
+      "mode": "public_preview",
+      "url": "https://t.me/s/alphaworkout",
+      "area_hints": ["Punggol"],
+      "topic_hints": ["fitness", "dance", "sport"]
+    },
+    {
+      "source_id": "instagram-cloop",
+      "name": "Cloop",
+      "platform": "instagram",
+      "mode": "lead_only",
+      "url": "https://www.instagram.com/cloop.sg/",
+      "canonical_evidence_url": "https://cloop.sg/shop/",
+      "area_hints": [],
+      "topic_hints": ["thrifting", "fashion swaps", "upcycling", "workshops"]
+    },
+    {
+      "source_id": "facebook-swapaholic",
+      "name": "Swapaholic",
+      "platform": "facebook",
+      "mode": "lead_only",
+      "url": "https://www.facebook.com/swapaholicyou",
+      "canonical_evidence_url": "https://www.events.swapaholic.com/",
+      "area_hints": [],
+      "topic_hints": ["thrifting", "fashion swaps", "sustainability", "workshops"]
+    },
+    {
+      "source_id": "instagram-singapore-cycling-federation",
+      "name": "Singapore Cycling Federation",
+      "platform": "instagram",
+      "mode": "lead_only",
+      "url": "https://www.instagram.com/singaporecyclingfederation/",
+      "canonical_evidence_url": "https://linktr.ee/singaporecyclingfederation",
+      "area_hints": [],
+      "topic_hints": ["cycling", "learn to cycle", "bike mechanics", "BMX"]
+    },
+    {
+      "source_id": "facebook-smux-biking",
+      "name": "SMUX Biking",
+      "platform": "facebook",
+      "mode": "lead_only",
+      "url": "https://www.facebook.com/groups/5094212471",
+      "canonical_evidence_url": "https://vivace.smu.edu.sg/explore/smux/smux-biking",
+      "area_hints": [],
+      "topic_hints": ["cycling", "beginner rides", "social rides"]
+    },
+    {
+      "source_id": "instagram-rapha-singapore",
+      "name": "Rapha Singapore",
+      "platform": "instagram",
+      "mode": "lead_only",
+      "url": "https://www.instagram.com/rapha_singapore/",
+      "canonical_evidence_url": "https://events.rapha.cc/raphasingapore",
+      "area_hints": [],
+      "topic_hints": ["cycling", "beginner rides", "cafe rides"]
+    },
+    {
+      "source_id": "instagram-passionarts",
+      "name": "PAssionArts",
+      "platform": "instagram",
+      "mode": "lead_only",
+      "url": "https://www.instagram.com/passionartssg/",
+      "canonical_evidence_url": "https://www.pa.gov.sg/our-programmes/community-arts/",
+      "area_hints": ["Jurong West", "Punggol", "Bishan"],
+      "topic_hints": ["arts", "crafts", "performances", "community"]
+    },
+    {
+      "source_id": "website-brompton-experiences",
+      "name": "Brompton Experiences Club Rides",
+      "platform": "website",
+      "mode": "lead_only",
+      "url": "https://www.bromptonexperiences.com/club-rides",
+      "canonical_evidence_url": "https://www.bromptonexperiences.com/club-rides",
+      "area_hints": [],
+      "topic_hints": ["cycling", "beginner rides", "social rides", "cafe rides"]
+    },
+    {
+      "source_id": "website-community-coffee",
+      "name": "The Community Coffee",
+      "platform": "website",
+      "mode": "lead_only",
+      "url": "https://thecommunitycoffee.com/products/monthly-public-cupping",
+      "canonical_evidence_url": "https://thecommunitycoffee.com/products/monthly-public-cupping",
+      "area_hints": [],
+      "topic_hints": ["coffee", "cafe hopping", "tasting", "workshops"]
+    },
+    {
+      "source_id": "website-singapore-coffee-week",
+      "name": "Singapore Coffee Week",
+      "platform": "website",
+      "mode": "lead_only",
+      "url": "https://sgcoffeeweek.sg/event-highlights/activities-and-programs/",
+      "canonical_evidence_url": "https://sgcoffeeweek.sg/event-highlights/activities-and-programs/",
+      "area_hints": [],
+      "topic_hints": ["coffee", "cafe hopping", "cupping", "workshops"]
+    },
+    {
+      "source_id": "website-luggage-market",
+      "name": "The Luggage Market",
+      "platform": "website",
+      "mode": "lead_only",
+      "url": "https://www.booktlm.com/",
+      "canonical_evidence_url": "https://www.booktlm.com/",
+      "area_hints": [],
+      "topic_hints": ["thrifting", "fashion", "community market"]
+    },
+    {
+      "source_id": "website-fleawhere",
+      "name": "Fleawhere",
+      "platform": "website",
+      "mode": "lead_only",
+      "url": "https://fleawhere.com/",
+      "canonical_evidence_url": "https://fleawhere.com/",
+      "area_hints": [],
+      "topic_hints": ["thrifting", "upcycling", "workshops", "community market"]
+    }
+  ]
+}

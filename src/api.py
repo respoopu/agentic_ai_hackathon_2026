@@ -197,12 +197,28 @@ class HobbiService:
     ) -> dict[str, Any]:
         operation = payload.get("operation")
         if operation == "health":
-            records = len(self.ckb.all())
+            records = self.ckb.all()
+            usable_real = [
+                record
+                for record in records
+                if not record.is_fictional
+                and record.verification != "retired"
+                and record.freshness_state != "dead"
+            ]
             return {
                 "ok": True,
                 "service": "hobbi",
-                "ready_for_real_planning": records > 0,
-                "ckb_records": records,
+                "ready_for_real_planning": bool(usable_real),
+                "ckb_records": len(records),
+                "ckb_usable_real_records": len(usable_real),
+                "ckb_verified_real_records": sum(
+                    record.verification == "verified" for record in usable_real
+                ),
+                "ckb_unverified_real_records": sum(
+                    record.verification == "unverified" for record in usable_real
+                ),
+                "ckb_fictional_records": sum(record.is_fictional for record in records),
+                "ckb_unusable_records": len(records) - len(usable_real),
             }
         if operation == "discovery_replay":
             self._require_role(self.compliance_token, authorization, "operator")

@@ -12,7 +12,20 @@ The backend implements architecture v2.2 without changing the merged agent promp
 - an optional, not-yet-production-validated Bedrock structured-output adapter, cached Discovery replay, sandbox booking, and an authenticated local JSON API;
 - twelve eligible runtime profiles and a one-command B1–B15 report that marks unsupported counterfactual metrics unmeasured.
 
-The canonical CKB sources are the merged transcription sheet, 157 sourced drafts, quarantine fixtures, builder, and loader. The runtime consumes `data/seed_ckb.json` when the existing builder can publish it. It does not silently promote unfinished drafts or invent verification metadata. Evaluation uses an explicitly synthetic catalogue and never presents those rows as real activities.
+The CKB research queue now combines the 157 merged NLB/ActiveSG drafts with public community previews and official organiser, park and sport pages. The deterministic shortlist contains 45 candidates across Jurong West, Punggol and Bishan. These remain review candidates: the runtime consumes `data/seed_ckb.json` only after a named human checks and attests every promoted field. Evaluation uses an explicitly synthetic catalogue and never presents those rows as real activities.
+
+### Build and attest the real CKB
+
+```bash
+python scripts/fetch_public_social_candidates.py
+python scripts/build_ckb_review_queue.py
+python scripts/select_ckb_shortlist.py
+# Open data/ckb_shortlist.csv, follow each source URL, and complete every review field.
+python scripts/promote_ckb_shortlist.py --as-of 2026-09-02
+python scripts/build_ckb.py --check-urls --as-of 2026-09-02T12:00:00+08:00
+```
+
+The collector reads public Telegram previews only, never joins or bypasses private/login-gated groups, and stores compact excerpts rather than page dumps. Instagram and Facebook pages are lead sources; stable official organiser pages are preferred as evidence. Promotion fails closed if any shortlist row is pending, a rejection lacks a reason, a reviewer is an automated actor, or an approved row fails the merged builder’s canonical validation.
 
 ### Install and verify
 
@@ -46,7 +59,7 @@ The single `POST /` endpoint accepts these operations:
 
 | Operation | Purpose |
 |---|---|
-| `health` | Runtime and CKB readiness |
+| `health` | Runtime and CKB readiness, split into usable real, verified, unverified, fictional and unusable counts |
 | `discovery_replay` | Operator-authorized G1 replay of the typed, unverified ActiveSG capture |
 | `intake_and_plan` | Trusted-adult-authorized, one-time I0/setup followed by bounded planning |
 | `guardian_approve` | Store provider/attendance/spend approval against one exact Plan, then resume at G2 |

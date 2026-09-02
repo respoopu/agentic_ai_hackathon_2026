@@ -47,6 +47,7 @@ class ApiAndSimulationTests(unittest.TestCase):
             try:
                 health = service.handle({"operation": "health"})
                 self.assertFalse(health["ready_for_real_planning"])
+                self.assertEqual(0, health["ckb_usable_real_records"])
                 response = service.handle(
                     {
                         "operation": "intake_and_plan",
@@ -75,6 +76,38 @@ class ApiAndSimulationTests(unittest.TestCase):
                 self.assertEqual("no_viable_plan", response["state"]["outcome"])
                 self.assertTrue(response["state"]["binding_constraint"])
                 self.assertEqual(["trusted_adult"], response["notification_required"])
+            finally:
+                service.close()
+
+    def test_health_ignores_fictional_and_retired_rows_for_real_readiness(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            service = HobbiService(temporary)
+            try:
+                fictional = listing_record(
+                    "fictional", verification="unverified", provider_type="private_unverified"
+                )
+                retired = listing_record("retired").model_copy(
+                    update={"verification": "retired", "freshness_state": "dead"}
+                )
+                service.ckb.seed([fictional, retired])
+                health = service.handle({"operation": "health"})
+                self.assertFalse(health["ready_for_real_planning"])
+                self.assertEqual(2, health["ckb_records"])
+                self.assertEqual(1, health["ckb_fictional_records"])
+                self.assertEqual(2, health["ckb_unusable_records"])
+            finally:
+                service.close()
+
+    def test_health_accepts_sourced_unverified_real_row_for_guardian_flow(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            service = HobbiService(temporary)
+            try:
+                service.ckb.seed([listing_record("real-unverified", verification="unverified")])
+                health = service.handle({"operation": "health"})
+                self.assertTrue(health["ready_for_real_planning"])
+                self.assertEqual(1, health["ckb_usable_real_records"])
+                self.assertEqual(0, health["ckb_verified_real_records"])
+                self.assertEqual(1, health["ckb_unverified_real_records"])
             finally:
                 service.close()
 

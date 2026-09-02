@@ -1,12 +1,14 @@
 # Seed CKB — the transcription contract
 
-*Version 1.1 · 1 Sep 2026 · owner: unassigned*
+*Version 1.2 · 2 Sep 2026 · owner: Codex (pipeline), named human reviewers (attestation)*
 
 Hobbi is a very good librarian standing in an empty library. Every agent in
 [`architecture.md`](./architecture.md) reasons *about* activities. The schema,
 builder, loader boundary, quarantine fixtures and 157 sourced drafts now exist;
-the committed build artifact still has zero real rows until selected drafts are
-completed and promoted into `data/seed_ckb.csv`.
+the committed build artifact still has zero real rows until selected candidates
+are completed and promoted into `data/seed_ckb.csv`. The reproducible review
+queue now contains 355 unique candidates and its deterministic shortlist has 45
+rows across Jurong West, Punggol and Bishan.
 
 > **Integration assumption (1 Sep).** For PR #3 reconciliation, the factual
 > content already present in the draft files is accepted as provisionally
@@ -51,17 +53,36 @@ resolve; the validator enforces this.
 
 ## 2. How to work
 
-Transcribe into a shared sheet (Google Sheets — four people editing at once, no
-merge conflicts, nobody needs Python), export as CSV to `data/seed_ckb.csv`,
-then:
+The current pipeline does the research collation and shortlist selection first:
 
 ```bash
+python3 scripts/fetch_public_social_candidates.py
+python3 scripts/build_ckb_review_queue.py
+python3 scripts/select_ckb_shortlist.py
+```
+
+This produces `data/ckb_shortlist.csv`. A human opens every linked source and
+fills `review_decision`, all applicable `confirmed_*` fields, `reviewed_at`,
+`reviewed_by`, and `review_notes`. Rejections need a reason. Approvals need
+complete canonical values; blank values are never inferred from hints. Then:
+
+```bash
+python3 scripts/promote_ckb_shortlist.py --as-of 2026-09-02
 python3 scripts/build_ckb.py                 # validate + build data/seed_ckb.json
 python3 scripts/build_ckb.py --coverage-only # just the gap report
 python3 scripts/build_ckb.py --check-urls    # HEAD every source_url
 python3 scripts/build_ckb.py --allow-incomplete # local development only
 python3 scripts/build_ckb.py --as-of 2026-09-01T09:00:00+08:00 # reproducible build
 ```
+
+The promotion command reuses the merged builder's row parser. It refuses any
+pending row, any unsigned decision, an automated actor recorded as reviewer,
+or any approved value that the canonical builder would reject. This is the
+publication boundary: collection and selection do not write `seed_ckb.csv`.
+
+Teams may still use a shared sheet for simultaneous review: import
+`data/ckb_shortlist.csv`, complete it, and export with the same columns before
+running promotion.
 
 Stdlib only — it runs on a clean laptop with nothing installed. It refuses
 badly-sourced rows and then prints which coverage cells are still empty, named
@@ -81,9 +102,9 @@ from an **unchecked** one (403, timeout — several government sites block
 automated requests, which is not the same as being broken). Only dead links
 fail the build.
 
-Start the sheet from `data/seed_ckb.csv`, which ships with the header row and
-three worked examples covering the three schedule shapes. The examples have `#`
-in front of the id so the validator skips them; delete them when you start.
+`data/seed_ckb.csv` still ships with the header and three skipped worked
+examples covering the schedule shapes. The promotion command replaces those
+examples only after the shortlist is fully attested.
 
 ---
 
