@@ -105,7 +105,7 @@ def draft_rows(paths: Iterable[Path]) -> list[dict[str, str]]:
     output: list[dict[str, str]] = []
     for path in paths:
         with path.open(encoding="utf-8", newline="") as handle:
-            for row in csv.DictReader(handle):
+            for row in csv.DictReader(handle, restval=""):
                 if not row.get("listing_id") or row["listing_id"].startswith("#"):
                     continue
                 missing = [

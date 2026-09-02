@@ -19,6 +19,21 @@ SOURCE = {
 
 
 class TelegramPreviewParserTests(unittest.TestCase):
+    def test_unbalanced_message_does_not_swallow_the_next_post(self) -> None:
+        markup = """
+        <div class="tgme_widget_message" data-post="testcommunity/40">
+          <div class="tgme_widget_message_text">Broken workshop
+        <div class="tgme_widget_message" data-post="testcommunity/41">
+          <div class="tgme_widget_message_text">Valid workshop 20 Sep, 3pm, $5</div>
+        </div>
+        """
+        parser = TelegramPreviewParser()
+        parser.feed(markup)
+        self.assertEqual(
+            ["testcommunity/41"],
+            [message.post_path for message in parser.messages],
+        )
+
     def test_extracts_public_message_without_media_or_page_dump(self) -> None:
         markup = """
         <a class="tme_messages_more" href="/s/testcommunity?before=41"></a>

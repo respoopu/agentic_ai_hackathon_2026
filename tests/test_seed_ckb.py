@@ -136,6 +136,16 @@ class HydrationTests(unittest.TestCase):
             sessions,
         )
 
+    def test_naive_boundary_is_treated_as_singapore_time(self) -> None:
+        schedule = Schedule(
+            kind="fixed_dates",
+            fixed_dates=["2026-09-05T10:00:00+08:00"],
+        )
+        self.assertEqual(
+            [datetime(2026, 9, 5, 10, 0, tzinfo=SG_TZ)],
+            expand_next_sessions(schedule, as_of=datetime(2026, 9, 5, 9, 59)),
+        )
+
     def test_hydration_keeps_relative_fields_out_of_stored_record(self) -> None:
         listing = hydrate_listing(
             self.record,
@@ -174,6 +184,22 @@ class CoverageTests(unittest.TestCase):
         self.assertTrue(is_weekend(saturday))
         self.assertFalse(is_weekday_evening(saturday))
         self.assertTrue(is_weekday_evening(friday_evening))
+
+    def test_fixed_date_coverage_normalises_utc_to_singapore(self) -> None:
+        friday_evening_utc = {
+            "schedule": {
+                "kind": "fixed_dates",
+                "fixed_dates": ["2026-09-04T10:00+00:00"],
+            }
+        }
+        self.assertTrue(is_weekday_evening(friday_evening_utc))
+
+        if HAS_PYDANTIC:
+            schedule = Schedule(
+                kind="fixed_dates", fixed_dates=["2026-09-04T10:00+00:00"]
+            )
+            self.assertTrue(schedule.is_weekday_evening())
+            self.assertFalse(schedule.is_weekend())
 
     def test_quarantine_only_seed_is_not_complete(self) -> None:
         payload = json.loads((ROOT / "data" / "quarantine_listings.json").read_text())

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import unittest
 from datetime import date
+from unittest.mock import patch
 
 from scripts.select_ckb_shortlist import (
     _age_overlaps_target,
@@ -116,6 +117,28 @@ class ShortlistSelectionTests(unittest.TestCase):
         from scripts.select_ckb_shortlist import SUPPLEMENTAL_IDS
 
         self.assertEqual({"WEB-luggage-market"}, SUPPLEMENTAL_IDS)
+
+    def test_supplement_inside_an_area_quota_is_not_selected_twice(self) -> None:
+        from scripts.select_ckb_shortlist import select_shortlist
+
+        row = {
+            "candidate_id": "SUP-1",
+            "proposed_area": "Bishan",
+            "source_kind": "public_web_candidate",
+            "title_hint": "Workshop",
+            "hobby_buckets": "artistic",
+            "_score": "10",
+        }
+        with (
+            patch("scripts.select_ckb_shortlist.AREA_QUOTAS", {"Bishan": 1}),
+            patch(
+                "scripts.select_ckb_shortlist.SOURCE_QUOTAS",
+                {"Bishan": {"public_web_candidate": 1}},
+            ),
+            patch("scripts.select_ckb_shortlist.SUPPLEMENTAL_IDS", {"SUP-1"}),
+        ):
+            selected = select_shortlist([row])
+        self.assertEqual(["SUP-1"], [item["candidate_id"] for item in selected])
 
 
 if __name__ == "__main__":

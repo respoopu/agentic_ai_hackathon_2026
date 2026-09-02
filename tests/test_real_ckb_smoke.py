@@ -20,10 +20,29 @@ from pathlib import Path
 
 from src.api import HobbiService
 from src.ckb.seed_loader import load_seed_records
-from tests.test_intake_and_gates import consents
+from src.schema.plan import ConsentRecord
 
 assert "sim.catalogue" not in sys.modules
 root = Path.cwd()
+now = datetime.fromisoformat("2026-09-02T12:00:00+08:00")
+consents = [
+    ConsentRecord(
+        consent_id="real-smoke-teen-personal",
+        teen_id="real-smoke-teen",
+        kind="personal_data",
+        granted=True,
+        granted_by="teen",
+        recorded_at=now,
+    ),
+    ConsentRecord(
+        consent_id="real-smoke-teen-adult",
+        teen_id="real-smoke-teen",
+        kind="trusted_adult_authority",
+        granted=True,
+        granted_by="trusted_adult",
+        recorded_at=now,
+    ),
+]
 records = load_seed_records(root / "data" / "seed_ckb.json")
 real_ids = {
     record.listing_id
@@ -55,14 +74,14 @@ with tempfile.TemporaryDirectory() as directory:
                     },
                     "consents": [
                         consent.model_dump(mode="json")
-                        for consent in consents("real-smoke-teen")
+                        for consent in consents
                     ],
                 },
             },
             authorization="guardian-smoke-token",
         )
         item_ids = [item["listing_id"] for item in response["state"]["approved_plan"]["items"]]
-        print(json.dumps({
+        print("REAL_CKB_RESULT=" + json.dumps({
             "ready": health["ready_for_real_planning"],
             "outcome": response["state"]["outcome"],
             "item_ids": item_ids,
@@ -80,7 +99,12 @@ with tempfile.TemporaryDirectory() as directory:
             check=False,
         )
         self.assertEqual(0, completed.returncode, completed.stderr)
-        result = json.loads(completed.stdout)
+        result_line = next(
+            line.removeprefix("REAL_CKB_RESULT=")
+            for line in completed.stdout.splitlines()
+            if line.startswith("REAL_CKB_RESULT=")
+        )
+        result = json.loads(result_line)
         self.assertTrue(result["ready"])
         self.assertEqual("escalated_to_adult", result["outcome"])
         self.assertTrue(result["item_ids"])

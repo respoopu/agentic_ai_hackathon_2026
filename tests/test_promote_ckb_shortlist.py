@@ -138,6 +138,34 @@ class PromoteShortlistTests(unittest.TestCase):
                 {"decisions": {"WEB-not-shortlisted": {"review_decision": "reject"}}},
             )
 
+    def test_attestation_cannot_overwrite_generated_source_fields(self) -> None:
+        with self.assertRaisesRegex(SignoffError, "unsupported attestation fields"):
+            apply_attestations(
+                [approved_row()],
+                {
+                    "decisions": {
+                        "WEB-real-1": {
+                            "review_decision": "approve",
+                            "source_url": "https://attacker.invalid/replacement",
+                        }
+                    }
+                },
+            )
+
+    def test_json_null_does_not_become_literal_none(self) -> None:
+        reviewed = apply_attestations(
+            [approved_row()],
+            {
+                "decisions": {
+                    "WEB-real-1": {
+                        "review_decision": "approve",
+                        "confirmed": {"nearest_mrt": None},
+                    }
+                }
+            },
+        )
+        self.assertEqual("", reviewed[0]["confirmed_nearest_mrt"])
+
     def test_promotes_only_complete_human_approved_rows(self) -> None:
         rejected = {
             "candidate_id": "SOC-reject",

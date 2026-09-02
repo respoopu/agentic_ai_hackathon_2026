@@ -19,6 +19,13 @@ promoted 35 complete real rows and retained 11 documented rejections;
 transcribed from pages a named human opened, plus 10 invented rows for the
 vetting demo.
 
+**Accepted scope decision:** the earlier planning estimate was approximately
+45 real rows. Human review accepted 35 complete rows and rejected 11 candidates;
+the 10 quarantine fixtures still put the canonical artifact at the 45-row
+volume gate. We accepted 35 real rows for this hackathon snapshot because every
+required coverage cell below passes. This is not a claim that 35 is the
+long-term production target.
+
 **Why it is not just plumbing:**
 
 1. Nothing runs without it — no demo, no tests, no video.
@@ -219,6 +226,12 @@ validator prints this list with PASS/GAP against your current sheet:
 | Provider spread | cc ≥3 · activesg ≥3 · informal ≥3 · third_space ≥2 · commercial ≥1 |
 | Free majority | Over half the set is S$0 |
 | Freshness | Nothing verified more than 30 days ago |
+
+The scenario-2 upper bound of two weekday-evening options is a deliberate demo
+fixture constraint, not a general measure of supply quality. A refresh that
+finds more valid options should report the changed scenario shape for an
+explicit product decision; it must never discard valid activities merely to
+keep the demo wording true.
 
 ---
 

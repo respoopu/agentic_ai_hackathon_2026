@@ -598,7 +598,7 @@ def is_weekday_evening(rec: dict) -> bool:
     if s["kind"] == "fixed_dates":
         return any(
             value.weekday() < 5 and value.time() >= time(17)
-            for value in map(datetime.fromisoformat, s["fixed_dates"])
+            for value in (_datetime(item, "fixed_dates") for item in s["fixed_dates"])
         )
     if s["kind"] != "weekly" or not s.get("start_time"):
         return False
@@ -615,7 +615,7 @@ def is_weekend(rec: dict) -> bool:
     if s["kind"] == "fixed_dates":
         return any(
             value.weekday() >= 5
-            for value in map(datetime.fromisoformat, s["fixed_dates"])
+            for value in (_datetime(item, "fixed_dates") for item in s["fixed_dates"])
         )
     return s["kind"] == "weekly" and s.get("weekday") in {"sat", "sun"}
 
@@ -629,9 +629,11 @@ def coverage(
     records: list[dict],
     *,
     deep_area: str = DEEP_AREA,
+    target_areas: set[str] | None = None,
     as_of: datetime | None = None,
 ) -> list[tuple[str, bool, str]]:
     """Each check names the doc requirement it exists to satisfy."""
+    target_areas = TARGET_AREAS if target_areas is None else target_areas
     real = [r for r in records if not r.get("is_fictional")]
     fake = [r for r in records if r.get("is_fictional")]
     free = [r for r in real if is_free(r)]
@@ -668,15 +670,15 @@ def coverage(
             ]
         )
         for a, rows in by_area.items()
-        if a in TARGET_AREAS
+        if a in target_areas
     }
-    for area in TARGET_AREAS - thin.keys():
+    for area in target_areas - thin.keys():
         thin[area] = 0
     short = {a: n for a, n in thin.items() if n < 3}
     check(
         "A3 · >=3 free, beginner, join-alone per target area",
-        not short and bool(thin),
-        ("no rows yet" if not thin else "all areas clear")
+        not short,
+        "all areas clear"
         if not short
         else "short: " + ", ".join(f"{a} has {n}" for a, n in sorted(short.items())),
     )
@@ -819,8 +821,8 @@ def atomic_write_json(path: Path, records: list[dict]) -> None:
             handle.write("\n")
             handle.flush()
             os.fsync(handle.fileno())
-        assert temp_path is not None
         os.replace(temp_path, path)
+        os.chmod(path, 0o644)
     except BaseException:
         if temp_path is not None:
             temp_path.unlink(missing_ok=True)

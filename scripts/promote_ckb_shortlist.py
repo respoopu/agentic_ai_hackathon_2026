@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import tempfile
 from collections.abc import Iterable
 from datetime import datetime
@@ -65,6 +66,14 @@ CONFIRMED_TO_SEED = {
     "confirmed_in_incumbent_directory": "in_incumbent_directory",
 }
 EVIDENTIARY_FIELDS = {"reviewed_at", "reviewed_by", *CONFIRMED_TO_SEED}
+DECISION_FIELDS = {
+    "review_decision",
+    "review_notes",
+    "reviewed_at",
+    "reviewed_by",
+    "confirmed",
+}
+CONFIRMED_FIELDS = {key.removeprefix("confirmed_") for key in CONFIRMED_TO_SEED}
 
 
 class SignoffError(ValueError):
@@ -95,6 +104,11 @@ def apply_attestations(
         if not isinstance(attestation, dict):
             output.append(dict(source))
             continue
+        unexpected = set(attestation) - DECISION_FIELDS
+        if unexpected:
+            raise SignoffError(
+                f"{candidate_id}: unsupported attestation fields: {sorted(unexpected)}"
+            )
         seen.add(candidate_id)
         merged = dict(source)
         for key, value in defaults.items():
@@ -103,15 +117,21 @@ def apply_attestations(
         confirmed = attestation.get("confirmed", {})
         if not isinstance(confirmed, dict):
             raise SignoffError(f"{candidate_id}: confirmed must be an object")
+        unexpected_confirmed = set(confirmed) - CONFIRMED_FIELDS
+        if unexpected_confirmed:
+            raise SignoffError(
+                f"{candidate_id}: unsupported confirmed fields: "
+                f"{sorted(unexpected_confirmed)}"
+            )
         merged.update(
             {
-                f"confirmed_{key}": str(value)
+                f"confirmed_{key}": "" if value is None else str(value)
                 for key, value in confirmed.items()
             }
         )
         merged.update(
             {
-                key: str(value)
+                key: "" if value is None else str(value)
                 for key, value in attestation.items()
                 if key != "confirmed"
             }
@@ -201,20 +221,29 @@ def validate_and_promote(
 
 def write_seed(rows: list[dict[str, str]], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(
-        mode="w",
-        encoding="utf-8",
-        newline="",
-        dir=path.parent,
-        prefix=f".{path.name}.",
-        suffix=".tmp",
-        delete=False,
-    ) as handle:
-        temporary = Path(handle.name)
-        writer = csv.DictWriter(handle, fieldnames=COLUMNS, lineterminator="\n")
-        writer.writeheader()
-        writer.writerows(rows)
-    temporary.replace(path)
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            newline="",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            temporary = Path(handle.name)
+            writer = csv.DictWriter(handle, fieldnames=COLUMNS, lineterminator="\n")
+            writer.writeheader()
+            writer.writerows(rows)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+        os.chmod(path, 0o644)
+    except BaseException:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+        raise
 
 
 def main() -> int:

@@ -10,6 +10,21 @@ from scripts.build_ckb_review_queue import build_queue
 
 
 class ReviewQueueTests(unittest.TestCase):
+    def test_short_csv_rows_use_blank_values(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            draft = root / "draft.csv"
+            draft.write_text(
+                "listing_id,title,provider,source_url,notes\n"
+                "ROW-1,Workshop\n",
+                encoding="utf-8",
+            )
+            social = root / "social.json"
+            social.write_text('{"candidates": []}', encoding="utf-8")
+            rows, _ = build_queue([draft], social)
+        self.assertEqual("ROW-1", rows[0]["candidate_id"])
+        self.assertEqual("", rows[0]["source_url"])
+
     def test_deduplicates_by_stable_source_url_and_keeps_both_source_families(
         self,
     ) -> None:

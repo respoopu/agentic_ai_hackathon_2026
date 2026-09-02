@@ -104,10 +104,12 @@ class TelegramPreviewParser(HTMLParser):
         classes = set(values.get("class", "").split())
         if (
             tag == "div"
-            and self._message is None
             and values.get("data-post")
             and "tgme_widget_message" in classes
         ):
+            # A new message root proves the previous one was malformed if its
+            # closing div never arrived. Drop that partial message rather than
+            # letting it swallow all subsequent posts or emit invented fields.
             self._message = TelegramMessage(post_path=values["data-post"])
             self._message_div_depth = 1
             return

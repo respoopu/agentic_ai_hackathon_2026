@@ -393,6 +393,7 @@ def _take_diverse(
 
 def select_shortlist(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     selected: list[dict[str, str]] = []
+    selected_ids: set[str] = set()
     for area, area_total in AREA_QUOTAS.items():
         area_pool = [row for row in rows if row["proposed_area"] == area]
         bucket_counts: Counter[str] = Counter()
@@ -401,14 +402,21 @@ def select_shortlist(rows: list[dict[str, str]]) -> list[dict[str, str]]:
             source_pool = [
                 row
                 for row in area_pool
-                if row["source_kind"] == source_kind and row not in area_selected
+                if row["source_kind"] == source_kind
+                and row["candidate_id"] not in selected_ids
             ]
-            area_selected.extend(_take_diverse(source_pool, quota, bucket_counts))
+            chosen = _take_diverse(source_pool, quota, bucket_counts)
+            area_selected.extend(chosen)
+            selected_ids.update(row["candidate_id"] for row in chosen)
         if len(area_selected) < area_total:
-            remainder = [row for row in area_pool if row not in area_selected]
-            area_selected.extend(
-                _take_diverse(remainder, area_total - len(area_selected), bucket_counts)
+            remainder = [
+                row for row in area_pool if row["candidate_id"] not in selected_ids
+            ]
+            chosen = _take_diverse(
+                remainder, area_total - len(area_selected), bucket_counts
             )
+            area_selected.extend(chosen)
+            selected_ids.update(row["candidate_id"] for row in chosen)
         if len(area_selected) != area_total:
             raise ValueError(
                 f"{area}: selected {len(area_selected)} rows, need {area_total}; "
@@ -416,11 +424,16 @@ def select_shortlist(rows: list[dict[str, str]]) -> list[dict[str, str]]:
             )
         selected.extend(area_selected)
 
-    supplements = [row for row in rows if row["candidate_id"] in SUPPLEMENTAL_IDS]
-    found = {row["candidate_id"] for row in supplements}
+    found = {row["candidate_id"] for row in rows} & SUPPLEMENTAL_IDS
     missing = SUPPLEMENTAL_IDS - found
     if missing:
         raise ValueError(f"missing supplemental shortlist rows: {sorted(missing)}")
+    supplements = [
+        row
+        for row in rows
+        if row["candidate_id"] in SUPPLEMENTAL_IDS
+        and row["candidate_id"] not in selected_ids
+    ]
     selected.extend(sorted(supplements, key=lambda row: row["candidate_id"]))
 
     output: list[dict[str, str]] = []
