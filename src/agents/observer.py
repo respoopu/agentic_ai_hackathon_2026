@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Literal
 
 from pydantic import Field
@@ -12,6 +13,45 @@ from src.schema.listing import ListingRecord
 from src.schema.plan import StrictModel
 from src.schema.preferences import Axis, DislikeSignal, PreferenceModel
 from src.store.personal_data import PersonalDataStore
+
+TEMPORARY_PAUSE_PHRASES = (
+    "exam week",
+    "exams run",
+    "family travel",
+    "need a pause",
+    "this week is too busy",
+    "sick this week",
+    "another booking would not help this week",
+)
+PROVENANCE_RANK = {"seed": 0, "debrief": 1, "attendance": 2}
+
+
+def is_temporary_pause_text(text: str) -> bool:
+    lower = text.lower()
+    return any(phrase in lower for phrase in TEMPORARY_PAUSE_PHRASES)
+
+
+def _attendance_axis(current: Axis, target: float, occurred_at: datetime) -> Axis:
+    same_direction = current.provenance == "attendance" and current.value * target > 0
+    if same_direction:
+        direction = 1 if target > 0 else -1
+        value = max(-1.0, min(1.0, current.value + direction * 0.1))
+        confidence = min(1.0, current.confidence + 0.05)
+    else:
+        value = target
+        confidence = 0.75
+    return Axis(
+        value=value,
+        confidence=confidence,
+        provenance="attendance",
+        updated_at=occurred_at,
+    )
+
+
+def _stronger_axis(current: Axis, candidate: Axis) -> Axis:
+    if PROVENANCE_RANK[candidate.provenance] < PROVENANCE_RANK[current.provenance]:
+        return current
+    return candidate
 
 
 class ObserverResult(StrictModel):
@@ -52,16 +92,16 @@ class Observer:
         if event.attended and listing is not None:
             axis_updates: dict[str, Axis] = {}
             if "sporty" in listing.vibes:
-                axis_updates["intensity"] = Axis(
-                    value=0.6, confidence=0.75, provenance="attendance", updated_at=event.occurred_at
+                axis_updates["intensity"] = _attendance_axis(
+                    preferences.intensity, 0.6, event.occurred_at
                 )
             if "chill" in listing.vibes:
-                axis_updates["intensity"] = Axis(
-                    value=-0.6, confidence=0.75, provenance="attendance", updated_at=event.occurred_at
+                axis_updates["intensity"] = _attendance_axis(
+                    preferences.intensity, -0.6, event.occurred_at
                 )
             if "artistic" in listing.vibes:
-                axis_updates["contact_noncontact"] = Axis(
-                    value=0.6, confidence=0.75, provenance="attendance", updated_at=event.occurred_at
+                axis_updates["contact_noncontact"] = _attendance_axis(
+                    preferences.contact_noncontact, 0.6, event.occurred_at
                 )
             updates.update(axis_updates)
         persisted_debrief: DebriefRecord | None = None
@@ -117,40 +157,65 @@ class Observer:
                 ]
                 if attribution == "activity" and len(corroborating) >= 2:
                     if activity_vibe == "sporty":
-                        updates["intensity"] = Axis(
+                        proposed = Axis(
                             value=-0.4,
                             confidence=0.5,
                             provenance="debrief",
                             updated_at=debrief.submitted_at,
                         )
+                        current = updates.get("intensity", preferences.intensity)
+                        assert isinstance(current, Axis)
+                        updates["intensity"] = _stronger_axis(current, proposed)
                     elif activity_vibe == "chill":
-                        updates["intensity"] = Axis(
+                        proposed = Axis(
                             value=0.4,
                             confidence=0.5,
                             provenance="debrief",
                             updated_at=debrief.submitted_at,
                         )
+                        current = updates.get("intensity", preferences.intensity)
+                        assert isinstance(current, Axis)
+                        updates["intensity"] = _stronger_axis(current, proposed)
                     elif activity_vibe == "artistic":
-                        updates["contact_noncontact"] = Axis(
+                        proposed = Axis(
                             value=-0.4,
                             confidence=0.5,
                             provenance="debrief",
                             updated_at=debrief.submitted_at,
                         )
+                        current = updates.get(
+                            "contact_noncontact", preferences.contact_noncontact
+                        )
+                        assert isinstance(current, Axis)
+                        updates["contact_noncontact"] = _stronger_axis(
+                            current, proposed
+                        )
         updates.update({"debriefs": debrief_records, "dislikes": dislikes})
         adapted = PreferenceModel.model_validate({**preferences.model_dump(), **updates})
-        lower_debrief = debrief.text.lower() if debrief is not None else ""
-        temporary_pause = not event.attended and any(
-            phrase in lower_debrief
-            for phrase in (
-                "exam week",
-                "family travel",
-                "this week is too busy",
-                "sick this week",
-                "another booking would not help this week",
+        temporary_pause = bool(
+            not event.attended
+            and debrief is not None
+            and is_temporary_pause_text(debrief.text)
+        )
+        previous_was_temporary = bool(
+            len(attendance) >= 2
+            and any(
+                record.booking_id == attendance[-2].booking_id
+                and is_temporary_pause_text(record.text)
+                for record in debrief_records
             )
         )
-        if len(attendance) >= 2 and not attendance[-1].attended and not attendance[-2].attended:
+        if temporary_pause:
+            action: Literal["none", "replan", "try_to_commit", "hold_this_week"] = (
+                "hold_this_week"
+            )
+            reasons = ["temporary_constraint_no_booking_helpful"]
+        elif (
+            len(attendance) >= 2
+            and not attendance[-1].attended
+            and not attendance[-2].attended
+            and not previous_was_temporary
+        ):
             action: Literal["none", "replan", "try_to_commit", "hold_this_week"] = (
                 "replan"
             )
@@ -158,9 +223,6 @@ class Observer:
         elif len(attendance) >= 3 and all(value.attended for value in attendance[-3:]):
             action = "try_to_commit"
             reasons = ["sustained_repeat_attendance"]
-        elif temporary_pause:
-            action = "hold_this_week"
-            reasons = ["temporary_constraint_no_booking_helpful"]
         else:
             action = "none"
             reasons = [

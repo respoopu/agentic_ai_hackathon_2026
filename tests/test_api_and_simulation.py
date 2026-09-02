@@ -6,10 +6,15 @@ import urllib.error
 from unittest.mock import MagicMock, patch
 
 from sim.adversarial import run_adversarial_set
-from sim.counterfactual import load_longitudinal_scenario
+from sim.counterfactual import (
+    _authored_result_paths,
+    _first_attendance_summary,
+    load_longitudinal_scenario,
+    run_first_attendance,
+)
 from sim.counterfactual import run as counterfactual
 from sim.harness import load_profiles, run_eligible_profiles
-from sim.report import rows
+from sim.report import _optional, rows
 from src.api import ApiAuthorizationError, HobbiService, _source_status
 from src.store.personal_data import AuthorizationError
 from tests.helpers import NOW, listing_record
@@ -328,9 +333,15 @@ class ApiAndSimulationTests(unittest.TestCase):
         self.assertEqual((4, 4), (first["hobbi"]["completed"], first["hobbi"]["denominator"]))
         self.assertEqual((3, 4), (first["static"]["completed"], first["static"]["denominator"]))
         self.assertEqual(25.0, first["completion_rate_delta_percentage_points"])
+        self.assertEqual(7.0, first["hobbi"]["median_days_among_completers"])
+        self.assertEqual(28, first["profiles"][3]["hobbi"]["days"])
         self.assertTrue(long["measured"])
-        self.assertEqual({"numerator": 2, "denominator": 12}, long["hold_rate"])
+        self.assertEqual(
+            {"numerator": 2, "denominator": 12},
+            long["hold_branch_reachability"],
+        )
         self.assertEqual(1.0, long["adaptation_latency"]["mean_cycles"])
+        self.assertEqual(0, long["adaptation_latency"]["unresolved_replans"])
         self.assertEqual(
             {"none", "replan", "try_to_commit", "hold_this_week"},
             {cycle["observer_action"] for cycle in long["hobbi_cycles"]},
@@ -343,6 +354,45 @@ class ApiAndSimulationTests(unittest.TestCase):
         self.assertTrue(
             all(not forbidden.intersection(cycle) for cycle in scenario["cycles"])
         )
+        self.assertEqual(
+            ["$.profile.attended"],
+            _authored_result_paths({"profile": {"attended": True}}),
+        )
+
+    def test_empty_counterfactual_population_and_optional_report_values_are_safe(self) -> None:
+        with patch("sim.counterfactual.load_profiles", return_value=[]):
+            first = run_first_attendance()
+        self.assertEqual(0, first["hobbi"]["denominator"])
+        self.assertIsNone(first["completion_rate_delta_percentage_points"])
+        self.assertIsNone(first["hobbi"]["median_days_among_completers"])
+        self.assertEqual("n/a", _optional(None))
+        comparison = counterfactual()
+        comparison["longitudinal"]["adaptation_latency"].update(
+            {
+                "triggered_replans": 1,
+                "resolved_replans": 0,
+                "unresolved_replans": 1,
+                "mean_cycles": None,
+            }
+        )
+        with patch("sim.report.counterfactual", return_value=comparison):
+            rendered = dict(rows())
+        self.assertIn("mean n/a cycles", rendered["B11 Adaptation latency"])
+
+    def test_first_attendance_censor_uses_planned_session_day(self) -> None:
+        summary = _first_attendance_summary(
+            {
+                "cycles": [
+                    {
+                        "request_day": 28,
+                        "session_day": 35,
+                        "attended": True,
+                    }
+                ]
+            }
+        )
+        self.assertFalse(summary["completed"])
+        self.assertEqual(35, summary["days"])
 
     def test_executable_adversarial_set_has_zero_violations(self) -> None:
         result = run_adversarial_set()
@@ -352,8 +402,31 @@ class ApiAndSimulationTests(unittest.TestCase):
             {"measured": True, "numerator": 0, "denominator": 8},
             result["constraint_violations"],
         )
+        self.assertIn(
+            "thin_plan_names_binding_constraint",
+            {case["case"] for case in result["cases"]},
+        )
+        self.assertIn(
+            "suppressed_peer_signal_never_filters",
+            {case["case"] for case in result["cases"]},
+        )
 
-    def test_static_arm_is_immutable_while_hobbi_replans_through_real_gates(self) -> None:
+    def test_crashing_adversarial_check_counts_as_a_violation(self) -> None:
+        with patch(
+            "sim.adversarial._unverified_provider_is_stopped",
+            side_effect=RuntimeError("boom"),
+        ):
+            result = run_adversarial_set()
+        failed = next(
+            case
+            for case in result["cases"]
+            if case["case"] == "unverified_provider_quarantined"
+        )
+        self.assertFalse(failed["passed"])
+        self.assertEqual("RuntimeError", failed["error"])
+        self.assertEqual(1, result["constraint_violations"]["numerator"])
+
+    def test_static_arm_is_immutable_while_hobbi_uses_production_components(self) -> None:
         long = counterfactual()["longitudinal"]
         self.assertEqual(
             1, len({cycle["listing_id"] for cycle in long["static_cycles"]})
@@ -363,10 +436,23 @@ class ApiAndSimulationTests(unittest.TestCase):
         )
         self.assertTrue(
             all(
-                cycle["gate_sequence"] == ["G1", "G2", "G3", "G4"]
+                cycle["g1_execution"] == "direct_production_validator"
+                and cycle["g1_passed"]
+                and cycle["in_graph_gate_sequence"] == ["G2", "G3", "G4"]
+                and cycle["approval_mode"] == "synthetic_auto_issued_per_plan"
                 for cycle in long["hobbi_cycles"]
             )
         )
+        trigger = next(
+            cycle
+            for cycle in long["hobbi_cycles"]
+            if cycle["observer_action"] == "replan"
+        )
+        response = long["hobbi_cycles"][trigger["cycle"]]
+        self.assertEqual(
+            trigger["cycle"], response["responding_to_replan_from_cycle"]
+        )
+        self.assertNotEqual(trigger["listing_id"], response["listing_id"])
         self.assertEqual(
             {"numerator": 8, "denominator": 12}, long["adherence"]["hobbi"]
         )

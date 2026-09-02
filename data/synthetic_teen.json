@@ -12,15 +12,15 @@
   "cycles": [
     {"day": 0, "month": 1, "context": "new term", "preferred_vibe": "sporty", "available": true},
     {"day": 28, "month": 2, "context": "new term", "preferred_vibe": "sporty", "available": true},
-    {"day": 56, "month": 3, "context": "exam week", "preferred_vibe": null, "available": false},
+    {"day": 56, "month": 3, "context": "exam week", "preferred_vibe": null, "available": false, "debrief_text": "Exams run for two weeks, so I need a pause."},
     {"day": 84, "month": 4, "context": "interest shift", "preferred_vibe": "artistic", "available": true},
-    {"day": 112, "month": 5, "context": "interest shift", "preferred_vibe": "artistic", "available": true},
+    {"day": 112, "month": 5, "context": "interest shift", "preferred_vibe": "artistic", "available": true, "debrief_text": "This activity was not my thing."},
     {"day": 140, "month": 6, "context": "recovery", "preferred_vibe": "artistic", "available": true},
     {"day": 168, "month": 7, "context": "recovery", "preferred_vibe": "artistic", "available": true},
     {"day": 196, "month": 8, "context": "sustained attendance", "preferred_vibe": "artistic", "available": true},
     {"day": 224, "month": 9, "context": "sustained attendance", "preferred_vibe": "artistic", "available": true},
     {"day": 252, "month": 10, "context": "sustained attendance", "preferred_vibe": "artistic", "available": true},
-    {"day": 280, "month": 11, "context": "family travel", "preferred_vibe": null, "available": false},
+    {"day": 280, "month": 11, "context": "family travel", "preferred_vibe": null, "available": false, "debrief_text": "Family travel means I need a pause."},
     {"day": 308, "month": 12, "context": "return", "preferred_vibe": "artistic", "available": true}
   ]
 }

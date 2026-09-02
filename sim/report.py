@@ -17,6 +17,10 @@ def _rate(metric: dict[str, Any], *, invert: bool = False) -> str:
     return f"{numerator}/{denominator} ({value:.1f}%)"
 
 
+def _optional(value: float | None) -> str:
+    return "n/a" if value is None else f"{value:.1f}"
+
+
 def rows() -> list[tuple[str, str]]:
     harness = run_eligible_profiles()
     metrics = harness["metrics"]
@@ -30,6 +34,7 @@ def rows() -> list[tuple[str, str]]:
     tools = metrics["tool_call_success"]
     long_tail = metrics["long_tail_coverage"]
     constraints = adversarial["constraint_violations"]
+    eligible_constraints = metrics["constraint_violations"]
     static_first = first["static"]
     hobbi_first = first["hobbi"]
     adherence = long["adherence"]
@@ -79,21 +84,27 @@ def rows() -> list[tuple[str, str]]:
         ),
         (
             "B10 Constraint violations",
-            f"measured executable adversarial set: {_rate(constraints)}",
+            (
+                f"adversarial {_rate(constraints)}; eligible runtime diagnostic "
+                f"{_rate(eligible_constraints)}"
+            ),
         ),
         (
             "B11 Adaptation latency",
             (
                 f"measured synthetic replay: {adaptation['resolved_replans']}/"
-                f"{adaptation['triggered_replans']} triggers changed a later plan; "
-                f"mean {adaptation['mean_cycles']:.1f} cycle among resolved triggers; "
-                f"{adaptation['triggered_replans'] - adaptation['resolved_replans']} "
-                "right-censored"
+                f"{adaptation['triggered_replans']} triggers changed the immediately "
+                "following instructed plan; "
+                f"mean {_optional(adaptation['mean_cycles'])} cycles among resolved "
+                f"triggers; {adaptation['unresolved_replans']} unresolved at horizon"
             ),
         ),
         (
-            "B12 Hold rate",
-            f"measured Observer decisions: {_rate(long['hold_rate'])} in synthetic replay",
+            "B12 Hold reachability",
+            (
+                "deterministic text-branch reachability: "
+                f"{_rate(long['hold_branch_reachability'])}; not a behavioral rate"
+            ),
         ),
         ("B13 Dead-link rate", f"not measured — {metrics['dead_links']['note']}"),
         (
@@ -101,20 +112,16 @@ def rows() -> list[tuple[str, str]]:
             (
                 f"measured synthetic replay: Hobbi {_rate(adherence['hobbi'])} vs "
                 f"static {_rate(adherence['static'])}; "
-                f"{adherence['delta_percentage_points']:+.1f} percentage points"
+                f"{_optional(adherence['delta_percentage_points'])} percentage-point delta"
             ),
         ),
         (
             "B15 First attendance ≤30d",
             (
-                f"measured S$0 synthetic cohort: Hobbi {hobbi_first['completed']}/"
+                f"S$0 synthetic cohort (n={hobbi_first['denominator']} per arm): Hobbi "
+                f"{hobbi_first['completed']}/"
                 f"{hobbi_first['denominator']} vs static {static_first['completed']}/"
-                f"{static_first['denominator']}; "
-                f"{first['completion_rate_delta_percentage_points']:+.1f} percentage points; "
-                f"median days/actions among completers {hobbi_first['median_days_among_completers']:.1f}/"
-                f"{hobbi_first['median_teen_actions_among_completers']:.1f} vs "
-                f"{static_first['median_days_among_completers']:.1f}/"
-                f"{static_first['median_teen_actions_among_completers']:.1f}"
+                f"{static_first['denominator']}; planned session date is used for censoring"
             ),
         ),
         ("A1 Unverified reached teen", _rate(metrics["unverified_reached_teen"])),

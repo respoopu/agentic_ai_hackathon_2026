@@ -26,17 +26,30 @@ ROOT = Path(__file__).resolve().parents[1]
 RESULT_FIELDS = {"attended", "hobbi_action", "static_vibe", "selected_listing_id"}
 
 
+def _authored_result_paths(value: Any, path: str = "$") -> list[str]:
+    found: list[str] = []
+    if isinstance(value, dict):
+        for key, child in value.items():
+            child_path = f"{path}.{key}"
+            if key in RESULT_FIELDS:
+                found.append(child_path)
+            found.extend(_authored_result_paths(child, child_path))
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            found.extend(_authored_result_paths(child, f"{path}[{index}]"))
+    return found
+
+
 def load_longitudinal_scenario() -> dict[str, Any]:
     payload = json.loads(
         (ROOT / "data" / "synthetic_teen.json").read_text(encoding="utf-8")
     )
-    leaked = [
-        sorted(RESULT_FIELDS.intersection(cycle))
-        for cycle in payload.get("cycles", [])
-        if RESULT_FIELDS.intersection(cycle)
-    ]
+    leaked = _authored_result_paths(payload)
     if leaked:
-        raise ValueError("synthetic environment cannot contain authored policy results")
+        raise ValueError(
+            "synthetic environment cannot contain authored policy results: "
+            + ", ".join(leaked)
+        )
     return payload
 
 
@@ -66,10 +79,9 @@ def _debrief(
 ) -> DebriefSubmission | None:
     if attended:
         return None
-    if not cycle.get("available", True):
-        text = f"{cycle['context']}; another booking would not help this week"
-    else:
-        text = "This activity was not my thing"
+    text = cycle.get("debrief_text")
+    if not text:
+        return None
     return DebriefSubmission(
         booking_id=booking_id,
         text=text,
@@ -85,6 +97,7 @@ def _plan_with_current_preferences(
     request: SessionRequest,
     ledger: BudgetLedger,
     preferences: Any,
+    unavailable_listing_ids: set[str] | None = None,
 ) -> tuple[Any, Any]:
     result = Planner().create_plan(
         planning_key=teen_id,
@@ -94,6 +107,7 @@ def _plan_with_current_preferences(
         preferences=preferences,
         listings=listings(),
         constraints=_constraints(profile),
+        unavailable_listing_ids=unavailable_listing_ids,
     )
     if result.plan is None:
         raise RuntimeError(f"evaluation policy produced no plan: {result.binding_constraint}")
@@ -109,10 +123,11 @@ def run_hobbi_policy(
     teen_id: str,
     stop_at_first_attendance: bool = False,
 ) -> dict[str, Any]:
-    """Execute real Planner, G1-G4, Broker persistence and Observer transitions."""
+    """Execute Planner/G1 directly, G2-G4 in-graph, Broker, and Observer."""
 
     record_map = {record.listing_id: record for record in records()}
     cycle_results: list[dict[str, Any]] = []
+    pending_replan: dict[str, Any] | None = None
     with tempfile.TemporaryDirectory() as temporary:
         personal = PersonalDataStore(Path(temporary, "personal.sqlite"))
         ckb = KnowledgeBase(Path(temporary, "ckb.sqlite"))
@@ -143,12 +158,19 @@ def run_hobbi_policy(
                     goal="find one hobby experiment", requested_at=requested_at
                 )
                 before = personal.planner_snapshot(teen_id)
+                replan_instruction = pending_replan
+                pending_replan = None
                 plan, g1 = _plan_with_current_preferences(
                     teen_id=teen_id,
                     profile=profile,
                     request=request,
                     ledger=before["ledger"],
                     preferences=before["preferences"],
+                    unavailable_listing_ids=(
+                        {replan_instruction["listing_id"]}
+                        if replan_instruction is not None
+                        else None
+                    ),
                 )
                 personal.save_plan(teen_id, plan, live=False)
                 personal.issue_plan_approvals(
@@ -181,7 +203,10 @@ def run_hobbi_policy(
                     )
                 booking = final["booking_records"][0]
                 listing = record_map[booking.listing_id]
-                occurred_at = requested_at + timedelta(hours=2)
+                plan_item = plan.items[0]
+                if plan_item.listing_id != booking.listing_id:
+                    raise RuntimeError("evaluation booking does not match planned item")
+                occurred_at = plan_item.session_at
                 attended = _attended(cycle, listing.vibes)
                 event = AttendanceEvent(
                     booking_id=booking.booking_id,
@@ -201,10 +226,16 @@ def run_hobbi_policy(
                     ),
                     store=personal,
                 )
+                if observer.action == "replan":
+                    pending_replan = {
+                        "cycle": index + 1,
+                        "listing_id": booking.listing_id,
+                    }
                 cycle_results.append(
                     {
                         "cycle": index + 1,
-                        "day": int(cycle["day"]),
+                        "request_day": int(cycle["day"]),
+                        "session_day": (occurred_at - AS_OF).days,
                         "context": cycle["context"],
                         "preferred_vibe": cycle.get("preferred_vibe"),
                         "available": bool(cycle.get("available", True)),
@@ -214,9 +245,19 @@ def run_hobbi_policy(
                         "attended": attended,
                         "observer_action": observer.action,
                         "observer_reasons": observer.reason_codes,
+                        "responding_to_replan_from_cycle": (
+                            replan_instruction["cycle"]
+                            if replan_instruction is not None
+                            else None
+                        ),
                         "ledger_version": personal.get_ledger(teen_id).version,
-                        "gate_sequence": [g1.gate]
-                        + [gate.gate for gate in final["gate_log"]],
+                        "planner_execution": "direct_production_component",
+                        "g1_execution": "direct_production_validator",
+                        "g1_passed": g1.passed,
+                        "in_graph_gate_sequence": [
+                            gate.gate for gate in final["gate_log"]
+                        ],
+                        "approval_mode": "synthetic_auto_issued_per_plan",
                     }
                 )
                 if stop_at_first_attendance and attended:
@@ -260,7 +301,8 @@ def run_static_policy(
         cycle_results.append(
             {
                 "cycle": index + 1,
-                "day": int(cycle["day"]),
+                "request_day": int(cycle["day"]),
+                "session_day": (item.session_at - AS_OF).days,
                 "context": cycle["context"],
                 "preferred_vibe": cycle.get("preferred_vibe"),
                 "available": bool(cycle.get("available", True)),
@@ -279,8 +321,8 @@ def run_static_policy(
 def _first_attendance_summary(result: dict[str, Any]) -> dict[str, Any]:
     attended = next((cycle for cycle in result["cycles"] if cycle["attended"]), None)
     return {
-        "completed": attended is not None and attended["day"] <= 30,
-        "days": None if attended is None else attended["day"],
+        "completed": attended is not None and attended["session_day"] <= 30,
+        "days": None if attended is None else attended["session_day"],
         "planning_cycles": len(result["cycles"]),
         "teen_actions": 1 + len(result["cycles"]),
     }
@@ -296,6 +338,7 @@ def run_first_attendance() -> dict[str, Any]:
             "day": day,
             "context": f"week {index + 1}",
             "available": True,
+            "debrief_text": "This activity was not my thing",
         }
         for index, day in enumerate((0, 7, 14, 21, 28))
     ]
@@ -352,6 +395,7 @@ def run_first_attendance() -> dict[str, Any]:
 
     static_summary = arm_summary("static")
     hobbi_summary = arm_summary("hobbi")
+    denominator = len(comparisons)
     return {
         "measured": True,
         "label": "deterministic synthetic S$0 counterfactual; not participant evidence",
@@ -367,8 +411,10 @@ def run_first_attendance() -> dict[str, Any]:
         "static": static_summary,
         "hobbi": hobbi_summary,
         "completion_rate_delta_percentage_points": (
-            (hobbi_summary["completed"] - static_summary["completed"])
-            / len(comparisons)
+            None
+            if denominator == 0
+            else (hobbi_summary["completed"] - static_summary["completed"])
+            / denominator
             * 100
         ),
         "profiles": comparisons,
@@ -400,16 +446,14 @@ def run_longitudinal() -> dict[str, Any]:
         if cycle["observer_action"] != "replan":
             continue
         triggered_replans += 1
-        changed = next(
-            (
-                future_index
-                for future_index in range(index + 1, len(hobbi["cycles"]))
-                if hobbi["cycles"][future_index]["listing_id"] != cycle["listing_id"]
-            ),
-            None,
-        )
-        if changed is not None:
-            latencies.append(changed - index)
+        if index + 1 >= len(hobbi["cycles"]):
+            continue
+        next_cycle = hobbi["cycles"][index + 1]
+        if (
+            next_cycle["responding_to_replan_from_cycle"] == cycle["cycle"]
+            and next_cycle["listing_id"] != cycle["listing_id"]
+        ):
+            latencies.append(1)
     denominator = len(cycles)
     return {
         "measured": True,
@@ -418,16 +462,19 @@ def run_longitudinal() -> dict[str, Any]:
             "hobbi": {"numerator": hobbi_attended, "denominator": denominator},
             "static": {"numerator": static_attended, "denominator": denominator},
             "delta_percentage_points": (
-                (hobbi_attended - static_attended) / denominator * 100
+                None
+                if denominator == 0
+                else (hobbi_attended - static_attended) / denominator * 100
             ),
         },
         "adaptation_latency": {
             "triggered_replans": triggered_replans,
             "resolved_replans": len(latencies),
+            "unresolved_replans": triggered_replans - len(latencies),
             "latency_cycles": latencies,
             "mean_cycles": None if not latencies else sum(latencies) / len(latencies),
         },
-        "hold_rate": {"numerator": holds, "denominator": denominator},
+        "hold_branch_reachability": {"numerator": holds, "denominator": denominator},
         "static_cycles": static["cycles"],
         "hobbi_cycles": hobbi["cycles"],
     }

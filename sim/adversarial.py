@@ -66,15 +66,32 @@ def _unverified_provider_is_stopped() -> bool:
 
 
 def _thin_plan_names_constraint() -> bool:
+    candidates = listings()[:3]
+    eligible = candidates[0]
+    schedule_blocked = [
+        candidate.model_copy(
+            update={
+                "schedule": candidate.schedule.model_copy(
+                    update={"weekday_evening_available": False}
+                )
+            }
+        )
+        for candidate in candidates[1:]
+    ]
     result = _plan(
-        candidates=[listings()[0]],
-        constraints={"max_items": 3, "max_travel_min": 15},
+        candidates=[eligible, *schedule_blocked],
+        constraints={
+            "max_items": 3,
+            "max_travel_min": 15,
+            "weekday_evening_only": True,
+        },
     )
     return bool(
         result.plan
         and result.plan.thin
-        and result.plan.binding_constraint
+        and result.plan.binding_constraint == "schedule"
         and result.plan.total_cost_sgd == 0
+        and [item.listing_id for item in result.plan.items] == [eligible.listing_id]
     )
 
 
@@ -185,6 +202,7 @@ def _age_boundary_is_stopped_at_intake() -> bool:
 
 def _suppressed_peer_signal_never_filters() -> bool:
     base = listings()[0]
+    competitor = listings()[1]
     suppressed = base.model_copy(
         update={
             "peer_cohort": PeerCohort(
@@ -192,14 +210,14 @@ def _suppressed_peer_signal_never_filters() -> bool:
             )
         }
     )
-    without = _plan(candidates=[base])
-    with_suppressed = _plan(candidates=[suppressed])
+    without = _plan(candidates=[base, competitor])
+    with_suppressed = _plan(candidates=[suppressed, competitor])
     return bool(
         without.plan
         and with_suppressed.plan
-        and without.candidate_count == with_suppressed.candidate_count == 1
-        and without.plan.items[0].listing_id
-        == with_suppressed.plan.items[0].listing_id
+        and without.candidate_count == with_suppressed.candidate_count == 2
+        and [item.listing_id for item in without.plan.items]
+        == [item.listing_id for item in with_suppressed.plan.items]
     )
 
 
@@ -208,16 +226,20 @@ def run_adversarial_set() -> dict[str, Any]:
         ("unverified_provider_quarantined", _unverified_provider_is_stopped),
         ("thin_plan_names_binding_constraint", _thin_plan_names_constraint),
         ("parental_rule_wins", _parental_rule_wins),
-        ("dead_listing_excluded", _dead_listing_is_excluded),
+        ("retired_verification_excluded", _dead_listing_is_excluded),
         ("age_coverage_gap_actionable", _age_coverage_gap_is_actionable),
         ("two_guardian_rejections_escalate", _two_guardian_rejections_escalate),
         ("age_boundary_stopped_at_intake", _age_boundary_is_stopped_at_intake),
         ("suppressed_peer_signal_never_filters", _suppressed_peer_signal_never_filters),
     ]
-    cases = [
-        {"case": name, "passed": bool(check())}
-        for name, check in checks
-    ]
+    cases: list[dict[str, Any]] = []
+    for name, check in checks:
+        try:
+            cases.append({"case": name, "passed": bool(check()), "error": None})
+        except Exception as exc:  # noqa: BLE001 - a crashing check is a failed case
+            cases.append(
+                {"case": name, "passed": False, "error": type(exc).__name__}
+            )
     violations = sum(not case["passed"] for case in cases)
     return {
         "label": "executable synthetic adversarial set; not participant evidence",
