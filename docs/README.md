@@ -63,7 +63,7 @@ Every discrepancy in classes A, B and C is resolved. Cross-document consistency 
 
 ## Implementation has started
 
-The seed-CKB foundation now exists: typed listing contracts, a deterministic CSV/quarantine builder, an atomic seed loader and request hydrator, sourced draft rows, quarantine fixtures and focused tests. The actual multi-agent Hobbi pipeline is not built yet; `lab/` remains unrelated workshop material. Every ✅ in [`user_stories.md`](./2-product/user_stories.md) still denotes **PoC scope, not completed progress**. Technical Quality is 20% of the score and is the one criterion no slide can earn, so building the end-to-end path remains the gap that matters most.
+The seed-CKB foundation now exists: typed listing contracts, a deterministic CSV/quarantine builder, an atomic seed loader and request hydrator, sourced draft rows, quarantine fixtures and focused tests. The actual multi-agent Hobbi pipeline is not built yet. Every ✅ in [`user_stories.md`](./2-product/user_stories.md) still denotes **PoC scope, not completed progress**. Technical Quality is 20% of the score and is the one criterion no slide can earn, so building the end-to-end path remains the gap that matters most.
 
 The agent-system prompt suite now follows the same source-of-truth order: role prompts and fixtures are downstream of [`architecture.md`](./3-system/architecture.md), with E1 retained only as a resolved audit record in [`discrepancies.md`](./4-decisions/discrepancies.md).
 
