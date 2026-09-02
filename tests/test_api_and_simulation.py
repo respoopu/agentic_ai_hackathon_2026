@@ -43,10 +43,13 @@ class ApiAndSimulationTests(unittest.TestCase):
 
     def test_empty_ckb_is_explicitly_not_ready_and_fails_planning(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            service = HobbiService(temporary, guardian_token=GUARDIAN_TOKEN)
+            service = HobbiService(
+                temporary, guardian_token=GUARDIAN_TOKEN, seed_artifact=None
+            )
             try:
                 health = service.handle({"operation": "health"})
                 self.assertFalse(health["ready_for_real_planning"])
+                self.assertEqual(0, health["ckb_usable_real_records"])
                 response = service.handle(
                     {
                         "operation": "intake_and_plan",
@@ -78,12 +81,45 @@ class ApiAndSimulationTests(unittest.TestCase):
             finally:
                 service.close()
 
+    def test_health_ignores_fictional_and_retired_rows_for_real_readiness(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            service = HobbiService(temporary, seed_artifact=None)
+            try:
+                fictional = listing_record(
+                    "fictional", verification="unverified", provider_type="private_unverified"
+                )
+                retired = listing_record("retired").model_copy(
+                    update={"verification": "retired", "freshness_state": "dead"}
+                )
+                service.ckb.seed([fictional, retired])
+                health = service.handle({"operation": "health"})
+                self.assertFalse(health["ready_for_real_planning"])
+                self.assertEqual(2, health["ckb_records"])
+                self.assertEqual(1, health["ckb_fictional_records"])
+                self.assertEqual(2, health["ckb_unusable_records"])
+            finally:
+                service.close()
+
+    def test_health_accepts_sourced_unverified_real_row_for_guardian_flow(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            service = HobbiService(temporary, seed_artifact=None)
+            try:
+                service.ckb.seed([listing_record("real-unverified", verification="unverified")])
+                health = service.handle({"operation": "health"})
+                self.assertTrue(health["ready_for_real_planning"])
+                self.assertEqual(1, health["ckb_usable_real_records"])
+                self.assertEqual(0, health["ckb_verified_real_records"])
+                self.assertEqual(1, health["ckb_unverified_real_records"])
+            finally:
+                service.close()
+
     def test_service_health_and_full_intake_path(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             service = HobbiService(
                 temporary,
                 guardian_token=GUARDIAN_TOKEN,
                 compliance_token=COMPLIANCE_TOKEN,
+                seed_artifact=None,
             )
             try:
                 service.ckb.seed([listing_record("api-free")])
@@ -202,6 +238,7 @@ class ApiAndSimulationTests(unittest.TestCase):
                 temporary,
                 guardian_token=GUARDIAN_TOKEN,
                 compliance_token=COMPLIANCE_TOKEN,
+                seed_artifact=None,
             )
             try:
                 service.ckb.seed(

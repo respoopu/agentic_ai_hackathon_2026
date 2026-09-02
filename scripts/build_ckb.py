@@ -45,6 +45,7 @@ OUT = ROOT / "data" / "seed_ckb.json"
 AGE_FLOOR, AGE_CEILING = 13, 17
 STALE_AFTER_DAYS = 30
 DEEP_AREA = "Jurong West"
+TARGET_AREAS = {"Jurong West", "Punggol", "Bishan"}
 SG_TZ = ZoneInfo("Asia/Singapore")
 
 PROVIDER_TYPES = {
@@ -304,12 +305,13 @@ def parse_row(raw: dict[str, str], *, as_of: datetime) -> dict:
         )
 
     # Provenance. "Verified" means a named person, on a named day.
-    if rec["verification"] == "verified":
-        if not rec["verified_at"] or not rec["verified_by"]:
-            raise RowError(
-                "verification=verified needs both verified_at and verified_by "
-                "— an unattributed row is not a verified row"
-            )
+    if rec["verification"] == "verified" and (
+        not rec["verified_at"] or not rec["verified_by"]
+    ):
+        raise RowError(
+            "verification=verified needs both verified_at and verified_by "
+            "— an unattributed row is not a verified row"
+        )
 
     vibes = [v.strip().lower() for v in g("vibes").split("|") if v.strip()]
     bad = set(vibes) - VIBES
@@ -593,6 +595,11 @@ def is_weekday_evening(rec: dict) -> bool:
     s = rec["schedule"]
     if s["kind"] == "drop_in":
         return s["weekday_evening_available"]
+    if s["kind"] == "fixed_dates":
+        return any(
+            value.weekday() < 5 and value.time() >= time(17)
+            for value in (_datetime(item, "fixed_dates") for item in s["fixed_dates"])
+        )
     if s["kind"] != "weekly" or not s.get("start_time"):
         return False
     return (
@@ -605,6 +612,11 @@ def is_weekend(rec: dict) -> bool:
     s = rec["schedule"]
     if s["kind"] == "drop_in":
         return s["weekend_available"]
+    if s["kind"] == "fixed_dates":
+        return any(
+            value.weekday() >= 5
+            for value in (_datetime(item, "fixed_dates") for item in s["fixed_dates"])
+        )
     return s["kind"] == "weekly" and s.get("weekday") in {"sat", "sun"}
 
 
@@ -617,9 +629,11 @@ def coverage(
     records: list[dict],
     *,
     deep_area: str = DEEP_AREA,
+    target_areas: set[str] | None = None,
     as_of: datetime | None = None,
 ) -> list[tuple[str, bool, str]]:
     """Each check names the doc requirement it exists to satisfy."""
+    target_areas = TARGET_AREAS if target_areas is None else target_areas
     real = [r for r in records if not r.get("is_fictional")]
     fake = [r for r in records if r.get("is_fictional")]
     free = [r for r in real if is_free(r)]
@@ -656,12 +670,15 @@ def coverage(
             ]
         )
         for a, rows in by_area.items()
+        if a in target_areas
     }
+    for area in target_areas - thin.keys():
+        thin[area] = 0
     short = {a: n for a, n in thin.items() if n < 3}
     check(
-        "A3 · >=3 free, beginner, join-alone per area",
-        not short and bool(thin),
-        ("no rows yet" if not thin else "all areas clear")
+        "A3 · >=3 free, beginner, join-alone per target area",
+        not short,
+        "all areas clear"
         if not short
         else "short: " + ", ".join(f"{a} has {n}" for a, n in sorted(short.items())),
     )
@@ -789,24 +806,26 @@ def display_path(path: Path) -> Path:
 
 def atomic_write_json(path: Path, records: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    handle = tempfile.NamedTemporaryFile(
-        mode="w",
-        encoding="utf-8",
-        dir=path.parent,
-        prefix=f".{path.name}.",
-        suffix=".tmp",
-        delete=False,
-    )
-    temp_path = Path(handle.name)
+    temp_path: Path | None = None
     try:
-        with handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            temp_path = Path(handle.name)
             json.dump(records, handle, indent=2, ensure_ascii=False)
             handle.write("\n")
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temp_path, path)
+        os.chmod(path, 0o644)
     except BaseException:
-        temp_path.unlink(missing_ok=True)
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
         raise
 
 
@@ -942,7 +961,7 @@ def main() -> int:
     # pass can never leave a malformed build artifact behind.
     try:  # optional tighter pass, once the agent env is installed
         sys.path.insert(0, str(ROOT))
-        from src.schema.listing import ListingRecord  # noqa: PLC0415
+        from src.schema.listing import ListingRecord
 
         for r in records:
             ListingRecord.model_validate(r)

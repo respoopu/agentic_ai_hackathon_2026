@@ -1,23 +1,30 @@
 # Seed CKB — the transcription contract
 
-*Version 1.1 · 1 Sep 2026 · owner: unassigned*
+*Version 1.3 · 2 Sep 2026 · owner: Codex (pipeline), Rayden / `respoopu` (attestation)*
 
-Hobbi is a very good librarian standing in an empty library. Every agent in
-[`architecture.md`](./architecture.md) reasons *about* activities. The schema,
-builder, loader boundary, quarantine fixtures and 157 sourced drafts now exist;
-the committed build artifact still has zero real rows until selected drafts are
-completed and promoted into `data/seed_ckb.csv`.
+Every agent in [`architecture.md`](./architecture.md) reasons *about* activities.
+The schema, builder, loader boundary, quarantine fixtures and canonical artifact
+now exist. The reproducible review queue contains 356 unique candidates and its
+deterministic shortlist has 46 rows: 25 Jurong West, 10 Punggol, 10 Bishan and
+one verified commercial thrifting supplement in Kallang. Human attestation
+promoted 35 complete real rows and retained 11 documented rejections;
+`data/seed_ckb.json` combines those with 10 fictional quarantine fixtures.
 
-> **Integration assumption (1 Sep).** For PR #3 reconciliation, the factual
-> content already present in the draft files is accepted as provisionally
-> accurate. This avoids blocking schema and loader work on another research
-> pass. It does **not** invent missing fields or relabel an unsigned row as
-> `verified`; slide-facing claims and final rows still follow the vetting tasks
-> in [`outstanding.md`](../5-delivery/outstanding.md).
+> **Historical integration assumption (1 Sep).** PR #3 treated draft facts as
+> provisional so schema work could proceed. The 2 Sep attestation supersedes
+> that assumption for the 35 promoted rows only; the remaining drafts are still
+> unsigned and must not be presented as canonical activities.
 
-**The job:** about 45 real activities for 13–17 year olds, transcribed by hand
-from pages someone actually opened, plus 10 invented ones for the vetting demo.
-Four people, one evening. No code required to take part.
+**Delivered:** 35 real activities usable by at least one 13–17 year old,
+transcribed from pages a named human opened, plus 10 invented rows for the
+vetting demo.
+
+**Accepted scope decision:** the earlier planning estimate was approximately
+45 real rows. Human review accepted 35 complete rows and rejected 11 candidates;
+the 10 quarantine fixtures still put the canonical artifact at the 45-row
+volume gate. We accepted 35 real rows for this hackathon snapshot because every
+required coverage cell below passes. This is not a claim that 35 is the
+long-term production target.
 
 **Why it is not just plumbing:**
 
@@ -26,8 +33,8 @@ Four people, one evening. No code required to take part.
    nobody has gathered them in one place."* The proof of that is gathering them.
    Which is why they must be real: a judge clicking a dead link during Q&A costs
    more than the row was worth, and [`sources.md`](../2-product/sources.md) opens
-   with a retraction of our own headline statistic. That posture and 45
-   unverified listings cannot coexist.
+   with a retraction of our own headline statistic. That posture and an
+   unverified runtime catalogue cannot coexist.
 3. The best demo moment only works if the data is built for it. Adversarial
    scenario 2 — *"nothing free within 15 minutes on a weekday evening, but
    widening to Saturday opens 6 options"* — is only true if the CKB genuinely
@@ -51,17 +58,41 @@ resolve; the validator enforces this.
 
 ## 2. How to work
 
-Transcribe into a shared sheet (Google Sheets — four people editing at once, no
-merge conflicts, nobody needs Python), export as CSV to `data/seed_ckb.csv`,
-then:
+The current pipeline does the research collation and shortlist selection first:
 
 ```bash
+python3 scripts/fetch_public_social_candidates.py
+python3 scripts/build_ckb_review_queue.py
+python3 scripts/select_ckb_shortlist.py --as-of 2026-09-02
+```
+
+This produces the generated `data/ckb_shortlist.csv`. Human decisions and
+confirmed canonical fields are kept separately in `data/ckb_attestations.json`,
+so shortlist regeneration cannot erase the sign-off ledger. Rejections need a
+reason. Approvals need complete canonical values; blank values are never
+inferred from hints. Reviewer identity, review date, participation facts and
+cost facts must be recorded on each decision; promotion rejects evidentiary
+defaults. Then:
+
+```bash
+python3 scripts/promote_ckb_shortlist.py --as-of 2026-09-02
 python3 scripts/build_ckb.py                 # validate + build data/seed_ckb.json
 python3 scripts/build_ckb.py --coverage-only # just the gap report
 python3 scripts/build_ckb.py --check-urls    # HEAD every source_url
 python3 scripts/build_ckb.py --allow-incomplete # local development only
 python3 scripts/build_ckb.py --as-of 2026-09-01T09:00:00+08:00 # reproducible build
 ```
+
+The promotion command reuses the merged builder's row parser. It refuses any
+pending row, any unsigned decision, an automated actor recorded as reviewer,
+or any approved value that the canonical builder would reject. This is the
+publication boundary: collection and selection do not write `seed_ckb.csv`.
+
+Teams may still use a shared sheet for simultaneous review: import
+`data/ckb_shortlist.csv`, complete it, and export with the same columns before
+running promotion. `data/seed_ckb.csv` is generated output owned by the
+promotion command, not a hand-maintained merge target; promotion replaces it.
+Use `--out` with a scratch path when trialling a refresh.
 
 Stdlib only — it runs on a clean laptop with nothing installed. It refuses
 badly-sourced rows and then prints which coverage cells are still empty, named
@@ -81,9 +112,25 @@ from an **unchecked** one (403, timeout — several government sites block
 automated requests, which is not the same as being broken). Only dead links
 fail the build.
 
-Start the sheet from `data/seed_ckb.csv`, which ships with the header row and
-three worked examples covering the three schedule shapes. The examples have `#`
-in front of the id so the validator skips them; delete them when you start.
+`data/seed_ckb.csv` contains the 35 promoted real rows. The committed
+`data/seed_ckb.json` is the corresponding validated runtime artifact plus the
+10 visibly fictional quarantine rows.
+
+### Snapshot validity and refresh
+
+The committed seed is a reproducible **2 Sep 2026 snapshot**, not a permanent
+live catalogue. Its earliest fixed-date session is **6 Sep 2026 at 10:00
+Asia/Singapore**. After that session begins, promotion against the current
+shortlist intentionally fails because the canonical builder rejects past
+fixed dates. The 30-day freshness gate also requires the 2 Sep attestations to
+be checked again before an October demo.
+
+Before a demo after 6 Sep, refresh the candidate captures and shortlist,
+re-check every promoted source as a named human, update the attestation ledger
+with current schedules and `reviewed_at` values, then rerun promotion and the
+builder. For an exact historical reproduction of this committed snapshot, use
+the documented `--as-of 2026-09-02` promotion command and the timezone-qualified
+builder command above.
 
 ---
 
@@ -100,7 +147,7 @@ copied straight off the page.
 | `title` | The activity name **as written on the page**. Don't improve it. |
 | `provider` | The organisation running it. |
 | `provider_type` | `cc` · `activesg` · `third_space` · `school` · `commercial` · `informal` |
-| `source_url` | The exact URL you read. Not the site's homepage. |
+| `source_url` | The exact page you read. A first-party multi-venue booking or directory page is acceptable only when it explicitly identifies the attested venue, and `review_notes` must say what entry was checked. Not the site's homepage. |
 | `verified_at` | The date **you** opened it, `YYYY-MM-DD`. |
 | `verified_by` | Your name. Not credit — accountability. |
 | `verification` | `verified` once you've seen it. `retired` if it has since died. |
@@ -156,7 +203,7 @@ stable across filters and re-runs.
 | Column | What goes in it |
 |---|---|
 | `vibes` | Pipe-separated from `sporty` `artistic` `chill` `explorative`. **Coverage auditing only** — never shown to a teen, never used to filter. See D10's five rules and invariant A9. |
-| `in_incumbent_directory` | Is it already listed on ActiveSG, Skoop or similar? This is the only way **B9** (long-tail coverage ≥ 40%) can be computed, and B9 is what backs *"we are not Skoop with an LLM."* |
+| `in_incumbent_directory` | Is it already listed in a cross-provider or cross-category consumer discovery/booking directory such as ActiveSG or Skoop? First-party provider calendars such as NLB LibCal are source systems, not incumbent discovery directories. Record this per row. This is the only way **B9** (long-tail coverage ≥ 40%) can be computed, and B9 is what backs *"we are not Skoop with an LLM."* |
 | `notes` | Anything a teammate needs. Tag exactly one row `#demo-retire` — that's the listing Compliance kills on camera for adversarial scenario 4. |
 
 ---
@@ -179,6 +226,12 @@ validator prints this list with PASS/GAP against your current sheet:
 | Provider spread | cc ≥3 · activesg ≥3 · informal ≥3 · third_space ≥2 · commercial ≥1 |
 | Free majority | Over half the set is S$0 |
 | Freshness | Nothing verified more than 30 days ago |
+
+The scenario-2 upper bound of two weekday-evening options is a deliberate demo
+fixture constraint, not a general measure of supply quality. A refresh that
+finds more valid options should report the changed scenario shape for an
+explicit product decision; it must never discard valid activities merely to
+keep the demo wording true.
 
 ---
 

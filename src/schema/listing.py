@@ -144,6 +144,11 @@ class Schedule(BaseModel):
         """Used by the coverage report to check adversarial scenario 2."""
         if self.kind == "drop_in":
             return bool(self.weekday_evening_available)
+        if self.kind == "fixed_dates":
+            return any(
+                value.weekday() < 5 and value.time() >= time(17)
+                for value in self.fixed_dates
+            )
         if self.kind != "weekly" or self.weekday is None or self.start_time is None:
             return False
         return self.weekday in (
@@ -157,6 +162,8 @@ class Schedule(BaseModel):
     def is_weekend(self) -> bool:
         if self.kind == "drop_in":
             return bool(self.weekend_available)
+        if self.kind == "fixed_dates":
+            return any(value.weekday() >= 5 for value in self.fixed_dates)
         return self.kind == "weekly" and self.weekday in ("sat", "sun")
 
 
