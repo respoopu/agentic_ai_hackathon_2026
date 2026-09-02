@@ -372,17 +372,17 @@ Four phases: **triggered situational interest → maintained situational interes
 
 ## J. Remaining verification tasks
 
-The v1 priority list is **closed** — all four items were chased and one was retracted. The canonical status, owner and acceptance test for what remains are tracked in [`outstanding.md`](../5-delivery/outstanding.md) **OW-01, OW-02 and OW-07–OW-11**; this table retains the research-specific rationale and effort estimate.
+The v1 priority list is **closed** — all four items were chased and one was retracted. The canonical status, owner and acceptance test for what remains are tracked in [`outstanding.md`](../5-delivery/outstanding.md) **OW-07–OW-11**; OW-01 was dropped and OW-02 completed. This table retains the research-specific rationale and effort estimate.
 
 | # | Task | Why | Effort |
 |---|---|---|---|
-| 1 | **Talk to five teenagers** | Closes the only pressure-test question we fail (§1.2), and validates I.8 | One afternoon. **Do this one.** |
+| 1 | **Talk to five teenagers** | **Dropped for the hackathon.** The modelled journeys expose rather than validate the assumptions. | Not in submission scope |
 | 2 | Verify "100+ ActiveSG interest groups" in MyActiveSG+ | Currently a listicle | 10 min |
 | 3 | Confirm Flying Cape still operates | 2019 source | 5 min |
 | 4 | Find a primary citation for "12 third spaces **by end-2026**" | Deadline is 🟡, the count is 🟢 | 15 min |
 | 5 | Fetch the Ostojic 2014 abstract directly | The reversal figure is from a secondary summary | 10 min |
-| 6 | Ask organisers: deadline, upload mechanism, live Q&A? | Not in the deck. Tracked as **D4/D5** — the team is handling it directly | One email |
+| 6 | Ask organisers: deadline, upload mechanism, live Q&A? | **Done.** Rayden confirmed the organiser response was received on 2 Sep. | Complete |
 | 7 | Verify whether Discover is actually the sign-up channel for the 20,000 opportunities | The current primary quote only calls it a digital compass | 15 min |
-| 8 | Validate the adult-coordination insight in teen/caregiver interviews | The supply fragmentation is observable; the household-time claim was not sourced | Fold into task 1 |
+| 8 | Validate the adult-coordination insight in teen/caregiver interviews | **Dropped with task 1.** Keep the household-time claim explicitly labelled as a hypothesis. | Not in submission scope |
 
 Everything else is solid or explicitly labelled as analysis rather than a sourced claim.

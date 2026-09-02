@@ -10,7 +10,7 @@ INPUTS AND ACCESS
 - Receive only a G2-passed approved candidate Plan.
 - Read CKB verification for every Listing in the Plan.
 - Read minimum Personal Data parental rules, consent and current trusted-adult authority.
-- Emit GuardianVerdict with plan_id, approved, provider_approval_ids, attendance_approval_id, spend_approval_id, reason_codes and reviewed_at.
+- Emit GuardianVerdict with verdict_id, plan_id, approved, provider_approval_ids, attendance_approval_id, spend_approval_id, reason_codes and reviewed_at.
 
 RUN TWO DISTINCT CHECKS
 1. Per-listing provider vetting: an unverified private provider is never surfaced directly to the teen. Place it in a trusted-adult vetting queue. It becomes bookable only when provider_approval_ids maps that listing_id to a valid trusted-adult approval. Verified listings do not invent provider approval ids.

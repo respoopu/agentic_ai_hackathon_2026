@@ -491,9 +491,9 @@ Two reasons to be explicit rather than vague. Technical Quality's top band is *"
 | **D10** | Cold start is 4–6 skippable vibe chips — **seeding, not typing** (§6.1) |
 | **D11** | Dislike is modelled, with decay and attribution, **never as a blocklist** |
 
-What is left is not a decision. It is the build, the deck, the video — and one task below.
+What remains is delivery work: the deck, the video and the final submission freeze, plus the explicitly scoped follow-ups in [`outstanding.md`](../5-delivery/outstanding.md).
 
-**The one that is not a decision but a task: talk to five teenagers (§1.2).** It closes the only pressure-test question we currently fail.
+Primary interviews were intentionally dropped for this hackathon. The five modelled journeys expose the assumptions but are not participant evidence; adult coordination and “scene, not class” therefore remain labelled hypotheses.
 
 ---
 

@@ -287,8 +287,8 @@ Concretely, in LangGraph, it is a validation function applied at each gate (`G1`
 | **I0** *(deterministic intake boundary)* | Intake/Setup → Planner | Declared age is 13–17 · required consent records exist · out-of-range requests terminate before planning or persistence |
 | **G1** | Planner ⇄ Discovery | Outbound `Plan` is valid, non-empty and stripped of personal data; returned `Listing` records are valid, carry source/verification fields, and contain no raw page dump |
 | **G2** | Planner → Guardian | Plan schema valid · every listing resolvable in CKB · ledger arithmetic balances · **cost ≤ money remaining** |
-| **G3** | Guardian → Broker | `GuardianVerdict` present · every listing `verified` or trusted-adult-approved · required provider, attendance and spend approval ids present |
-| **G4** | Broker → Observer | `BookingRecord` well-formed · `ledger_transaction_id` unique · ledger commitment applied exactly once |
+| **G3** | Guardian → Broker | approved `GuardianVerdict` matches the exact `plan_id` · every listing `verified` or trusted-adult-approved · required provider, attendance and spend approval ids present |
+| **G4** | Broker → Observer | `BookingRecord` is bound to that verdict · `ledger_transaction_id` is stable for its logical commitment · durable evidence shows the commitment was applied exactly once; an exact replay may return the stored record without another effect |
 
 **This is one instrumentation point, not the only one.** Gate results provide schema-validation and loop data; model responses provide token usage; tool wrappers provide tool-call outcomes; attendance records and the evaluation harness provide product metrics and judge scores. [`evaluation.md`](./evaluation.md) §3 names the source for each metric. (Discrepancy B3.)
 
@@ -432,14 +432,18 @@ class PlanItem(BaseModel):
     listing_id:        str
     session_at:        datetime
     cost_sgd:          Decimal
+    duration_hours:    float            # source of BookingRecord.committed_hours
 
 class Plan(BaseModel):
     plan_id:           str
     items:             list[PlanItem]
     total_cost_sgd:    Decimal
     ledger_version:    int              # optimistic-concurrency token read by Planner
+    thin:              bool             # Discovery cap reached with a thin candidate set
+    binding_constraint: str | None      # required whenever thin is true
 
 class GuardianVerdict(BaseModel):
+    verdict_id:              str
     plan_id:                 str
     approved:                bool
     provider_approval_ids:   dict[str, str]  # listing_id → trusted-adult approval id
@@ -452,10 +456,20 @@ class BookingRecord(BaseModel):
     booking_id:            str
     plan_id:               str
     listing_id:            str
+    guardian_verdict_id:   str           # binds the booking to the exact approval
     status:                Literal["booked", "failed"]
-    ledger_transaction_id: str | None    # idempotency key; unique when booked
+    ledger_transaction_id: str | None    # stable id derived per logical commitment
     committed_sgd:         Decimal
+    committed_hours:       float
     created_at:            datetime
+
+class CommitEvidence(BaseModel):
+    """Durable proof G4 reads instead of trusting Broker control flow."""
+    transaction_ids:       list[str]     # one per logical commitment, no duplicates
+    ledger_version_before: int
+    ledger_version_after:  int           # exactly before + 1 for the committed Plan
+    transaction_rows:      int           # durable rows found; equals len(transaction_ids)
+    replayed:              bool          # true when an exact replay returned stored records
 
 class GateResult(BaseModel):
     gate:              Literal["I0", "G1", "G2", "G3", "G4"]
