@@ -24,9 +24,9 @@
 
 **All twelve decisions in §D closed on 31 Aug**, and every discrepancy in classes A, B and C with them. §F records the subsequent consistency reviews and their corrections; future mismatches remain defects to fix, not something this status line claims can never exist.
 
-**One discrepancy row is open.** E1 was resolved on 1 Sep by regenerating the agent prompts and Python fixtures from `architecture.md` v2.2; OW-03 preserves that completion evidence. The subsequent PR audit opened **E2**, a Broker authorization/idempotency contract mismatch tracked for delivery as **OW-15**.
+**All discrepancy rows are resolved.** E1 was resolved on 1 Sep by regenerating the agent prompts and Python fixtures from `architecture.md` v2.2; OW-03 preserves that completion evidence. E2's Broker authorization/idempotency mismatch was resolved on 2 Sep by aligning the source contracts and executable fixtures with the implemented runtime; OW-15 preserves that completion evidence.
 
-Everything else that remains is work, not argument: the build, the deck, the video, the source-verification list below, and five teenagers.
+Everything else that remains is work, not argument: the deck, the video, the final submission freeze and the explicitly scoped follow-ups in the canonical tracker. Primary interviews were dropped for this hackathon and remain labelled as missing participant evidence.
 
 **If you read one row, read B7** — and then **B11**, the trap inside B7's own fix. Both closed on 31 Aug; they are kept because the reasoning is the reasoning behind slide 2 and the headline metric.
 
@@ -466,14 +466,14 @@ The old PowerShell-only validation also silently accepted unknown invariant labe
 
 ---
 
-### E2 · Broker authorization and idempotency contracts disagree 🔴 `OPEN — OW-15`
+### E2 · Broker authorization and idempotency contracts disagree 🟢 `RESOLVED — 2 Sep 2026 (OW-15)`
 
-The post-OW-03 PR audit found two coupled design gaps that must close before Broker is implemented:
+The post-OW-03 PR audit found two coupled design gaps that had to close before the Broker contract could be frozen:
 
-1. **Authorization is not carried into the booking record.** [`evaluation.md`](../3-system/evaluation.md) A7 says every `BookingRecord` carries a Guardian verdict id, but the authoritative `BookingRecord` schema in [`architecture.md`](../3-system/architecture.md) §5 has no such field. Architecture G3 requires a verdict to be present but does not explicitly require `approved=true` and a matching `plan_id`; the Validator prompt is stricter than the source contract.
-2. **The retry key has no stable lifecycle.** The Broker prompt says to create a unique `ledger_transaction_id` for each item, then relies on seeing the same id to detect a retry. Minting a fresh id after a timeout or crash bypasses that replay branch. G4's current “unique” wording also reads as though a legitimate replay should fail, even though the ledger must apply exactly once per logical commitment.
+1. **Authorization was not carried into the booking record.** At audit time, [`evaluation.md`](../3-system/evaluation.md) A7 said every `BookingRecord` carried a Guardian verdict id, but the authoritative schema in [`architecture.md`](../3-system/architecture.md) §5 had no such field. Architecture G3 required a verdict to be present but did not explicitly require `approved=true` and a matching `plan_id`; the Validator prompt was stricter than the source contract.
+2. **The retry key had no stable lifecycle.** The Broker prompt said to create a unique `ledger_transaction_id` for each item, then relied on seeing the same id to detect a retry. Minting a fresh id after a timeout or crash bypassed that replay branch. G4's “unique” wording also read as though a legitimate replay should fail, even though the ledger must apply exactly once per logical commitment.
 
-**Decision required.** Add `guardian_verdict_id` to `BookingRecord`; make G3 require a present, approved verdict matching `plan_id`; define the transaction id as deterministic from the logical commitment or durably reserved before the sandbox call; and define G4 as exactly-once application per transaction id with replay returning the stored record. Then align architecture, shared protocol, prompts and executable fixtures. Delivery and acceptance evidence are tracked as [`OW-15`](../5-delivery/outstanding.md).
+**Resolution.** `BookingRecord` now carries `guardian_verdict_id`; G3 requires a present, approved verdict matching the exact `plan_id`; Broker derives the transaction id deterministically from the logical commitment; and G4 permits an exact replay to return the stored record while durable evidence proves one ledger application. Architecture, shared protocol, prompts and executable fixtures agree. Delivery and acceptance evidence are recorded as [`OW-15`](../5-delivery/outstanding.md).
 
 The related validation gap—fixture `store_reads`, `store_writes` and `gates` are declared more broadly than they are enforced—is implementation debt rather than a source-contract disagreement. It is tracked separately as [`OW-16`](../5-delivery/outstanding.md).
 

@@ -43,8 +43,8 @@ The longitudinal cycle advances once per attendance event and stops when `tries_
 - `IntakeResult`: `eligible`, reason (`eligible`, `under_13` or `adult_mode_unavailable`), and nullable referral (`trusted_adult` or `general_activity_services`).
 - `PlanItem`: `listing_id`, `session_at`, `cost_sgd`.
 - `Plan`: `plan_id`, non-empty `items`, `total_cost_sgd`, `ledger_version`.
-- `GuardianVerdict`: `plan_id`, `approved`, listing-id keyed `provider_approval_ids`, `attendance_approval_id`, `spend_approval_id`, `reason_codes`, `reviewed_at`.
-- `BookingRecord`: `booking_id`, `plan_id`, `listing_id`, `status` (`booked` or `failed`), unique `ledger_transaction_id` when booked, `committed_sgd`, `created_at`.
+- `GuardianVerdict`: `verdict_id`, `plan_id`, `approved`, listing-id keyed `provider_approval_ids`, `attendance_approval_id`, `spend_approval_id`, `reason_codes`, `reviewed_at`.
+- `BookingRecord`: `booking_id`, `plan_id`, `listing_id`, `guardian_verdict_id`, `status` (`booked` or `failed`), stable `ledger_transaction_id` when booked, `committed_sgd`, `committed_hours`, `created_at`.
 - `AttendanceEvent`: `booking_id`, `attended`, `occurred_at`.
 - `DebriefRecord`: `booking_id`, `text`, `submitted_at`.
 - `DebriefSubmission`: `booking_id`, text, channel and submission time. The PoC accepts only `channel="in_app"` and has no audio field.
@@ -72,14 +72,14 @@ Validator is a detached on-edge function, not a router or business node:
 - I0, Intake/Setup to Planner: age 13-17, required consent present, ineligible requests stop before planning/persistence.
 - G1, Planner to/from Discovery: outbound Plan valid/non-empty/PII-free; returned ListingRecord valid, sourced, verified-state labelled and free of page dumps.
 - G2, Planner to Guardian: Plan valid; all listing ids resolve; ledger arithmetic balances; total cost is no more than money remaining.
-- G3, Guardian to Broker: GuardianVerdict present; every listing verified or trusted-adult-approved; provider, attendance and spend approval ids present when required.
-- G4, Broker to Observer: BookingRecord valid; `ledger_transaction_id` unique; commitment applied exactly once.
+- G3, Guardian to Broker: GuardianVerdict is approved and matches the exact `plan_id`; every listing is verified or trusted-adult-approved; provider, attendance and spend approval ids are present when required.
+- G4, Broker to Observer: BookingRecord is valid and carries that `guardian_verdict_id`; its `ledger_transaction_id` is the stable id for the logical commitment; durable transaction rows and ledger versions show that the commitment was applied exactly once. An exact replay passes with the same stored record and no additional effect.
 
 `gate_log` stores only payload shape: `schema_id`, validity, byte size, counters and reason codes/timestamp. It never stores payload content. Token usage remains separate.
 
 ## Re-entry and transaction rules
 
-Broker submits the Plan's `ledger_version` and a unique `ledger_transaction_id`. The narrow transaction atomically checks the version, records the booking and commits money/hours/tries exactly once. A duplicate returns the stored `BookingRecord`; it never duplicates commitment. A stale version stops for replan.
+Broker derives one stable `ledger_transaction_id` from each logical commitment (`plan_id`, listing, session and cost) and submits the Plan's `ledger_version`. The narrow transaction atomically checks the version and stored approved verdict, records the booking with `guardian_verdict_id`, and commits money/hours/tries exactly once. An exact replay derives the same id and returns the stored `BookingRecord`; it never repeats provider or ledger effects. A changed commitment derives a different id, and a stale version stops for replan.
 
 A booking failure provides an actionable reason, marks that slot unavailable and returns to Planner. A Compliance-retired listing flags affected plans. In both cases every replacement path is Planner -> G2 -> Guardian -> G3 -> Broker. No previous verdict authorises a replacement.
 

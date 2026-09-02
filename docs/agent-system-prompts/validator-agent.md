@@ -25,15 +25,17 @@ G2 - Planner to Guardian:
 - hard age/travel/parental constraints hold.
 
 G3 - Guardian to Broker:
-- GuardianVerdict exists, matches plan_id and is approved;
+- GuardianVerdict exists, is approved and matches the exact plan_id;
 - every listing is verified or has its listing-specific trusted-adult provider approval id;
 - attendance approval id exists;
 - spend approval id exists whenever the Plan commits money.
 
 G4 - Broker to Observer:
 - BookingRecord validates;
-- ledger_transaction_id is unique for a booked record;
-- ledger_version was checked and commitment applied exactly once.
+- guardian_verdict_id identifies the approved verdict for the exact Plan;
+- ledger_transaction_id is the stable id for the logical commitment;
+- durable transaction rows and ledger versions prove that the commitment was applied exactly once;
+- an exact replay may pass with the same stored BookingRecord and no additional effect.
 
 CAPS
 Reject any transition whose next counter would exceed MAX_REPLANS=3, MAX_DISCOVERY_ROUNDS=2 or MAX_GUARDIAN_REJECTIONS=2. Record cap_breached as a failed completion. Do not misclassify reaching a bound and taking its documented terminal path: that is a cap hit.

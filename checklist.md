@@ -4,7 +4,7 @@ Branch: `codex/backend-implementation`
 Base: `origin/main` at `ba44bb5`
 Scope: implement `OW-05`, `OW-06`, `OW-15`, and `OW-16` without rebuilding the merged CKB or changing the merged agent prompts; any acceptance gap without executable evidence remains open.
 
-Merged baseline: PR #4 and PR #5 are on `main`; the post-merge suite passes 140 tests. Active follow-up work is tracked in the appended OW-06 section on branch `codex/ow-06-executable-evaluation`.
+Merged baseline: PR #4, PR #5 and PR #7 are on `main`; the post-merge suite passes 149 tests. OW-06's executable evaluation is complete, and the remaining source-contract reconciliation for OW-15 is recorded below.
 
 ## How this checklist is maintained
 
@@ -92,8 +92,8 @@ Each task moves through `Planned` → `Implemented` → `Reviewed` → `Reconcil
 | [x] | E-01 | Add synthetic eligible profiles, separate age-boundary profiles, adversarial cases, and 9–12 month synthetic history. | Reconciled | 12 eligible profiles, a separate six-age matrix, merged adversarial fixtures, and a 12-cycle labelled replay are committed. |
 | [x] | E-02 | Implement Family A executable invariants against runtime behavior, including caps, S$0, vetting, reachability, idempotency, privacy, and ranking-only signals. | Reconciled | Dedicated runtime invariant tests plus merged fixture invariants cover A1–A12; full suite passes. |
 | [x] | E-03 | Implement eligible-profile harness and collect Family B system/product rates with denominators and zero-denominator handling. | Reconciled | Twelve profiles execute the real graph before and after plan-bound approval. Full and partial metrics carry explicit scopes; B1, full B2, B9, and full B10 are not presented as measured. |
-| [ ] | E-04 | Implement longitudinal replay showing old plan → signal → reasoning → new plan diffs. | Open | Scripted 12-cycle input remains illustrative only; a measured result must execute runtime plans and Observer transitions. |
-| [ ] | E-05 | Implement static-recommender counterfactual and compute B14/B15 for both arms. | Open | Hand-authored outcomes were removed. B14/B15 stay unmeasured until both executable policies run against the same observations. |
+| [x] | E-04 | Implement longitudinal replay showing old plan → signal → reasoning → new plan diffs. | Reconciled | PR #7 executes Planner/G1 plus the G2–G4 graph and Observer persistence over the shared synthetic environment, retaining causal replan and ledger evidence. |
+| [x] | E-05 | Implement static-recommender counterfactual and compute B14/B15 for both arms. | Reconciled | PR #7 executes both policies against the same observations: B14 is 8/12 vs 2/12 and B15 is 4/4 vs 3/4, censored by planned session date. |
 | [x] | E-06 | Include at least one correct `hold_this_week` decision in the replay. | Reconciled | The fixture contains two scripted holds, now labelled as illustrative input rather than measured product performance. |
 | [x] | E-07 | Implement `python -m sim.report` as the one-command reproducible metrics report. | Reconciled | Runtime-derived completion, booking, loop, S$0, free-share, and A1 diagnostics emit; partial B1/B2/B9/B10 and unmeasured B6/B11–B15 state their evidence limits. |
 
@@ -104,7 +104,7 @@ Each task moves through `Planned` → `Implemented` → `Reviewed` → `Reconcil
 | [x] | F-01 | Run focused tests after each implementation group and the complete canonical test suite at the end. | Reconciled | PR #4 passed its 98-test post-follow-up suite; after PR #5 merged, the clean `main` baseline passes 140 tests. |
 | [x] | F-02 | Run the eligible simulation, counterfactual, one-command report, and local API smoke test. | Reconciled | All three modules exit 0; health reports empty-CKB readiness false, protected access returns 401, oversized input returns 413, and malformed JSON returns 400 without internal details. |
 | [x] | F-03 | Perform a final code review for correctness, authorization, privacy, concurrency, loop bounds, error handling, and accidental scope drift. | Reconciled | Both Claude review passes were independently checked; the initial blocker/high findings and follow-up R-1 regression were corrected, while partial capabilities and unsupported evaluation claims are explicitly scoped. |
-| [x] | F-04 | Reconcile code, tests, README, tracker status, and this checklist with architecture v2.2 and merged prompt contracts. | Reconciled | PR #4 merged and closed `OW-05` and `OW-16`; `OW-06` remains active for executable evaluation, while `OW-15` still needs narrow source-contract reconciliation. |
+| [x] | F-04 | Reconcile code, tests, README, tracker status, and this checklist with architecture v2.2 and merged prompt contracts. | Reconciled | PR #4 closed `OW-05` and `OW-16`; PR #7 closed `OW-06`; the post-merge housekeeping reconciliation aligned the OW-15 source contracts with the implemented authorization and idempotency behavior. |
 | [x] | F-05 | Inspect the complete diff and repository for secrets, generated junk, and unrelated changes. | Reconciled | Secret scan is clean; ignored runtime/venv artifacts are absent from the diff; no merged prompt or CKB source-data file changed. |
 | [x] | F-06 | Commit and push `codex/backend-implementation`, then open a PR to `main` with summary, validation evidence, risks, and scope boundaries. | Reconciled | Opened [PR #4](https://github.com/respoopu/agentic_ai_hackathon_2026/pull/4) to `main`; its description records validation evidence and the CKB/prompt boundaries. |
 
@@ -178,3 +178,15 @@ Base: merged `main` after PR #5
 | [x] | ER-05 | B11 credited unrelated later listing changes; B12 overstated a phrase-matched post-session branch. | Reconciled | B11 only credits the immediately following cycle carrying the matching replan instruction. B12 is labelled deterministic branch reachability; OW-23 tracks typed classification and pre-booking scheduler behavior. |
 | [x] | ER-06 | B10 dropped the eligible diagnostic, tolerated crashes and included weak/ambiguous assertions. | Reconciled | Report includes 0/8 adversarial and 0/12 eligible populations; crashes count as violations; schedule and peer checks now exercise competing behavior; retired verification is named precisely. |
 | [x] | ER-07 | Combined gate labels obscured that Planner/G1 run outside LangGraph and approvals are synthetic. | Reconciled | Cycle evidence separates direct Planner/G1 execution from in-graph G2–G4 and labels per-Plan approvals as synthetic; README and evaluation methodology match. |
+
+## 13. Post-merge tracker and OW-15 contract reconciliation
+
+Branch: `codex/outstanding-housekeeping`
+Base: merged `main` after PR #7
+
+| Done | ID | Task | Status | Acceptance and evidence |
+|---|---|---|---|---|
+| [x] | HK-01 | Reconcile the canonical tracker and historical checklist after PR #7 merged. | Reconciled | OW-06 moved to completed history, E-04/E-05 now reflect the executable PR #7 result, and OW-02 closed on Rayden's confirmation that the organiser response was received. |
+| [x] | HK-02 | Align the OW-15 architecture and prompt contracts with the implemented runtime. | Reconciled | Canonical `BookingRecord` fields include `guardian_verdict_id`; G3 binds an approved verdict to the exact Plan; Broker derives one stable transaction id per logical commitment; and G4 explicitly accepts replay while applying the commitment once. |
+| [x] | HK-03 | Reconcile Broker fixtures and executable fixture validation. | Reconciled | Success and duplicate-replay fixtures bind the stored booking to the matching Guardian verdict and logical commitment; validators reject missing bindings or changed transaction ids. All 25 fixtures and the full 152-test suite pass. |
+| [x] | HK-04 | Add the missing demo-frontend delivery item to the canonical backlog. | Reconciled | OW-24 now defines the end-to-end UI acceptance boundary and explicitly precedes deck screenshots and video recording. |

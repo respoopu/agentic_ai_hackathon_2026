@@ -83,6 +83,21 @@ class AgentPromptContractTests(unittest.TestCase):
         for marker in required:
             self.assertIn(marker, protocol)
 
+    def test_broker_authorization_and_idempotency_docs_match_runtime(self) -> None:
+        sources = {
+            "architecture": (ROOT / "docs/3-system/architecture.md").read_text(
+                encoding="utf-8"
+            ),
+            "protocol": (PROMPTS / "shared-protocol.md").read_text(encoding="utf-8"),
+            "broker": (PROMPTS / "broker-agent.md").read_text(encoding="utf-8"),
+            "validator": (PROMPTS / "validator-agent.md").read_text(encoding="utf-8"),
+        }
+        for name, source in sources.items():
+            with self.subTest(source=name):
+                self.assertIn("guardian_verdict_id", source)
+                self.assertIn("logical commitment", source)
+                self.assertIn("replay", source.lower())
+
     def test_fixture_validator_is_canonical_python_and_complete(self) -> None:
         self.assertTrue(VALIDATOR.is_file())
         result = subprocess.run(
@@ -190,6 +205,30 @@ class AgentPromptContractTests(unittest.TestCase):
                 result = self.run_fixture_validator({filename: fixture})
                 self.assertNotEqual(0, result.returncode)
                 self.assertIn("call Planner directly", result.stdout + result.stderr)
+
+    def test_broker_fixture_requires_guardian_verdict_binding(self) -> None:
+        fixture = json.loads(
+            (FIXTURES / "broker" / "sandbox-idempotent-booking.yaml").read_text(
+                encoding="utf-8"
+            )
+        )
+        del fixture["expect"]["output"]["booking_record"]["guardian_verdict_id"]
+        result = self.run_fixture_validator({"missing-verdict-binding.yaml": fixture})
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("bind the matching Guardian verdict id", result.stdout + result.stderr)
+
+    def test_broker_fixture_requires_stable_transaction_identity(self) -> None:
+        fixture = json.loads(
+            (FIXTURES / "broker" / "sandbox-idempotent-booking.yaml").read_text(
+                encoding="utf-8"
+            )
+        )
+        fixture["expect"]["output"]["booking_record"]["ledger_transaction_id"] = (
+            "caller_supplied_tx"
+        )
+        result = self.run_fixture_validator({"changed-transaction-id.yaml": fixture})
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("derive the stable transaction id", result.stdout + result.stderr)
 
     def test_fixture_corpus_traces_family_a_and_adversarial_sets(self) -> None:
         coverage: set[str] = set()

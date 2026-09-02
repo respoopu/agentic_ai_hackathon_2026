@@ -303,8 +303,15 @@ def _sandbox_booking(fixture: dict[str, Any], source: str, errors: list[str]) ->
 
 @invariant("ledger_transaction_applies_exactly_once")
 def _ledger_once(fixture: dict[str, Any], source: str, errors: list[str]) -> None:
-    output, calls = fixture["expect"]["output"], fixture["expect"]["tool_calls"]
-    _expect(errors, source, bool(output.get("booking_record", {}).get("ledger_transaction_id")), "booked record needs a ledger_transaction_id")
+    given, output, calls = fixture["given"], fixture["expect"]["output"], fixture["expect"]["tool_calls"]
+    record = output.get("booking_record", {})
+    plan = given.get("plan", {})
+    verdict = given.get("GuardianVerdict", {})
+    _expect(errors, source, verdict.get("approved") is True and verdict.get("plan_id") == plan.get("plan_id"), "G3 must carry an approved Guardian verdict for the exact Plan")
+    _expect(errors, source, record.get("plan_id") == plan.get("plan_id"), "booked record must retain the exact approved plan id")
+    _expect(errors, source, bool(record.get("guardian_verdict_id")) and record.get("guardian_verdict_id") == verdict.get("verdict_id"), "booked record must bind the matching Guardian verdict id")
+    _expect(errors, source, bool(record.get("ledger_transaction_id")), "booked record needs a ledger_transaction_id")
+    _expect(errors, source, record.get("ledger_transaction_id") == given.get("expected_stable_transaction_id"), "Broker must derive the stable transaction id for the logical commitment")
     _expect(errors, source, output.get("ledger_version_checked") is True and calls.get("ledger_commit") == 1, "ledger commit must be version-checked and applied once")
     _expect(errors, source, calls.get("duplicate_ledger_commit") == 0, "duplicate ledger commit must be suppressed")
 
@@ -313,7 +320,9 @@ def _ledger_once(fixture: dict[str, Any], source: str, errors: list[str]) -> Non
 def _duplicate_transaction(fixture: dict[str, Any], source: str, errors: list[str]) -> None:
     given, output, calls = fixture["given"], fixture["expect"]["output"], fixture["expect"]["tool_calls"]
     existing = given.get("existing_booking_record", {})
-    _expect(errors, source, given.get("ledger_transaction_id") == existing.get("ledger_transaction_id"), "duplicate fixture must reuse the same ledger_transaction_id")
+    _expect(errors, source, given.get("expected_stable_transaction_id") == existing.get("ledger_transaction_id"), "exact replay must derive the same stable ledger_transaction_id")
+    _expect(errors, source, bool(given.get("logical_commitment")), "duplicate fixture must identify the logical commitment")
+    _expect(errors, source, given.get("guardian_verdict_id") == existing.get("guardian_verdict_id"), "stored replay must retain its Guardian verdict binding")
     _expect(errors, source, output.get("replayed") is True and output.get("booking_record") == existing, "duplicate must return the stored BookingRecord")
     _expect(errors, source, calls.get("sandbox_provider") == 0 and calls.get("ledger_commit") == 0, "duplicate must make no provider or ledger side effect")
 

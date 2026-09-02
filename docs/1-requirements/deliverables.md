@@ -14,15 +14,15 @@ Content stated as official comes from the deck. Anything read from a rendered di
 
 | # | Item | Hard limit / requirement | Owner | Status |
 |---|---|---|---|---|
-| 1 | Project files / workflow | **≤ 5 GB · one submission only** | | ☐ |
-| 2 | Presentation deck | **≤ 10 slides** | | ☐ |
-| 3 | Demo video **or** simulation recording | **≤ 5 minutes** | | ☐ |
-| 4 | `README.md` | Run instructions + overview and purpose of each script/file | | ☐ |
-| 5 | Environment setup | `requirements.txt` or Docker setup | | ☐ |
-| 6 | Secrets | Use a `.env` pattern; commit no secrets | | ☐ |
-| 7 | Testing / evaluation | Results **should be covered in the slides**; we treat this as a submission requirement | | ☐ |
-| 8 | Reproducibility | Submitted solution runs as shown in the video | | ☐ |
-| 9 | Deck/code consistency | Methodology presented is reflected at code level | | ☐ |
+| 1 | Project files / workflow | **≤ 5 GB · one submission only** | | In progress — backend PoC exists; demo frontend is OW-24 and final package verification is OW-14 |
+| 2 | Presentation deck | **≤ 10 slides** | | Not started — OW-12 |
+| 3 | Demo video **or** simulation recording | **≤ 5 minutes** | | Not started — OW-13 |
+| 4 | `README.md` | Run instructions + overview and purpose of each script/file | Codex | Done |
+| 5 | Environment setup | `requirements.txt` or Docker setup | Codex | Done — `requirements.txt` and `.env.example` committed |
+| 6 | Secrets | Use a `.env` pattern; commit no secrets | | In progress — pattern exists; repeat scan at OW-14 freeze |
+| 7 | Testing / evaluation | Results **should be covered in the slides**; we treat this as a submission requirement | Codex | Code complete — PR #7; deck placement remains OW-12 |
+| 8 | Reproducibility | Submitted solution runs as shown in the video | | Pending OW-13/OW-14 |
+| 9 | Deck/code consistency | Methodology presented is reflected at code level | | Pending OW-12/OW-14 |
 
 Item 3 is one five-minute artifact: either a digital solution video or a video recording of a simulation. Submit one, not both. The deck does not restrict the simulation option to physical systems.
 
@@ -489,14 +489,16 @@ Ranked by marks-per-hour, given the rubric.
 
 ---
 
-## 12. Gaps and ambiguities in the deck — confirm with organisers
+## 12. Organiser questions and resolved ambiguities
+
+Rayden confirmed on 2 Sep 2026 that the organiser response has been received. The authoritative operational instructions remain with the team's registration materials; this section no longer represents an open repository dependency.
 
 | # | Issue | Impact | Ask |
 |---|---|---|---|
 | 1 | The "Pressure-Testing Our Own Statement" slide says *"put our statement through these **five** questions"* but lists only **four**. | Low — the four listed are usable as-is. | None needed; noted so nobody hunts for a missing fifth. |
-| 2 | The deck gives **no submission deadline, portal, or file-format spec**. | High — we cannot plan the freeze without it. | Confirm the deadline, upload mechanism, and accepted formats (zip? repo link? mp4 codec?). |
-| 3 | **No team size or eligibility rules** appear in this deck. | Medium | Confirm from the registration materials. |
-| 4 | It is unclear whether the **Presentation** criterion is graded on a live pitch, the recorded video, or the deck alone. Two signals conflict: the alignment slide points Presentation at the **deck**, but the rubric wording ("some prompting or clarification needed") and the instruction to "**rehearse delivery**" both imply a **live Q&A**. | High — changes how much we rehearse and whether we prepare an objection-handling sheet. | Confirm whether there is a live pitch and Q&A, and how long. |
+| 2 | The deck gives **no submission deadline, portal, or file-format spec**. | High — we cannot plan the freeze without it. | **Resolved externally:** follow the organiser response held with the registration materials. |
+| 3 | **No team size or eligibility rules** appear in this deck. | Medium | **Resolved externally:** follow the organiser response held with the registration materials. |
+| 4 | It is unclear whether the **Presentation** criterion is graded on a live pitch, the recorded video, or the deck alone. Two signals conflict: the alignment slide points Presentation at the **deck**, but the rubric wording ("some prompting or clarification needed") and the instruction to "**rehearse delivery**" both imply a **live Q&A**. | High — changes how much we rehearse and whether we prepare an objection-handling sheet. | **Resolved externally:** follow the confirmed presentation format in the organiser response. |
 | 5 | The 5 GB project-files limit is generous; unclear whether large files (model weights, datasets) are expected or discouraged. | Low | Assume a lean repo. |
 | 6 | Slide 10 of the sample flow is "Call to Action" — unclear whether judges expect a business/adoption ask or a vision statement. | Low | Do both in one line. |
 | 7 | Topic numbering in the deck repeats ("Topic #4" is used for both *Case Studies* and *Understanding the Deliverables*). | None | Cosmetic. |
