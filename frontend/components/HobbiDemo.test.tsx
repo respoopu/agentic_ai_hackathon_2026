@@ -34,7 +34,8 @@ describe("HobbiDemo", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
 
     expect(screen.getByRole("heading", { name: "What should we try?" })).toBeInTheDocument();
-    expect(screen.getByText(/Get moving/)).toBeInTheDocument();
+    expect(screen.getAllByText("Get moving")).toHaveLength(2);
+    expect(screen.getByRole("button", { name: /Make stuffArt, craft and making/i })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText("35 activities ready")).toBeInTheDocument());
   });
 });

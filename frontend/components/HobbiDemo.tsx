@@ -30,11 +30,11 @@ type Profile = DemoSetupRequest & { display_name: string };
 const DEMO_EMAIL = "maya@hobbi.test";
 const DEMO_PASSWORD = "hobbi123";
 
-const vibeOptions: Array<{ value: Vibe; label: string; icon: string }> = [
-  { value: "sporty", label: "Get moving", icon: "🏃" },
-  { value: "artistic", label: "Make stuff", icon: "🎨" },
-  { value: "chill", label: "Keep it chill", icon: "🌿" },
-  { value: "explorative", label: "Try anything", icon: "🧭" },
+const vibeOptions: Array<{ value: Vibe; label: string; note: string }> = [
+  { value: "sporty", label: "Get moving", note: "Sports and active picks" },
+  { value: "artistic", label: "Make stuff", note: "Art, craft and making" },
+  { value: "chill", label: "Keep it chill", note: "Easy, low-pressure plans" },
+  { value: "explorative", label: "Try anything", note: "Something unexpected" },
 ];
 
 const journeySteps = ["Pick", "Check", "Book", "Done"];
@@ -81,6 +81,31 @@ function NavIcon({ name }: { name: "home" | "profile" | "logout" }) {
     return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c1-5 4-7 8-7s7 2 8 7" /></svg>;
   }
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5M14 8l4 4-4 4m4-4H8" /></svg>;
+}
+
+function VibeIcon({ vibe }: { vibe: Vibe }) {
+  const content = {
+    sporty: <><circle cx="12" cy="12" r="8" /><path d="m7 6 4 3 5-2 1 5-4 4v4M4 12h6l3-3" /></>,
+    artistic: <><path d="m5 19 3-1 10-10-2-2L6 16Z" /><path d="m14 6 2-2 4 4-2 2M4 20h16" /></>,
+    chill: <><path d="M19 4C10 4 5 8 5 15c4 1 8 0 11-3 2-2 3-5 3-8Z" /><path d="M5 20c2-5 6-8 11-11" /></>,
+    explorative: <><circle cx="12" cy="12" r="9" /><path d="m15 9-2 5-5 2 2-5Z" /></>,
+  }[vibe];
+  return <svg className="vibe-icon" viewBox="0 0 24 24" aria-hidden="true">{content}</svg>;
+}
+
+function MetricIcon({ type }: { type: "tries" | "budget" | "time" }) {
+  const content = {
+    tries: <><path d="M5 5h14v5a2 2 0 0 0 0 4v5H5v-5a2 2 0 0 0 0-4Z" /><path d="M12 8v8" /></>,
+    budget: <><circle cx="12" cy="12" r="9" /><path d="M15 8.5c-.8-.5-1.7-.7-2.7-.7-1.7 0-3 .8-3 2s1.2 1.8 3 2.1 3 .9 3 2.1-1.3 2-3 2c-1.2 0-2.3-.3-3.2-1M12 5.5v13" /></>,
+    time: <><circle cx="12" cy="13" r="8" /><path d="M12 9v4l3 2M9 3h6" /></>,
+  }[type];
+  return <svg className="metric-icon" viewBox="0 0 24 24" aria-hidden="true">{content}</svg>;
+}
+
+function AttendanceIcon({ went }: { went: boolean }) {
+  return went
+    ? <svg className="attendance-icon" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="18" /><path d="m16 24 6 6 11-13" /></svg>
+    : <svg className="attendance-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="11" width="32" height="29" rx="7" /><path d="M16 7v8M32 7v8M8 20h32m-20 7 8 8m0-8-8 8" /></svg>;
 }
 
 function JourneyProgress({ screen }: { screen: Screen }) {
@@ -171,11 +196,14 @@ export function HobbiDemo() {
     setScreen("home");
   }
 
-  async function createPlan() {
+  async function createPlan(vibeOverride?: Vibe) {
     if (!profile) return;
     setBusy(true);
     setError(null);
-    const { display_name: _displayName, ...payload } = profile;
+    const { display_name: _displayName, ...savedProfile } = profile;
+    const payload = vibeOverride
+      ? { ...savedProfile, cold_start_vibes: [vibeOverride] }
+      : savedProfile;
     try {
       const result = await demoRequest<PlanStepResponse>("/api/plan", payload);
       if (!result.plan || !result.approval_requirements) throw new Error("No activity returned");
@@ -306,13 +334,12 @@ export function HobbiDemo() {
       <section className="product-main">
         <header className="mobile-header">
           <button className="nav-wordmark" type="button" onClick={goHome}>hobbi<span>.</span></button>
-          {profile ? <div className="mini-avatar">{profile.display_name.slice(0, 1).toUpperCase()}</div> : null}
         </header>
         {inJourney ? <JourneyProgress screen={screen} /> : null}
         {error && screen !== "profile" ? <p className="page-error" role="alert">{error}</p> : null}
 
         {screen === "profile" ? <ProfileScreen profile={profile} selectedVibes={selectedVibes} verifiedOnly={verifiedOnly} onToggleVibe={toggleVibe} onVerifiedChange={setVerifiedOnly} onSave={saveProfile} /> : null}
-        {screen === "home" && profile ? <HomeScreen profile={profile} health={health} busy={busy} onStart={createPlan} onEdit={() => setScreen("profile")} /> : null}
+        {screen === "home" && profile ? <HomeScreen profile={profile} health={health} busy={busy} onStart={() => createPlan()} onExplore={createPlan} onEdit={() => setScreen("profile")} /> : null}
 
         {screen === "plan" && plan ? (
           <section className="task-screen" key="plan">
@@ -343,11 +370,11 @@ export function HobbiDemo() {
             <div className="task-heading"><p className="screen-kicker">Quick check-in</p><h1>How did it go?</h1></div>
             <form onSubmit={recordAttendance}>
               <div className="attendance-choice" role="group" aria-label="Attendance">
-                <button className={attended ? "choice-button selected" : "choice-button"} type="button" onClick={() => setAttended(true)} aria-pressed={attended}>🙌<span>I went</span></button>
-                <button className={!attended ? "choice-button selected" : "choice-button"} type="button" onClick={() => setAttended(false)} aria-pressed={!attended}>🫠<span>I missed it</span></button>
+                <button className={attended ? "choice-button selected" : "choice-button"} type="button" onClick={() => setAttended(true)} aria-pressed={attended}><AttendanceIcon went /><span>I went</span></button>
+                <button className={!attended ? "choice-button selected" : "choice-button"} type="button" onClick={() => setAttended(false)} aria-pressed={!attended}><AttendanceIcon went={false} /><span>I missed it</span></button>
               </div>
               <label className="debrief-field">Anything else?<textarea value={debrief} onChange={(event) => setDebrief(event.target.value)} maxLength={2000} placeholder="Optional" /></label>
-              <div className="quick-replies">{["Loved it", "It was okay", "Not my thing"].map((reply) => <button type="button" key={reply} onClick={() => setDebrief(reply)}>{reply}</button>)}</div>
+              <div className="quick-replies">{["Loved it", "It was okay", "Not my thing"].map((reply) => <button className={debrief === reply ? "selected" : ""} type="button" key={reply} onClick={() => setDebrief(reply)} aria-pressed={debrief === reply}>{reply}</button>)}</div>
               <div className="task-actions"><button className="action-button primary full" type="submit" disabled={busy}>{busy ? "Saving…" : "Save check-in"}</button></div>
             </form>
           </section>
@@ -380,7 +407,7 @@ function ProfileScreen({ profile, selectedVibes, verifiedOnly, onToggleVibe, onV
       <form className="profile-form" onSubmit={onSave}>
         <fieldset><legend>About you</legend><div className="field-grid two"><label>Name<input name="display_name" defaultValue={profile?.display_name ?? "Maya"} required maxLength={40} /></label><label>Age<input name="age" type="number" min="13" max="17" defaultValue={profile?.declared_age ?? 15} required /></label></div></fieldset>
         <fieldset><legend>What do you want to do?</legend><label className="goal-field"><input name="goal" defaultValue={profile?.goal ?? "Try something new after school"} required maxLength={500} /></label></fieldset>
-        <fieldset><legend>Pick your vibe <small>Choose any</small></legend><div className="vibe-grid">{vibeOptions.map((vibe) => <button className={selectedVibes.includes(vibe.value) ? "vibe-button selected" : "vibe-button"} type="button" key={vibe.value} onClick={() => onToggleVibe(vibe.value)} aria-pressed={selectedVibes.includes(vibe.value)}><span>{vibe.icon}</span>{vibe.label}</button>)}</div></fieldset>
+        <fieldset><legend>Pick your vibe <small>Choose any</small></legend><div className="vibe-grid">{vibeOptions.map((vibe) => <button className={selectedVibes.includes(vibe.value) ? "vibe-button selected" : "vibe-button"} type="button" key={vibe.value} onClick={() => onToggleVibe(vibe.value)} aria-pressed={selectedVibes.includes(vibe.value)}><VibeIcon vibe={vibe.value} />{vibe.label}</button>)}</div></fieldset>
         <fieldset><legend>Your limits</legend><div className="field-grid limits"><label>Budget<input name="budget" type="number" min="0" step="1" defaultValue={profile?.money_total_sgd ?? 20} required /><small>S$ total</small></label><label>Time<input name="hours" type="number" min="0.5" max="40" step="0.5" defaultValue={profile?.hours_per_week ?? 2} required /><small>hours/week</small></label><label>Tries<input name="tries" type="number" min="1" max="12" defaultValue={profile?.tries_total ?? 3} required /><small>activities</small></label><label>Travel<input name="travel" type="number" min="5" max="120" step="5" defaultValue={profile?.max_travel_min ?? 45} required /><small>minutes max</small></label></div></fieldset>
         <label className="switch-row"><span><strong>Verified organisers only</strong><small>Hide organisers that still need an adult check.</small></span><input type="checkbox" checked={verifiedOnly} onChange={(event) => onVerifiedChange(event.target.checked)} /></label>
         <button className="action-button primary save-profile" type="submit">Save profile</button>
@@ -389,14 +416,27 @@ function ProfileScreen({ profile, selectedVibes, verifiedOnly, onToggleVibe, onV
   );
 }
 
-function HomeScreen({ profile, health, busy, onStart, onEdit }: { profile: Profile; health: HealthView | null; busy: boolean; onStart: () => void; onEdit: () => void }) {
+function HomeScreen({ profile, health, busy, onStart, onExplore, onEdit }: { profile: Profile; health: HealthView | null; busy: boolean; onStart: () => void; onExplore: (vibe: Vibe) => void; onEdit: () => void }) {
   return (
     <section className="home-screen">
-      <header className="home-heading"><div><p className="screen-kicker">Hey {profile.display_name}!</p><h1>What should we try?</h1></div><div className="mini-avatar large">{profile.display_name.slice(0, 1).toUpperCase()}</div></header>
-      <div className="quest-panel"><div><span className="quest-label">READY WHEN YOU ARE</span><h2>Find your next activity</h2><p>{profile.goal}</p><button className="action-button primary" type="button" onClick={onStart} disabled={busy}>{busy ? "Finding a match…" : "Find an activity"}</button></div><HobbiBuddy small /></div>
-      <div className="stats-row" aria-label="Your activity limits"><div><span>🎟️</span><strong>{profile.tries_total}</strong><small>tries</small></div><div><span>💸</span><strong>S${profile.money_total_sgd}</strong><small>budget</small></div><div><span>⏱️</span><strong>{profile.hours_per_week}h</strong><small>per week</small></div></div>
-      <div className="profile-summary"><div><p className="screen-kicker">Your setup</p><h2>{profile.cold_start_vibes?.length ? profile.cold_start_vibes.map((vibe) => vibeOptions.find((item) => item.value === vibe)?.label).join(" · ") : "Surprise me"}</h2><p>Up to {profile.max_travel_min} minutes away · {profile.parental_rules?.includes("verified_only") ? "Verified only" : "Adult review allowed"}</p></div><button className="text-button" type="button" onClick={onEdit}>Edit profile</button></div>
-      <p className={health?.ready_for_real_planning ? "catalogue-status ready" : "catalogue-status"}><span />{health?.ready_for_real_planning ? `${health.real_activities} activities ready` : "Checking activities"}</p>
+      <header className="home-heading"><div><p className="screen-kicker">Hey {profile.display_name}!</p><h1>What should we try?</h1></div></header>
+
+      <div className="home-primary-grid">
+        <div className="quest-panel"><div><span className="quest-label">READY WHEN YOU ARE</span><h2>Find your next activity</h2><p>{profile.goal}</p><button className="action-button primary" type="button" onClick={onStart} disabled={busy}>{busy ? "Finding a match…" : "Find an activity"}</button></div><HobbiBuddy small /></div>
+        <aside className="profile-card">
+          <div className="profile-card-heading"><div><p className="screen-kicker">Your profile</p><h2>{profile.cold_start_vibes?.length ? "Your picks" : "Surprise me"}</h2></div><button className="text-button" type="button" onClick={onEdit}>Edit</button></div>
+          <div className="profile-vibes">{profile.cold_start_vibes?.length ? profile.cold_start_vibes.map((vibe) => <span key={vibe}><VibeIcon vibe={vibe} />{vibeOptions.find((item) => item.value === vibe)?.label}</span>) : <p>Any vibe works</p>}</div>
+          <div className="profile-constraints"><span><strong>{profile.max_travel_min} min</strong> max travel</span><span><strong>{profile.parental_rules?.includes("verified_only") ? "Verified" : "Flexible"}</strong> organisers</span></div>
+          <p className={health?.ready_for_real_planning ? "catalogue-status ready" : "catalogue-status"}><span />{health?.ready_for_real_planning ? `${health.real_activities} activities ready` : "Checking activities"}</p>
+        </aside>
+      </div>
+
+      <div className="stats-row" aria-label="Your activity limits"><div><MetricIcon type="tries" /><strong>{profile.tries_total}</strong><small>tries left</small></div><div><MetricIcon type="budget" /><strong>S${profile.money_total_sgd}</strong><small>budget</small></div><div><MetricIcon type="time" /><strong>{profile.hours_per_week}h</strong><small>per week</small></div></div>
+
+      <section className="explore-section">
+        <div className="section-heading"><div><p className="screen-kicker">Quick start</p><h2>Explore by vibe</h2></div><p>Pick one for this search.</p></div>
+        <div className="explore-grid">{vibeOptions.map((vibe) => <button className={`explore-tile ${vibe.value}`} type="button" key={vibe.value} onClick={() => onExplore(vibe.value)} disabled={busy}><VibeIcon vibe={vibe.value} /><span><strong>{vibe.label}</strong><small>{vibe.note}</small></span><b aria-hidden="true">→</b></button>)}</div>
+      </section>
     </section>
   );
 }
