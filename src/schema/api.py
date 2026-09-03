@@ -147,6 +147,18 @@ class PlanStepResponse(StrictModel):
     approval_requirements: ApprovalRequirements | None = None
 
 
+class PlanOptionView(StrictModel):
+    outcome: str = Field(min_length=1)
+    plan: PlanView
+    approval_requirements: ApprovalRequirements
+
+
+class ShortlistStepResponse(StrictModel):
+    ok: bool
+    teen_id: str = Field(min_length=1)
+    options: list[PlanOptionView] = Field(min_length=1, max_length=4)
+
+
 class BookingStepResponse(StrictModel):
     ok: bool
     outcome: str = Field(min_length=1)

@@ -13,4 +13,6 @@ export type DemoNextPlanRequest = components["schemas"]["DemoNextPlanRequest"];
 export type DemoSetupRequest = components["schemas"]["DemoSetupRequest"];
 export type HealthView = components["schemas"]["HealthView"];
 export type PlanStepResponse = components["schemas"]["PlanStepResponse"];
+export type PlanOptionView = components["schemas"]["PlanOptionView"];
 export type PlanView = components["schemas"]["PlanView"];
+export type ShortlistStepResponse = components["schemas"]["ShortlistStepResponse"];

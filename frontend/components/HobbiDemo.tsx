@@ -5,13 +5,16 @@ import { FormEvent, useEffect, useState } from "react";
 import { ActivityDetails } from "@/components/ActivityDetails";
 import type {
   AdaptationView,
+  ActivityPlanView,
   BookingStepResponse,
   BookingView,
   DemoApproveRequest,
   DemoAttendanceRequest,
   DemoSetupRequest,
   HealthView,
+  PlanOptionView,
   PlanStepResponse,
+  ShortlistStepResponse,
 } from "@/lib/contracts";
 import { DemoApiError, demoRequest } from "@/lib/http";
 
@@ -20,6 +23,7 @@ type Screen =
   | "profile"
   | "home"
   | "plan"
+  | "details"
   | "approval"
   | "booked"
   | "debrief"
@@ -43,6 +47,7 @@ const journeyPositions: Record<Screen, number> = {
   profile: 0,
   home: 0,
   plan: 0,
+  details: 0,
   approval: 1,
   booked: 2,
   debrief: 3,
@@ -53,6 +58,23 @@ function errorMessage(error: unknown): string {
   return error instanceof DemoApiError
     ? error.message
     : "Something went wrong. Give it another try.";
+}
+
+function formatShortlistCost(value: number | string): string {
+  const amount = Number(value);
+  return amount === 0 ? "Free" : `S$${amount.toFixed(2)}`;
+}
+
+function formatShortlistTime(activity: ActivityPlanView): string {
+  if (activity.session_flexible) return activity.schedule_note ?? "Flexible timing";
+  return new Intl.DateTimeFormat("en-SG", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "Asia/Singapore",
+  }).format(new Date(activity.session_at));
 }
 
 function HobbiBuddy({ small = false }: { small?: boolean }) {
@@ -128,6 +150,7 @@ export function HobbiDemo() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [shortlistResponse, setShortlistResponse] = useState<ShortlistStepResponse | null>(null);
   const [planResponse, setPlanResponse] = useState<PlanStepResponse | null>(null);
   const [bookingResponse, setBookingResponse] = useState<BookingStepResponse | null>(null);
   const [adaptation, setAdaptation] = useState<AdaptationView | null>(null);
@@ -159,7 +182,7 @@ export function HobbiDemo() {
   const requirements = planResponse?.approval_requirements ?? null;
   const booking = bookingResponse?.bookings?.[0] ?? null;
   const nextPlan = nextPlanResponse?.plan ?? null;
-  const inJourney = ["plan", "approval", "booked", "debrief", "adapted"].includes(screen);
+  const inJourney = ["plan", "details", "approval", "booked", "debrief", "adapted"].includes(screen);
 
   function toggleVibe(vibe: Vibe) {
     setSelectedVibes((current) =>
@@ -205,9 +228,10 @@ export function HobbiDemo() {
       ? { ...savedProfile, cold_start_vibes: [vibeOverride] }
       : savedProfile;
     try {
-      const result = await demoRequest<PlanStepResponse>("/api/plan", payload);
-      if (!result.plan || !result.approval_requirements) throw new Error("No activity returned");
-      setPlanResponse(result);
+      const result = await demoRequest<ShortlistStepResponse>("/api/plan", payload);
+      if (!result.options.length) throw new Error("No activities returned");
+      setShortlistResponse(result);
+      setPlanResponse(null);
       setScreen("plan");
     } catch (requestError) {
       setError(errorMessage(requestError));
@@ -276,6 +300,7 @@ export function HobbiDemo() {
   }
 
   function clearJourney() {
+    setShortlistResponse(null);
     setPlanResponse(null);
     setBookingResponse(null);
     setAdaptation(null);
@@ -341,11 +366,13 @@ export function HobbiDemo() {
         {screen === "profile" ? <ProfileScreen profile={profile} selectedVibes={selectedVibes} verifiedOnly={verifiedOnly} onToggleVibe={toggleVibe} onVerifiedChange={setVerifiedOnly} onSave={saveProfile} /> : null}
         {screen === "home" && profile ? <HomeScreen profile={profile} health={health} busy={busy} onStart={() => createPlan()} onExplore={createPlan} onEdit={() => setScreen("profile")} /> : null}
 
-        {screen === "plan" && plan ? (
-          <section className="task-screen" key="plan">
-            <div className="task-heading"><p className="screen-kicker">Your match</p><h1>Try this next</h1></div>
+        {screen === "plan" && shortlistResponse ? <ShortlistScreen options={shortlistResponse.options} onSelect={(option) => { setPlanResponse({ ok: true, teen_id: shortlistResponse.teen_id, outcome: option.outcome, plan: option.plan, approval_requirements: option.approval_requirements }); setScreen("details"); }} onBack={goHome} /> : null}
+
+        {screen === "details" && plan ? (
+          <section className="task-screen" key="details">
+            <div className="task-heading"><p className="screen-kicker">Your pick</p><h1>Good choice</h1><p>Here’s everything you need before asking an adult.</p></div>
             <ActivityDetails activity={plan.activities[0]} />
-            <div className="task-actions"><button className="action-button secondary" type="button" onClick={goHome}>Not now</button><button className="action-button primary" type="button" onClick={() => setScreen("approval")}>Ask my adult</button></div>
+            <div className="task-actions"><button className="action-button secondary" type="button" onClick={() => setScreen(shortlistResponse ? "plan" : "home")}>Back to picks</button><button className="action-button primary" type="button" onClick={() => setScreen("approval")}>Ask my adult</button></div>
           </section>
         ) : null}
 
@@ -359,7 +386,7 @@ export function HobbiDemo() {
               <CheckRow label="Approval" value={requirements.provider_listing_ids?.length ? "Provider needs review" : "Verified organiser"} />
             </div>
             <a className="plain-link" href={plan.activities[0].source_url} target="_blank" rel="noreferrer">Open organiser page ↗</a>
-            <div className="task-actions"><button className="action-button secondary" type="button" onClick={() => setScreen("plan")}>Back</button><button className="action-button primary" type="button" onClick={approvePlan} disabled={busy}>{busy ? "Booking…" : "Approve as demo adult"}</button></div>
+            <div className="task-actions"><button className="action-button secondary" type="button" onClick={() => setScreen("details")}>Back</button><button className="action-button primary" type="button" onClick={approvePlan} disabled={busy}>{busy ? "Booking…" : "Approve as demo adult"}</button></div>
           </section>
         ) : null}
 
@@ -437,6 +464,32 @@ function HomeScreen({ profile, health, busy, onStart, onExplore, onEdit }: { pro
         <div className="section-heading"><div><p className="screen-kicker">Quick start</p><h2>Explore by vibe</h2></div><p>Pick one for this search.</p></div>
         <div className="explore-grid">{vibeOptions.map((vibe) => <button className={`explore-tile ${vibe.value}`} type="button" key={vibe.value} onClick={() => onExplore(vibe.value)} disabled={busy}><VibeIcon vibe={vibe.value} /><span><strong>{vibe.label}</strong><small>{vibe.note}</small></span><b aria-hidden="true">→</b></button>)}</div>
       </section>
+    </section>
+  );
+}
+
+function ShortlistScreen({ options, onSelect, onBack }: { options: PlanOptionView[]; onSelect: (option: PlanOptionView) => void; onBack: () => void }) {
+  return (
+    <section className="task-screen shortlist-screen" key="plan">
+      <div className="task-heading"><p className="screen-kicker">Your matches</p><h1>Try this next</h1><p>We found {options.length} activities that fit. Pick one to see the full details.</p></div>
+      <div className="shortlist" aria-label="Activity matches">
+        {options.map((option, index) => {
+          const activity = option.plan.activities[0];
+          return (
+            <button className={index === 0 ? "shortlist-item top-pick" : "shortlist-item"} type="button" key={option.plan.plan_id} onClick={() => onSelect(option)}>
+              <span className="shortlist-rank">{index + 1}</span>
+              <span className="shortlist-copy">
+                <span className="shortlist-label">{index === 0 ? "Top pick" : activity.commitment.replace("_", " ")}</span>
+                <strong>{activity.title}</strong>
+                <small>{activity.venue_name} · {activity.nearest_mrt ? `${activity.nearest_mrt} MRT` : activity.planning_area}</small>
+                <span className="shortlist-meta"><span>{formatShortlistTime(activity)}</span><span>{activity.duration_hours}h</span><span>{formatShortlistCost(activity.cost_sgd)}</span></span>
+              </span>
+              <span className="shortlist-action">View <span aria-hidden="true">→</span></span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="task-actions"><button className="action-button secondary" type="button" onClick={onBack}>Back home</button></div>
     </section>
   );
 }

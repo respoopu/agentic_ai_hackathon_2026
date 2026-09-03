@@ -32,6 +32,84 @@ class FrontendContractTests(unittest.TestCase):
             set(contract["paths"]),
         )
         self.assertIn("ActivityPlanView", contract["components"]["schemas"])
+        self.assertIn("ShortlistStepResponse", contract["components"]["schemas"])
+
+    def test_shortlist_options_are_independently_bookable_plans(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            service = HobbiService(
+                temporary,
+                guardian_token=GUARDIAN_TOKEN,
+                seed_artifact=None,
+            )
+            try:
+                service.ckb.seed(
+                    [
+                        listing_record("option-1"),
+                        listing_record("option-2"),
+                        listing_record("option-3"),
+                        listing_record("option-4"),
+                        listing_record("duplicate-venue").model_copy(
+                            update={"title": "Activity option-1 at another venue"}
+                        ),
+                    ]
+                )
+                teen_id = "shortlist-teen"
+                response = service.handle(
+                    {
+                        "operation": "intake_and_plan",
+                        "shortlist_size": 4,
+                        "setup": {
+                            "teen_id": teen_id,
+                            "thread_id": "shortlist-thread",
+                            "declared_age": 15,
+                            "request": {
+                                "goal": "show me a few choices",
+                                "requested_at": NOW.isoformat(),
+                            },
+                            "ledger": {
+                                "money_total_sgd": 0,
+                                "hours_per_week": 2,
+                                "tries_total": 3,
+                            },
+                            "constraints": {"max_items": 1},
+                            "consents": [
+                                value.model_dump(mode="json")
+                                for value in consents(teen_id)
+                            ],
+                        },
+                    },
+                    authorization=GUARDIAN_TOKEN,
+                )
+                shortlist = response["shortlist"]
+                self.assertEqual(4, len(shortlist))
+                listing_ids = [
+                    option["plan_view"]["activities"][0]["listing_id"]
+                    for option in shortlist
+                ]
+                self.assertEqual(4, len(set(listing_ids)))
+                self.assertEqual(
+                    1, len({"option-1", "duplicate-venue"}.intersection(listing_ids))
+                )
+                self.assertTrue(
+                    all(len(option["plan_view"]["activities"]) == 1 for option in shortlist)
+                )
+
+                chosen = shortlist[2]
+                approved = service.handle(
+                    {
+                        "operation": "guardian_approve",
+                        "teen_id": teen_id,
+                        "plan_id": chosen["plan_view"]["plan_id"],
+                        "attendance_approval_id": "shortlist-attendance",
+                    },
+                    authorization=GUARDIAN_TOKEN,
+                )
+                self.assertEqual(1, len(approved["bookings"]))
+                self.assertEqual(
+                    listing_ids[2], approved["bookings"][0]["activity"]["listing_id"]
+                )
+            finally:
+                service.close()
 
     def test_display_contract_drives_booking_and_adapted_next_plan(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

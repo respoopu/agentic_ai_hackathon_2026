@@ -662,6 +662,29 @@
         "title": "HealthView",
         "type": "object"
       },
+      "PlanOptionView": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_requirements": {
+            "$ref": "#/components/schemas/ApprovalRequirements"
+          },
+          "outcome": {
+            "minLength": 1,
+            "title": "Outcome",
+            "type": "string"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/PlanView"
+          }
+        },
+        "required": [
+          "outcome",
+          "plan",
+          "approval_requirements"
+        ],
+        "title": "PlanOptionView",
+        "type": "object"
+      },
       "PlanStepResponse": {
         "additionalProperties": false,
         "properties": {
@@ -854,6 +877,36 @@
         ],
         "title": "PreparationView",
         "type": "object"
+      },
+      "ShortlistStepResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/PlanOptionView"
+            },
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Options",
+            "type": "array"
+          },
+          "teen_id": {
+            "minLength": 1,
+            "title": "Teen Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ok",
+          "teen_id",
+          "options"
+        ],
+        "title": "ShortlistStepResponse",
+        "type": "object"
       }
     }
   },
@@ -1020,7 +1073,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlanStepResponse"
+                  "$ref": "#/components/schemas/ShortlistStepResponse"
                 }
               }
             },

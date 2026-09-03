@@ -15,6 +15,9 @@ test("logs in, sets a profile, books, checks in, and adapts through the real ser
 
   await page.getByRole("button", { name: "Find an activity" }).click();
   await expect(page.getByRole("heading", { name: "Try this next" })).toBeVisible();
+  await expect(page.getByLabel("Activity matches").getByRole("button")).toHaveCount(4);
+  await page.getByLabel("Activity matches").getByRole("button").first().click();
+  await expect(page.getByRole("heading", { name: "Good choice" })).toBeVisible();
   await expect(page.getByText("Human-verified").or(page.getByText("Adult review needed"))).toBeVisible();
 
   await page.getByRole("button", { name: "Ask my adult" }).click();

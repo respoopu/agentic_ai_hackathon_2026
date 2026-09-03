@@ -2,13 +2,13 @@ import { randomUUID } from "node:crypto";
 
 import { NextResponse } from "next/server";
 
-import type { ApiErrorView, DemoSetupRequest, PlanStepResponse } from "@/lib/contracts";
+import type { ApiErrorView, DemoSetupRequest, PlanOptionView, ShortlistStepResponse } from "@/lib/contracts";
 import { callHobbi, guardianToken, TEEN_TOKEN_COOKIE } from "@/lib/hobbi-server";
 import { outcomeOf, readJson, routeError } from "@/lib/route-response";
 
 export async function POST(
   request: Request,
-): Promise<NextResponse<PlanStepResponse | ApiErrorView>> {
+): Promise<NextResponse<ShortlistStepResponse | ApiErrorView>> {
   try {
     const body = await readJson<DemoSetupRequest>(request);
     const teenId = `demo-${randomUUID()}`;
@@ -25,6 +25,7 @@ export async function POST(
     const result = await callHobbi(
       {
         operation: "intake_and_plan",
+        shortlist_size: 4,
         setup: {
           teen_id: teenId,
           thread_id: threadId,
@@ -54,13 +55,29 @@ export async function POST(
     if (typeof teenToken !== "string") {
       throw new Error("missing teen session token");
     }
+    const rawOptions = Array.isArray(result.shortlist)
+      ? result.shortlist
+      : [{
+          outcome: outcomeOf(result),
+          plan_view: result.plan_view,
+          approval_requirements: result.approval_requirements,
+        }];
+    const options = rawOptions.flatMap((rawOption) => {
+      const option = rawOption as Record<string, unknown>;
+      if (!option.plan_view || !option.approval_requirements) return [];
+      return [{
+        outcome: typeof option.outcome === "string" ? option.outcome : outcomeOf(result),
+        plan: option.plan_view,
+        approval_requirements: option.approval_requirements,
+      } as PlanOptionView];
+    });
+    if (options.length === 0) {
+      throw new Error("no activities returned");
+    }
     const response = NextResponse.json({
       ok: true,
       teen_id: teenId,
-      outcome: outcomeOf(result),
-      plan: (result.plan_view ?? null) as PlanStepResponse["plan"],
-      approval_requirements: (result.approval_requirements ??
-        null) as PlanStepResponse["approval_requirements"],
+      options,
     });
     response.cookies.set(TEEN_TOKEN_COOKIE, teenToken, {
       httpOnly: true,

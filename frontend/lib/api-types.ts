@@ -332,6 +332,13 @@ export interface components {
             /** Verified Activities */
             verified_activities: number;
         };
+        /** PlanOptionView */
+        PlanOptionView: {
+            approval_requirements: components["schemas"]["ApprovalRequirements"];
+            /** Outcome */
+            outcome: string;
+            plan: components["schemas"]["PlanView"];
+        };
         /** PlanStepResponse */
         PlanStepResponse: {
             /** @default null */
@@ -392,6 +399,15 @@ export interface components {
             meet: string;
             /** People Come Alone */
             people_come_alone: boolean;
+        };
+        /** ShortlistStepResponse */
+        ShortlistStepResponse: {
+            /** Ok */
+            ok: boolean;
+            /** Options */
+            options: components["schemas"]["PlanOptionView"][];
+            /** Teen Id */
+            teen_id: string;
         };
     };
     responses: never;
@@ -549,7 +565,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PlanStepResponse"];
+                    "application/json": components["schemas"]["ShortlistStepResponse"];
                 };
             };
             /** @description Safe frontend error */

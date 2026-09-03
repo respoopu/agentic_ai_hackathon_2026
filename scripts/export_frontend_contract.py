@@ -24,6 +24,7 @@ from src.schema.api import (
     DemoSetupRequest,
     HealthView,
     PlanStepResponse,
+    ShortlistStepResponse,
 )
 
 DEFAULT_OUTPUT = ROOT / "contracts" / "frontend-api.openapi.json"
@@ -38,6 +39,7 @@ MODELS: tuple[type[BaseModel], ...] = (
     DemoSetupRequest,
     HealthView,
     PlanStepResponse,
+    ShortlistStepResponse,
 )
 
 
@@ -97,7 +99,7 @@ def build_contract() -> dict[str, Any]:
                 "post": {
                     "operationId": "createPlan",
                     "requestBody": _request("DemoSetupRequest"),
-                    "responses": _responses("PlanStepResponse"),
+                    "responses": _responses("ShortlistStepResponse"),
                 }
             },
             "/api/approve": {

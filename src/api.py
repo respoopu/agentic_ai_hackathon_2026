@@ -6,6 +6,7 @@ import argparse
 import hmac
 import json
 import os
+import re
 import secrets
 import sqlite3
 import threading
@@ -51,6 +52,13 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RUNTIME_DIR = ROOT / ".hobbi"
 MAX_REQUEST_BYTES = 1_000_000
 COMPLIANCE_USER_AGENT = "hobbi-compliance/1.0"
+
+
+def _shortlist_family(title: str) -> tuple[str, ...]:
+    """Group repeated venue variants without hiding genuinely different activities."""
+
+    words = re.findall(r"[a-z0-9]+", title.lower())
+    return tuple(words[:3])
 
 
 class ApiAuthorizationError(PermissionError):
@@ -368,6 +376,10 @@ class HobbiService:
             return {"ok": True, "result": _jsonable(result)}
         if operation == "intake_and_plan":
             self._require_role(self.guardian_token, authorization, "trusted-adult")
+            requested_shortlist_size = payload.get("shortlist_size", 1)
+            if not isinstance(requested_shortlist_size, int):
+                raise ValueError("shortlist_size must be an integer")
+            shortlist_size = max(1, min(4, requested_shortlist_size))
             setup_input = SetupInput.model_validate(payload["setup"])
             intake_result = setup(setup_input, self.personal_data)
             response: dict[str, Any] = {
@@ -379,24 +391,64 @@ class HobbiService:
                 self.personal_data.set_profile_access_token(
                     setup_input.teen_id, teen_access_token
                 )
-                final = self.runtime.invoke(
-                    self._initial_state(
-                        setup_input, intake_result.intake, intake_result.gate
-                    )
-                )
-                response["state"] = _jsonable(final)
                 response["teen_access_token"] = teen_access_token
-                if final.get("approved_plan") is not None:
-                    response["plan_view"] = _jsonable(
-                        self._plan_view(final["approved_plan"])
+                option_results: list[dict[str, Any]] = []
+                unavailable_listing_ids: set[str] = set()
+                first_final: HobbiState | None = None
+                for index in range(shortlist_size):
+                    state = (
+                        self._initial_state(
+                            setup_input, intake_result.intake, intake_result.gate
+                        )
+                        if index == 0
+                        else self._state_for_existing_profile(
+                            setup_input.teen_id,
+                            f"{setup_input.thread_id}:option:{index + 1}",
+                        )
                     )
-                    response["approval_requirements"] = _jsonable(
-                        self._approval_requirements(final["approved_plan"])
+                    state["unavailable_listing_ids"] = sorted(
+                        unavailable_listing_ids
                     )
-                response["ok"] = final["outcome"] not in {
-                    "no_viable_plan",
-                    "cap_breached",
-                }
+                    final = self.runtime.invoke(state)
+                    if first_final is None:
+                        first_final = final
+                    option_plan = final.get("approved_plan")
+                    if option_plan is None:
+                        break
+                    unavailable_listing_ids.update(
+                        item.listing_id for item in option_plan.items
+                    )
+                    selected_families = {
+                        _shortlist_family(listing.title)
+                        for item in option_plan.items
+                        if (listing := self.ckb.get(item.listing_id)) is not None
+                    }
+                    unavailable_listing_ids.update(
+                        record.listing_id
+                        for record in self.ckb.all()
+                        if _shortlist_family(record.title) in selected_families
+                    )
+                    option_results.append(
+                        {
+                            "outcome": final["outcome"],
+                            "plan_view": _jsonable(self._plan_view(option_plan)),
+                            "approval_requirements": _jsonable(
+                                self._approval_requirements(option_plan)
+                            ),
+                        }
+                    )
+
+                if first_final is None:
+                    raise RuntimeError("planning did not produce a result")
+                response["state"] = _jsonable(first_final)
+                if option_results:
+                    response["plan_view"] = option_results[0]["plan_view"]
+                    response["approval_requirements"] = option_results[0][
+                        "approval_requirements"
+                    ]
+                    if shortlist_size > 1:
+                        response["shortlist"] = option_results
+                response["ok"] = bool(option_results)
                 if not response["ok"]:
                     response["notification_required"] = ["trusted_adult"]
             return response

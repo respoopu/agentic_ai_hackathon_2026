@@ -1005,6 +1005,127 @@ textarea:focus {
 
 /* Journey */
 
+.shortlist-screen .task-heading {
+  margin-bottom: 26px;
+}
+
+.shortlist {
+  overflow: hidden;
+  border: 2px solid var(--line);
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 6px 0 #dfe2ea;
+}
+
+.shortlist-item {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: 126px;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 22px;
+  border: 0;
+  border-bottom: 2px solid var(--line);
+  text-align: left;
+  background: white;
+  cursor: pointer;
+  transition: background 140ms ease, padding-left 140ms ease;
+}
+
+.shortlist-item:last-child {
+  border-bottom: 0;
+}
+
+.shortlist-item.top-pick {
+  background: #f3f8ff;
+}
+
+.shortlist-item:hover {
+  padding-left: 27px;
+  background: #eef6ff;
+}
+
+.shortlist-rank {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 2px solid #c8dfff;
+  border-radius: 50%;
+  color: var(--purple-dark);
+  background: white;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.top-pick .shortlist-rank {
+  border-color: var(--purple);
+  color: white;
+  background: var(--purple);
+}
+
+.shortlist-copy {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.shortlist-label {
+  color: var(--purple);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.shortlist-copy > strong {
+  overflow: hidden;
+  font-size: 19px;
+  font-weight: 950;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shortlist-copy > small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shortlist-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 4px;
+}
+
+.shortlist-meta > span {
+  padding: 4px 8px;
+  border-radius: 7px;
+  color: #596076;
+  background: #f1f3f8;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.shortlist-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--purple);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.shortlist-action span {
+  font-size: 19px;
+}
+
 .journey-progress {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1572,6 +1693,36 @@ textarea:focus {
 
   .section-heading > p {
     display: none;
+  }
+
+  .shortlist-item {
+    min-height: 138px;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 13px;
+    padding: 18px 16px;
+  }
+
+  .shortlist-item:hover {
+    padding-left: 16px;
+  }
+
+  .shortlist-rank {
+    width: 36px;
+    height: 36px;
+  }
+
+  .shortlist-copy > strong {
+    font-size: 17px;
+    white-space: normal;
+  }
+
+  .shortlist-copy > small {
+    white-space: normal;
+  }
+
+  .shortlist-action {
+    grid-column: 2;
+    justify-self: start;
   }
 
   .profile-summary {
