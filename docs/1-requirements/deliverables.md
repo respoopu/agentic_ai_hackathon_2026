@@ -14,7 +14,7 @@ Content stated as official comes from the deck. Anything read from a rendered di
 
 | # | Item | Hard limit / requirement | Owner | Status |
 |---|---|---|---|---|
-| 1 | Project files / workflow | **≤ 5 GB · one submission only** | | In progress — backend PoC exists; demo frontend is OW-24 and final package verification is OW-14 |
+| 1 | Project files / workflow | **≤ 5 GB · one submission only** | | In progress — backend and verified demo frontend exist; final package verification is OW-14 |
 | 2 | Presentation deck | **≤ 10 slides** | | Not started — OW-12 |
 | 3 | Demo video **or** simulation recording | **≤ 5 minutes** | | Not started — OW-13 |
 | 4 | `README.md` | Run instructions + overview and purpose of each script/file | Codex | Done |

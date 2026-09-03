@@ -1,6 +1,6 @@
 # Outstanding Work — Hobbi
 
-*Canonical tracker for unfinished validation, integration, build and submission work. Last updated 2 Sep 2026.*
+*Canonical tracker for unfinished validation, integration, build and submission work. Last updated 3 Sep 2026.*
 
 This file answers **what is still open, who owns it, and what “done” means**. The product, architecture, evaluation and source documents retain the reasoning; they link here for status rather than maintaining competing task lists.
 
@@ -20,7 +20,6 @@ This file answers **what is still open, who owns it, and what “done” means**
 
 | ID | Priority | Status | Item | Owner | Target | Done when | Detail |
 |---|---|---|---|---|---|---|---|
-| **OW-24** | P0 | **Next** | Build and verify the demo frontend | — | Before deck screenshots and video recording | A responsive local UI drives the real API through teen setup, plan generation, trusted-adult review/approval, sandbox booking, attendance/debrief and visible adaptation; it clearly labels human checkpoints and sandbox actions, exposes safe error/empty/loading states, keeps credentials out of client code, has documented one-command startup, and passes automated plus browser-level smoke checks | [`architecture.md`](../3-system/architecture.md) §§3, 4, 10 · [`deliverables.md`](../1-requirements/deliverables.md) §§3.1, 3.3, 8.4 |
 | **OW-12** | P0 | **Not started** | Produce and verify the presentation deck | — | After OW-24 demo flow freezes | Deck is no more than 10 slides, reflects the built system, carries sourced figures and measured results, and passes the rubric/slide checklist | [`deliverables.md`](../1-requirements/deliverables.md) §§3, 7–10 |
 | **OW-13** | P0 | **Not started** | Record and verify the demo video or simulation recording | — | After OW-24 demo flow freezes | Recording is no more than 5 minutes, shows the submitted prototype running, includes the adaptive counterfactual beat, and matches the deck and repository | [`deliverables.md`](../1-requirements/deliverables.md) §§3.3, 6 · [`architecture.md`](../3-system/architecture.md) §10 |
 | **OW-14** | P0 | **Not started** | Freeze and validate the final submission | — | Submission deadline | The confirmed organiser deadline, upload mechanism, accepted formats and presentation format are transcribed into `deliverables.md` §12; repository, deck and recording are mutually consistent; secrets are absent; documented commands run from a clean checkout; size/format/upload rules are satisfied; the one allowed submission is verified before upload | [`deliverables.md`](../1-requirements/deliverables.md) §§2, 8, 11.6 |
@@ -39,6 +38,12 @@ This file answers **what is still open, who owns it, and what “done” means**
 ## Completed / dropped history
 
 Move closed rows here under a dated heading, preserving their ID, final owner and outcome.
+
+### 3 Sep 2026
+
+| ID | Priority | Final status | Item | Owner | Outcome |
+|---|---|---|---|---|---|
+| **OW-24** | P0 | **Done** | Build and verify the demo frontend | Codex | A responsive youth-focused Next.js interface starts with a documented fake login, keeps preferences on a dedicated profile screen, and provides a returning-user home before driving the real API through planning, exact-plan trusted-adult approval, sandbox booking, attendance/debrief and an adapted next plan. Pydantic display models generate the OpenAPI contract and TypeScript types; server routes keep the Guardian credential out of browser code and hold the teen token in an HttpOnly cookie. Safe loading, empty and error states are present; `scripts/run_demo.py` starts both services; Python contract tests, React tests, a production build, Playwright end-to-end flow and desktop/mobile visual checks pass. |
 
 ### 2 Sep 2026
 

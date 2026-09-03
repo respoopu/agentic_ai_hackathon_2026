@@ -191,3 +191,17 @@ Base: merged `main` after PR #7
 | [x] | HK-03 | Reconcile Broker fixtures and executable fixture validation. | Reconciled | Success and duplicate-replay fixtures bind the stored booking to the matching Guardian verdict and logical commitment; validators reject missing bindings or changed transaction ids. All 25 fixtures and the full 152-test suite pass. |
 | [x] | HK-04 | Add the missing demo-frontend delivery item to the canonical backlog. | Reconciled | OW-24 now defines the end-to-end UI acceptance boundary and explicitly precedes deck screenshots and video recording. |
 | [x] | HK-05 | Reconcile the PR #8 review findings. | Reconciled | Replay-fixture assertions no longer pass on absent fields and carry two negative tests that fail without the guard; `architecture.md` §5 now documents `PlanItem.duration_hours`, `Plan.thin`/`binding_constraint` and `CommitEvidence`, checked field-for-field against `src/schema` by an executable test; the vacuous `replay` substring check is replaced by a ledger-scoped one; OW-02's unmet transcription obligation is carried by OW-14. 155 tests and 25 fixtures pass. |
+
+## 14. OW-24 demo frontend
+
+Branch: `codex/demo-frontend`
+Base: merged `main` after PR #9
+
+| Done | ID | Task | Status | Acceptance and evidence |
+|---|---|---|---|---|
+| [x] | UI-01 | Define a stable browser-facing API contract. | Reconciled | Pydantic display models generate a committed OpenAPI 3.1 contract and generated TypeScript types for health, first plan, approval, attendance and next-cycle planning. Contract freshness and the real adaptation path are covered by Python tests. |
+| [x] | UI-02 | Keep privileged credentials outside browser code. | Reconciled | Same-origin Next.js server routes hold the Guardian credential; a fresh synthetic profile is created per journey and its teen token is stored as an HttpOnly, same-site cookie. Existing agent-facing operations remain compatible. |
+| [x] | UI-03 | Build the login→profile→home→plan→check→book→learn journey. | Reconciled | The responsive interface starts with a documented fake login, moves preference input to a dedicated profile screen, provides a returning-user home, and then shows real sourced activity details, an explicit trusted-adult handoff, exact-plan approval requirements, a prominent sandbox receipt, attendance and a text debrief. |
+| [x] | UI-04 | Make longitudinal adaptation visible. | Reconciled | Observer output names temporary/decaying evidence and permanent-label count; the next-cycle operation runs the production Planner over persisted evidence and the UI shows first try → next experiment. |
+| [x] | UI-05 | Add safe operational states and repeatable startup. | Reconciled | Loading controls disable duplicate actions, safe errors hide backend detail, catalogue readiness is visible, no-plan responses fail closed, fresh IDs avoid stored-profile collisions, and `scripts/run_demo.py` starts both local services with one command. |
+| [x] | UI-06 | Verify implementation and presentation. | Reconciled | Generated-contract check, TypeScript check, React unit test, production build and Playwright real-service journey pass. Desktop and 390×844 mobile visual checks confirm readable hierarchy, responsive navigation and honest drop-in hours/age presentation. |

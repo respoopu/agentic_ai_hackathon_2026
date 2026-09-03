@@ -1,0 +1,1101 @@
+{
+  "components": {
+    "schemas": {
+      "ActivityPlanView": {
+        "additionalProperties": false,
+        "properties": {
+          "age_max": {
+            "minimum": 0,
+            "title": "Age Max",
+            "type": "integer"
+          },
+          "age_min": {
+            "minimum": 0,
+            "title": "Age Min",
+            "type": "integer"
+          },
+          "beginner_friendly": {
+            "title": "Beginner Friendly",
+            "type": "boolean"
+          },
+          "commitment": {
+            "enum": [
+              "taster",
+              "one_off",
+              "short_course",
+              "term"
+            ],
+            "title": "Commitment",
+            "type": "string"
+          },
+          "cost_sgd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Cost Sgd"
+          },
+          "duration_hours": {
+            "exclusiveMinimum": 0,
+            "title": "Duration Hours",
+            "type": "number"
+          },
+          "freshness_state": {
+            "enum": [
+              "fresh",
+              "stale"
+            ],
+            "title": "Freshness State",
+            "type": "string"
+          },
+          "guest_allowed": {
+            "title": "Guest Allowed",
+            "type": "boolean"
+          },
+          "join_alone_ok": {
+            "title": "Join Alone Ok",
+            "type": "boolean"
+          },
+          "listing_id": {
+            "minLength": 1,
+            "title": "Listing Id",
+            "type": "string"
+          },
+          "nearest_mrt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Nearest Mrt"
+          },
+          "organiser": {
+            "minLength": 1,
+            "title": "Organiser",
+            "type": "string"
+          },
+          "planning_area": {
+            "minLength": 1,
+            "title": "Planning Area",
+            "type": "string"
+          },
+          "provider_type": {
+            "minLength": 1,
+            "title": "Provider Type",
+            "type": "string"
+          },
+          "schedule_kind": {
+            "enum": [
+              "weekly",
+              "fixed_dates",
+              "drop_in"
+            ],
+            "title": "Schedule Kind",
+            "type": "string"
+          },
+          "schedule_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Schedule Note"
+          },
+          "session_at": {
+            "format": "date-time",
+            "title": "Session At",
+            "type": "string"
+          },
+          "session_flexible": {
+            "title": "Session Flexible",
+            "type": "boolean"
+          },
+          "source_url": {
+            "minLength": 1,
+            "title": "Source Url",
+            "type": "string"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "venue_name": {
+            "minLength": 1,
+            "title": "Venue Name",
+            "type": "string"
+          },
+          "verification": {
+            "enum": [
+              "verified",
+              "unverified"
+            ],
+            "title": "Verification",
+            "type": "string"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Verified At"
+          }
+        },
+        "required": [
+          "listing_id",
+          "title",
+          "organiser",
+          "provider_type",
+          "venue_name",
+          "planning_area",
+          "source_url",
+          "verification",
+          "freshness_state",
+          "age_min",
+          "age_max",
+          "beginner_friendly",
+          "join_alone_ok",
+          "guest_allowed",
+          "commitment",
+          "schedule_kind",
+          "session_flexible",
+          "session_at",
+          "duration_hours",
+          "cost_sgd"
+        ],
+        "title": "ActivityPlanView",
+        "type": "object"
+      },
+      "AdaptationView": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "none",
+              "replan",
+              "try_to_commit",
+              "hold_this_week"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "dislikes_recorded": {
+            "minimum": 0,
+            "title": "Dislikes Recorded",
+            "type": "integer"
+          },
+          "persisted": {
+            "title": "Persisted",
+            "type": "boolean"
+          },
+          "preference_changes": {
+            "items": {
+              "$ref": "#/components/schemas/PreferenceChange"
+            },
+            "title": "Preference Changes",
+            "type": "array"
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reason Codes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "action",
+          "dislikes_recorded",
+          "persisted"
+        ],
+        "title": "AdaptationView",
+        "type": "object"
+      },
+      "AdultSummaryView": {
+        "additionalProperties": false,
+        "properties": {
+          "organiser": {
+            "minLength": 1,
+            "title": "Organiser",
+            "type": "string"
+          },
+          "source_url": {
+            "minLength": 1,
+            "title": "Source Url",
+            "type": "string"
+          },
+          "timing": {
+            "format": "date-time",
+            "title": "Timing",
+            "type": "string"
+          },
+          "timing_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Timing Note"
+          },
+          "venue": {
+            "minLength": 1,
+            "title": "Venue",
+            "type": "string"
+          }
+        },
+        "required": [
+          "organiser",
+          "venue",
+          "timing",
+          "source_url"
+        ],
+        "title": "AdultSummaryView",
+        "type": "object"
+      },
+      "ApiErrorView": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "ok": {
+            "const": false,
+            "default": false,
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "retryable": {
+            "default": false,
+            "title": "Retryable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ApiErrorView",
+        "type": "object"
+      },
+      "ApprovalRequirements": {
+        "additionalProperties": false,
+        "properties": {
+          "attendance_required": {
+            "default": true,
+            "title": "Attendance Required",
+            "type": "boolean"
+          },
+          "provider_listing_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Provider Listing Ids",
+            "type": "array"
+          },
+          "spend_ceiling_sgd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Spend Ceiling Sgd"
+          },
+          "spend_required": {
+            "title": "Spend Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "spend_required"
+        ],
+        "title": "ApprovalRequirements",
+        "type": "object"
+      },
+      "AttendanceStepResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "adaptation": {
+            "$ref": "#/components/schemas/AdaptationView"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "adaptation"
+        ],
+        "title": "AttendanceStepResponse",
+        "type": "object"
+      },
+      "BookingStepResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "bookings": {
+            "items": {
+              "$ref": "#/components/schemas/BookingView"
+            },
+            "title": "Bookings",
+            "type": "array"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "outcome": {
+            "minLength": 1,
+            "title": "Outcome",
+            "type": "string"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "ok",
+          "outcome"
+        ],
+        "title": "BookingStepResponse",
+        "type": "object"
+      },
+      "BookingView": {
+        "additionalProperties": false,
+        "properties": {
+          "activity": {
+            "$ref": "#/components/schemas/ActivityPlanView"
+          },
+          "adult_summary": {
+            "$ref": "#/components/schemas/AdultSummaryView"
+          },
+          "booking_id": {
+            "minLength": 1,
+            "title": "Booking Id",
+            "type": "string"
+          },
+          "preparation": {
+            "$ref": "#/components/schemas/PreparationView"
+          },
+          "sandbox": {
+            "default": true,
+            "title": "Sandbox",
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "booked",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "booking_id",
+          "status",
+          "activity",
+          "preparation",
+          "adult_summary"
+        ],
+        "title": "BookingView",
+        "type": "object"
+      },
+      "DemoApproveRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "plan_id": {
+            "minLength": 1,
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "provider_listing_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Provider Listing Ids",
+            "type": "array"
+          },
+          "spend_ceiling_sgd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Spend Ceiling Sgd"
+          },
+          "teen_id": {
+            "minLength": 1,
+            "title": "Teen Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "teen_id",
+          "plan_id"
+        ],
+        "title": "DemoApproveRequest",
+        "type": "object"
+      },
+      "DemoAttendanceRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "attended": {
+            "title": "Attended",
+            "type": "boolean"
+          },
+          "booking_id": {
+            "minLength": 1,
+            "title": "Booking Id",
+            "type": "string"
+          },
+          "debrief": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Debrief"
+          },
+          "teen_id": {
+            "minLength": 1,
+            "title": "Teen Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "teen_id",
+          "booking_id",
+          "attended"
+        ],
+        "title": "DemoAttendanceRequest",
+        "type": "object"
+      },
+      "DemoNextPlanRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "teen_id": {
+            "minLength": 1,
+            "title": "Teen Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "teen_id"
+        ],
+        "title": "DemoNextPlanRequest",
+        "type": "object"
+      },
+      "DemoSetupRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "cold_start_vibes": {
+            "items": {
+              "enum": [
+                "sporty",
+                "artistic",
+                "chill",
+                "explorative"
+              ],
+              "type": "string"
+            },
+            "maxItems": 4,
+            "title": "Cold Start Vibes",
+            "type": "array"
+          },
+          "declared_age": {
+            "maximum": 17,
+            "minimum": 13,
+            "title": "Declared Age",
+            "type": "integer"
+          },
+          "goal": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Goal",
+            "type": "string"
+          },
+          "hours_per_week": {
+            "exclusiveMinimum": 0,
+            "maximum": 40,
+            "title": "Hours Per Week",
+            "type": "number"
+          },
+          "max_travel_min": {
+            "default": 45,
+            "maximum": 120,
+            "minimum": 5,
+            "title": "Max Travel Min",
+            "type": "integer"
+          },
+          "money_total_sgd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Money Total Sgd"
+          },
+          "parental_rules": {
+            "items": {
+              "enum": [
+                "verified_only",
+                "no_private_unverified",
+                "no_paid_activities"
+              ],
+              "type": "string"
+            },
+            "title": "Parental Rules",
+            "type": "array"
+          },
+          "tries_total": {
+            "exclusiveMinimum": 0,
+            "maximum": 12,
+            "title": "Tries Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "declared_age",
+          "goal",
+          "money_total_sgd",
+          "hours_per_week",
+          "tries_total"
+        ],
+        "title": "DemoSetupRequest",
+        "type": "object"
+      },
+      "HealthView": {
+        "additionalProperties": false,
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "ready_for_real_planning": {
+            "title": "Ready For Real Planning",
+            "type": "boolean"
+          },
+          "real_activities": {
+            "minimum": 0,
+            "title": "Real Activities",
+            "type": "integer"
+          },
+          "verified_activities": {
+            "minimum": 0,
+            "title": "Verified Activities",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok",
+          "ready_for_real_planning",
+          "real_activities",
+          "verified_activities"
+        ],
+        "title": "HealthView",
+        "type": "object"
+      },
+      "PlanOptionView": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_requirements": {
+            "$ref": "#/components/schemas/ApprovalRequirements"
+          },
+          "outcome": {
+            "minLength": 1,
+            "title": "Outcome",
+            "type": "string"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/PlanView"
+          }
+        },
+        "required": [
+          "outcome",
+          "plan",
+          "approval_requirements"
+        ],
+        "title": "PlanOptionView",
+        "type": "object"
+      },
+      "PlanStepResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_requirements": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ApprovalRequirements"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "outcome": {
+            "minLength": 1,
+            "title": "Outcome",
+            "type": "string"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "teen_id": {
+            "minLength": 1,
+            "title": "Teen Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ok",
+          "teen_id",
+          "outcome"
+        ],
+        "title": "PlanStepResponse",
+        "type": "object"
+      },
+      "PlanView": {
+        "additionalProperties": false,
+        "properties": {
+          "activities": {
+            "items": {
+              "$ref": "#/components/schemas/ActivityPlanView"
+            },
+            "minItems": 1,
+            "title": "Activities",
+            "type": "array"
+          },
+          "binding_constraint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Binding Constraint"
+          },
+          "plan_id": {
+            "minLength": 1,
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "thin": {
+            "title": "Thin",
+            "type": "boolean"
+          },
+          "total_cost_sgd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Total Cost Sgd"
+          }
+        },
+        "required": [
+          "plan_id",
+          "activities",
+          "total_cost_sgd",
+          "thin"
+        ],
+        "title": "PlanView",
+        "type": "object"
+      },
+      "PreferenceChange": {
+        "additionalProperties": false,
+        "properties": {
+          "after_confidence": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "After Confidence",
+            "type": "number"
+          },
+          "after_value": {
+            "maximum": 1,
+            "minimum": -1,
+            "title": "After Value",
+            "type": "number"
+          },
+          "axis": {
+            "enum": [
+              "indoor_outdoor",
+              "team_solo",
+              "contact_noncontact",
+              "intensity",
+              "competitive_social"
+            ],
+            "title": "Axis",
+            "type": "string"
+          },
+          "before_confidence": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Before Confidence",
+            "type": "number"
+          },
+          "before_value": {
+            "maximum": 1,
+            "minimum": -1,
+            "title": "Before Value",
+            "type": "number"
+          },
+          "evidence": {
+            "enum": [
+              "seed",
+              "debrief",
+              "attendance"
+            ],
+            "title": "Evidence",
+            "type": "string"
+          }
+        },
+        "required": [
+          "axis",
+          "before_value",
+          "after_value",
+          "before_confidence",
+          "after_confidence",
+          "evidence"
+        ],
+        "title": "PreferenceChange",
+        "type": "object"
+      },
+      "PreparationView": {
+        "additionalProperties": false,
+        "properties": {
+          "bring": {
+            "minLength": 1,
+            "title": "Bring",
+            "type": "string"
+          },
+          "guest_allowed": {
+            "title": "Guest Allowed",
+            "type": "boolean"
+          },
+          "meet": {
+            "minLength": 1,
+            "title": "Meet",
+            "type": "string"
+          },
+          "people_come_alone": {
+            "title": "People Come Alone",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "meet",
+          "bring",
+          "people_come_alone",
+          "guest_allowed"
+        ],
+        "title": "PreparationView",
+        "type": "object"
+      },
+      "ShortlistStepResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/PlanOptionView"
+            },
+            "maxItems": 4,
+            "minItems": 1,
+            "title": "Options",
+            "type": "array"
+          },
+          "teen_id": {
+            "minLength": 1,
+            "title": "Teen Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ok",
+          "teen_id",
+          "options"
+        ],
+        "title": "ShortlistStepResponse",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "A same-origin browser contract. Trusted-adult credentials stay in the Next.js server layer; the teen access token is held in an HttpOnly cookie.",
+    "title": "Hobbi demo frontend API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/approve": {
+      "post": {
+        "operationId": "approvePlan",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoApproveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingStepResponse"
+                }
+              }
+            },
+            "description": "Successful demo operation"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorView"
+                }
+              }
+            },
+            "description": "Safe frontend error"
+          }
+        }
+      }
+    },
+    "/api/attendance": {
+      "post": {
+        "operationId": "recordAttendance",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoAttendanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceStepResponse"
+                }
+              }
+            },
+            "description": "Successful demo operation"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorView"
+                }
+              }
+            },
+            "description": "Safe frontend error"
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthView"
+                }
+              }
+            },
+            "description": "Successful demo operation"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorView"
+                }
+              }
+            },
+            "description": "Safe frontend error"
+          }
+        }
+      }
+    },
+    "/api/next-plan": {
+      "post": {
+        "operationId": "createNextPlan",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoNextPlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanStepResponse"
+                }
+              }
+            },
+            "description": "Successful demo operation"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorView"
+                }
+              }
+            },
+            "description": "Safe frontend error"
+          }
+        }
+      }
+    },
+    "/api/plan": {
+      "post": {
+        "operationId": "createPlan",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoSetupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShortlistStepResponse"
+                }
+              }
+            },
+            "description": "Successful demo operation"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorView"
+                }
+              }
+            },
+            "description": "Safe frontend error"
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:3000"
+    }
+  ]
+}
