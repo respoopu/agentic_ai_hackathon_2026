@@ -5,7 +5,6 @@ import { FormEvent, useEffect, useState } from "react";
 import { ActivityDetails } from "@/components/ActivityDetails";
 import type {
   AdaptationView,
-  ApprovalRequirements,
   BookingStepResponse,
   BookingView,
   DemoApproveRequest,
@@ -16,18 +15,33 @@ import type {
 } from "@/lib/contracts";
 import { DemoApiError, demoRequest } from "@/lib/http";
 
-type Stage = "setup" | "plan" | "approval" | "booked" | "debrief" | "adapted";
+type Screen =
+  | "login"
+  | "profile"
+  | "home"
+  | "plan"
+  | "approval"
+  | "booked"
+  | "debrief"
+  | "adapted";
 type Vibe = "sporty" | "artistic" | "chill" | "explorative";
+type Profile = DemoSetupRequest & { display_name: string };
 
-const stages = [
-  { key: "plan", label: "Plan", detail: "Find a reversible first try" },
-  { key: "approval", label: "Check", detail: "Trusted adult reviews it" },
-  { key: "booked", label: "Book", detail: "Sandbox action only" },
-  { key: "adapted", label: "Learn", detail: "Use real attendance evidence" },
-] as const;
+const DEMO_EMAIL = "maya@hobbi.test";
+const DEMO_PASSWORD = "hobbi123";
 
-const stagePosition: Record<Stage, number> = {
-  setup: 0,
+const vibeOptions: Array<{ value: Vibe; label: string; icon: string }> = [
+  { value: "sporty", label: "Get moving", icon: "🏃" },
+  { value: "artistic", label: "Make stuff", icon: "🎨" },
+  { value: "chill", label: "Keep it chill", icon: "🌿" },
+  { value: "explorative", label: "Try anything", icon: "🧭" },
+];
+
+const journeySteps = ["Pick", "Check", "Book", "Done"];
+const journeyPositions: Record<Screen, number> = {
+  login: 0,
+  profile: 0,
+  home: 0,
   plan: 0,
   approval: 1,
   booked: 2,
@@ -35,32 +49,58 @@ const stagePosition: Record<Stage, number> = {
   adapted: 3,
 };
 
-const vibeOptions: Array<{ value: Vibe; label: string; note: string }> = [
-  { value: "sporty", label: "Move", note: "active and energetic" },
-  { value: "artistic", label: "Make", note: "creative and hands-on" },
-  { value: "chill", label: "Unwind", note: "calm and low-pressure" },
-  { value: "explorative", label: "Explore", note: "something unexpected" },
-];
-
 function errorMessage(error: unknown): string {
   return error instanceof DemoApiError
     ? error.message
-    : "Something interrupted this step. Please try again.";
+    : "Something went wrong. Give it another try.";
 }
 
-function friendlyAxis(axis: string): string {
-  return {
-    indoor_outdoor: "setting",
-    team_solo: "group style",
-    contact_noncontact: "creative fit",
-    intensity: "energy level",
-    competitive_social: "social pace",
-  }[axis] ?? axis;
+function HobbiBuddy({ small = false }: { small?: boolean }) {
+  return (
+    <div className={small ? "buddy buddy-small" : "buddy"} aria-hidden="true">
+      <svg viewBox="0 0 220 190">
+        <path className="buddy-shadow" d="M52 168c8-17 33-26 63-26 31 0 56 9 64 26-12 11-37 17-64 17-26 0-51-6-63-17Z" />
+        <path className="buddy-arm buddy-arm-left" d="M51 93C27 88 18 70 22 56c16 3 32 14 43 31Z" />
+        <path className="buddy-arm buddy-arm-right" d="M168 91c20-14 38-12 48-1-10 13-28 21-49 16Z" />
+        <path className="buddy-body" d="M111 21c43 0 75 31 75 76 0 45-25 72-74 72-50 0-78-27-78-71 0-43 32-77 77-77Z" />
+        <path className="buddy-belly" d="M67 112c20 15 67 18 91-1-6 31-23 46-48 46-24 0-38-14-43-45Z" />
+        <ellipse className="buddy-eye" cx="83" cy="83" rx="8" ry="10" />
+        <ellipse className="buddy-eye" cx="138" cy="83" rx="8" ry="10" />
+        <path className="buddy-smile" d="M91 106c12 11 25 11 37 0" />
+        <path className="buddy-spark" d="m174 20 7 15 16 6-16 7-7 15-6-15-16-7 16-6Z" />
+      </svg>
+    </div>
+  );
+}
+
+function NavIcon({ name }: { name: "home" | "profile" | "logout" }) {
+  if (name === "home") {
+    return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z" /></svg>;
+  }
+  if (name === "profile") {
+    return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c1-5 4-7 8-7s7 2 8 7" /></svg>;
+  }
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5M14 8l4 4-4 4m4-4H8" /></svg>;
+}
+
+function JourneyProgress({ screen }: { screen: Screen }) {
+  const position = journeyPositions[screen];
+  return (
+    <div className="journey-progress" aria-label={`Step ${position + 1} of 4`}>
+      {journeySteps.map((step, index) => (
+        <div className={index <= position ? "journey-step active" : "journey-step"} key={step}>
+          <span>{index < position ? "✓" : index + 1}</span>
+          <small>{step}</small>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export function HobbiDemo() {
-  const [stage, setStage] = useState<Stage>("setup");
+  const [screen, setScreen] = useState<Screen>("login");
   const [health, setHealth] = useState<HealthView | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [selectedVibes, setSelectedVibes] = useState<Vibe[]>([]);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [planResponse, setPlanResponse] = useState<PlanStepResponse | null>(null);
@@ -88,12 +128,13 @@ export function HobbiDemo() {
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
-  }, [stage]);
+  }, [screen]);
 
   const plan = planResponse?.plan ?? null;
   const requirements = planResponse?.approval_requirements ?? null;
   const booking = bookingResponse?.bookings?.[0] ?? null;
   const nextPlan = nextPlanResponse?.plan ?? null;
+  const inJourney = ["plan", "approval", "booked", "debrief", "adapted"].includes(screen);
 
   function toggleVibe(vibe: Vibe) {
     setSelectedVibes((current) =>
@@ -101,12 +142,22 @@ export function HobbiDemo() {
     );
   }
 
-  async function createPlan(event: FormEvent<HTMLFormElement>) {
+  function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setBusy(true);
-    setError(null);
     const data = new FormData(event.currentTarget);
-    const payload: DemoSetupRequest = {
+    if (data.get("email") !== DEMO_EMAIL || data.get("password") !== DEMO_PASSWORD) {
+      setError("Use the demo email and password shown below.");
+      return;
+    }
+    setError(null);
+    setScreen(profile ? "home" : "profile");
+  }
+
+  function saveProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    setProfile({
+      display_name: String(data.get("display_name")),
       declared_age: Number(data.get("age")),
       goal: String(data.get("goal")),
       money_total_sgd: Number(data.get("budget")),
@@ -115,14 +166,21 @@ export function HobbiDemo() {
       max_travel_min: Number(data.get("travel")),
       cold_start_vibes: selectedVibes,
       parental_rules: verifiedOnly ? ["verified_only"] : [],
-    };
+    });
+    setError(null);
+    setScreen("home");
+  }
+
+  async function createPlan() {
+    if (!profile) return;
+    setBusy(true);
+    setError(null);
+    const { display_name: _displayName, ...payload } = profile;
     try {
       const result = await demoRequest<PlanStepResponse>("/api/plan", payload);
-      if (!result.plan || !result.approval_requirements) {
-        throw new Error("No displayable plan returned");
-      }
+      if (!result.plan || !result.approval_requirements) throw new Error("No activity returned");
       setPlanResponse(result);
-      setStage("plan");
+      setScreen("plan");
     } catch (requestError) {
       setError(errorMessage(requestError));
     } finally {
@@ -144,7 +202,7 @@ export function HobbiDemo() {
       const result = await demoRequest<BookingStepResponse>("/api/approve", payload);
       if (!result.bookings?.length) throw new Error("No booking returned");
       setBookingResponse(result);
-      setStage("booked");
+      setScreen("booked");
     } catch (requestError) {
       setError(errorMessage(requestError));
     } finally {
@@ -164,12 +222,9 @@ export function HobbiDemo() {
       debrief: debrief.trim() || null,
     };
     try {
-      const result = await demoRequest<{ ok: boolean; adaptation: AdaptationView }>(
-        "/api/attendance",
-        payload,
-      );
+      const result = await demoRequest<{ ok: boolean; adaptation: AdaptationView }>("/api/attendance", payload);
       setAdaptation(result.adaptation);
-      setStage("adapted");
+      setScreen("adapted");
     } catch (requestError) {
       setError(errorMessage(requestError));
     } finally {
@@ -182,10 +237,8 @@ export function HobbiDemo() {
     setBusy(true);
     setError(null);
     try {
-      const result = await demoRequest<PlanStepResponse>("/api/next-plan", {
-        teen_id: planResponse.teen_id,
-      });
-      if (!result.plan) throw new Error("No next plan returned");
+      const result = await demoRequest<PlanStepResponse>("/api/next-plan", { teen_id: planResponse.teen_id });
+      if (!result.plan || !result.approval_requirements) throw new Error("No next activity returned");
       setNextPlanResponse(result);
     } catch (requestError) {
       setError(errorMessage(requestError));
@@ -194,10 +247,7 @@ export function HobbiDemo() {
     }
   }
 
-  function resetDemo() {
-    setStage("setup");
-    setSelectedVibes([]);
-    setVerifiedOnly(false);
+  function clearJourney() {
     setPlanResponse(null);
     setBookingResponse(null);
     setAdaptation(null);
@@ -207,369 +257,161 @@ export function HobbiDemo() {
     setError(null);
   }
 
-  return (
-    <main className="app-shell">
-      <header className="topbar">
-        <button className="wordmark" type="button" onClick={resetDemo} aria-label="Start Hobbi again">
-          hobbi<span className="wordmark-dot">.</span>
-        </button>
-        <div className="runtime-status" aria-live="polite">
-          <span className={health?.ready_for_real_planning ? "status-dot ready" : "status-dot"} />
-          {health?.ready_for_real_planning
-            ? `${health.real_activities} real activities ready`
-            : health
-              ? "Catalogue needs attention"
-              : "Checking catalogue"}
-        </div>
-        <span className="demo-label">Local prototype</span>
-      </header>
+  function goHome() {
+    clearJourney();
+    setScreen("home");
+  }
 
-      <div className="workspace">
-        <aside className="stage-rail" aria-label="Hobbi journey">
-          <p className="rail-title">Your first try</p>
-          <ol>
-            {stages.map((item, index) => {
-              const activeIndex = stagePosition[stage];
-              const state = index < activeIndex ? "done" : index === activeIndex ? "current" : "later";
-              return (
-                <li className={state} key={item.key}>
-                  <span className="stage-number">{index < activeIndex ? "✓" : `0${index + 1}`}</span>
-                  <span>
-                    <strong>{item.label}</strong>
-                    <small>{item.detail}</small>
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
-          <div className="agent-note">
-            <span className="agent-orbit" aria-hidden="true" />
-            <p>
-              <strong>Agents act within limits.</strong>
-              Planning is automatic. Approval is human. Every booking here is simulated.
-            </p>
-          </div>
-        </aside>
+  function logout() {
+    clearJourney();
+    setProfile(null);
+    setSelectedVibes([]);
+    setVerifiedOnly(false);
+    setScreen("login");
+  }
 
-        <section className="main-stage" aria-live="polite">
-          {error ? (
-            <div className="error-banner" role="alert">
-              <span>{error}</span>
-              <button type="button" onClick={() => setError(null)}>Dismiss</button>
-            </div>
-          ) : null}
-
-          {stage === "setup" ? (
-            <section className="step-panel setup-panel" key="setup">
-              <div className="intro-lockup">
-                <p className="eyebrow">Plan · one reversible experiment</p>
-                <h1>Find a first try that actually fits.</h1>
-                <p>
-                  Tell Hobbi what is practical. The Planner will choose a real Singapore activity;
-                  it will not give you a personality label.
-                </p>
-              </div>
-
-              <form className="setup-form" onSubmit={createPlan}>
-                <fieldset className="form-section">
-                  <legend>Start with the week you have</legend>
-                  <div className="field-grid">
-                    <label className="wide-field">
-                      <span>What would make this try worthwhile?</span>
-                      <textarea
-                        name="goal"
-                        defaultValue="I want something low-pressure where it is okay to arrive alone."
-                        maxLength={500}
-                        required
-                      />
-                    </label>
-                    <label>
-                      <span>Age</span>
-                      <select name="age" defaultValue="15">
-                        {[13, 14, 15, 16, 17].map((age) => <option key={age}>{age}</option>)}
-                      </select>
-                    </label>
-                    <label>
-                      <span>Total budget</span>
-                      <select name="budget" defaultValue="20">
-                        <option value="0">S$0</option>
-                        <option value="10">S$10</option>
-                        <option value="20">S$20</option>
-                        <option value="50">S$50</option>
-                      </select>
-                    </label>
-                    <label>
-                      <span>Time each week</span>
-                      <select name="hours" defaultValue="3">
-                        <option value="1">1 hour</option>
-                        <option value="2">2 hours</option>
-                        <option value="3">3 hours</option>
-                        <option value="5">5 hours</option>
-                      </select>
-                    </label>
-                    <label>
-                      <span>Tries available</span>
-                      <select name="tries" defaultValue="3">
-                        <option value="1">1 try</option>
-                        <option value="2">2 tries</option>
-                        <option value="3">3 tries</option>
-                        <option value="4">4 tries</option>
-                      </select>
-                    </label>
-                    <label>
-                      <span>Travel limit</span>
-                      <select name="travel" defaultValue="45">
-                        <option value="20">20 minutes</option>
-                        <option value="30">30 minutes</option>
-                        <option value="45">45 minutes</option>
-                        <option value="60">60 minutes</option>
-                      </select>
-                    </label>
-                  </div>
-                </fieldset>
-
-                <fieldset className="form-section">
-                  <legend>Where should we start?</legend>
-                  <p className="field-help">Optional. These choices nudge the first plan; they never filter your options.</p>
-                  <div className="vibe-row">
-                    {vibeOptions.map((vibe) => {
-                      const selected = selectedVibes.includes(vibe.value);
-                      return (
-                        <button
-                          className={selected ? "vibe selected" : "vibe"}
-                          type="button"
-                          aria-label={`${vibe.label}: ${vibe.note}`}
-                          aria-pressed={selected}
-                          onClick={() => toggleVibe(vibe.value)}
-                          key={vibe.value}
-                        >
-                          <strong>{vibe.label}</strong>
-                          <span>{vibe.note}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="surprise-note">
-                    {selectedVibes.length === 0 ? "Surprise me is on." : `${selectedVibes.length} gentle nudge${selectedVibes.length > 1 ? "s" : ""} selected.`}
-                  </p>
-                </fieldset>
-
-                <label className="check-line">
-                  <input
-                    type="checkbox"
-                    checked={verifiedOnly}
-                    onChange={(event) => setVerifiedOnly(event.target.checked)}
-                  />
-                  <span>
-                    <strong>Only use human-verified organisers</strong>
-                    <small>Leave off to let a trusted adult review sourced, unverified providers.</small>
-                  </span>
-                </label>
-
-                <div className="form-action">
-                  <p>Teen and trusted adult complete this local-demo setup together.</p>
-                  <button className="primary-button" type="submit" disabled={busy || health?.ready_for_real_planning === false}>
-                    {busy ? "Planning…" : "Plan my first try"}<span aria-hidden="true">→</span>
-                  </button>
-                </div>
-              </form>
-            </section>
-          ) : null}
-
-          {stage === "plan" && plan ? (
-            <section className="step-panel" key="plan">
-              <div className="section-heading">
-                <div>
-                  <p className="eyebrow">Planner finished · no booking made</p>
-                  <h1>A practical first experiment.</h1>
-                </div>
-                <span className="decision-mark" aria-hidden="true">01</span>
-              </div>
-              <ActivityDetails activity={plan.activities[0]} />
-              <div className="reason-line">
-                <strong>Why this came first</strong>
-                <p>It fits the declared limits and keeps commitment low. Your setup choices influenced ranking only; nothing became a permanent label.</p>
-              </div>
-              <div className="step-actions">
-                <button className="text-button" type="button" onClick={resetDemo}>Start over</button>
-                <button className="primary-button" type="button" onClick={() => setStage("approval")}>
-                  Pass to trusted adult <span aria-hidden="true">→</span>
-                </button>
-              </div>
-            </section>
-          ) : null}
-
-          {stage === "approval" && plan && requirements ? (
-            <section className="step-panel adult-panel" key="approval">
-              <div className="role-change">
-                <span className="role-icon" aria-hidden="true">A</span>
-                <div>
-                  <p className="eyebrow">Human checkpoint</p>
-                  <h1>Trusted-adult review</h1>
-                  <p>Hobbi pauses here. The adult approves this exact plan—not a blank cheque for later changes.</p>
-                </div>
-              </div>
-              <ActivityDetails activity={plan.activities[0]} compact />
-              <div className="approval-list">
-                <div><span>✓</span><p><strong>Attendance</strong>Approve this person attending this session.</p></div>
-                <div><span>✓</span><p><strong>Organiser and venue</strong>{plan.activities[0].organiser} at {plan.activities[0].venue_name}.</p></div>
-                {requirements.provider_listing_ids?.length ? (
-                  <div><span>!</span><p><strong>Provider vetting</strong>This sourced organiser is not yet human-verified. Review the linked source before approving.</p></div>
-                ) : (
-                  <div><span>✓</span><p><strong>Provider vetting</strong>The organiser record was checked by a named human.</p></div>
-                )}
-                <div><span>✓</span><p><strong>Spending limit</strong>{requirements.spend_required ? `Approve up to S$${Number(plan.total_cost_sgd).toFixed(2)}.` : "No spend approval needed; this plan is free."}</p></div>
-              </div>
-              <div className="step-actions">
-                <button className="text-button" type="button" onClick={() => setStage("plan")}>Back to plan</button>
-                <button className="primary-button" type="button" onClick={approvePlan} disabled={busy}>
-                  {busy ? "Booking…" : "Approve & book in sandbox"}<span aria-hidden="true">→</span>
-                </button>
-              </div>
-            </section>
-          ) : null}
-
-          {stage === "booked" && booking ? (
-            <BookedStep booking={booking} onContinue={() => setStage("debrief")} />
-          ) : null}
-
-          {stage === "debrief" && booking ? (
-            <section className="step-panel debrief-panel" key="debrief">
-              <div className="section-heading">
-                <div>
-                  <p className="eyebrow">Observer · evidence after action</p>
-                  <h1>What actually happened?</h1>
-                  <p>Attendance counts more than the setup screen. One difficult session will not become a permanent judgement.</p>
-                </div>
-                <span className="decision-mark" aria-hidden="true">04</span>
-              </div>
-              <form onSubmit={recordAttendance}>
-                <div className="attendance-toggle" role="group" aria-label="Attendance">
-                  <button className={attended ? "selected" : ""} type="button" aria-pressed={attended} onClick={() => setAttended(true)}>I went</button>
-                  <button className={!attended ? "selected" : ""} type="button" aria-pressed={!attended} onClick={() => setAttended(false)}>I did not go</button>
-                </div>
-                <label className="debrief-field">
-                  <span>Anything Hobbi should learn?</span>
-                  <textarea
-                    value={debrief}
-                    onChange={(event) => setDebrief(event.target.value)}
-                    placeholder="The activity was fine, but the group felt awkward…"
-                    maxLength={2000}
-                  />
-                </label>
-                <div className="quick-notes" aria-label="Example reflections">
-                  <button type="button" onClick={() => { setAttended(false); setDebrief("It was not my thing."); }}>Not my thing</button>
-                  <button type="button" onClick={() => { setAttended(true); setDebrief("I liked it and would try something similar."); }}>I liked it</button>
-                  <button type="button" onClick={() => { setAttended(false); setDebrief("Exam week — I need a pause."); }}>Busy this week</button>
-                </div>
-                <div className="step-actions">
-                  <button className="text-button" type="button" onClick={() => setStage("booked")}>Back</button>
-                  <button className="primary-button" type="submit" disabled={busy}>
-                    {busy ? "Learning…" : "Save what happened"}<span aria-hidden="true">→</span>
-                  </button>
-                </div>
-              </form>
-            </section>
-          ) : null}
-
-          {stage === "adapted" && adaptation && plan ? (
-            <section className="step-panel adapted-panel" key="adapted">
-              <div className="adaptation-heading">
-                <div className="signal-orbit" aria-hidden="true"><span /></div>
-                <div>
-                  <p className="eyebrow">Observer saved the evidence</p>
-                  <h1>{adaptation.action === "hold_this_week" ? "This week can wait." : "A little wiser, not boxed in."}</h1>
-                  <p>{adaptation.action === "hold_this_week" ? "Hobbi recognised a temporary constraint and will not treat it as a dislike." : "Hobbi recorded this experience without turning it into a permanent personality label."}</p>
-                </div>
-              </div>
-
-              <div className="learning-ledger">
-                <div>
-                  <span className="ledger-number">{adaptation.dislikes_recorded}</span>
-                  <p><strong>new dislike signal</strong><small>Temporary and designed to decay</small></p>
-                </div>
-                <div>
-                  <span className="ledger-number">{adaptation.preference_changes?.length ?? 0}</span>
-                  <p><strong>preference update</strong><small>Grounded in attendance evidence</small></p>
-                </div>
-                <div>
-                  <span className="ledger-number">0</span>
-                  <p><strong>permanent labels</strong><small>Hobbi never diagnoses a type</small></p>
-                </div>
-              </div>
-
-              {adaptation.preference_changes?.length ? (
-                <div className="change-list">
-                  {adaptation.preference_changes.map((change) => (
-                    <p key={change.axis}><strong>{friendlyAxis(change.axis)}</strong> now uses {change.evidence} evidence with {Math.round(change.after_confidence * 100)}% confidence.</p>
-                  ))}
-                </div>
-              ) : null}
-
-              {nextPlan ? (
-                <div className="next-reveal">
-                  <div className="comparison-line">
-                    <span>First try</span><strong>{plan.activities[0].title}</strong>
-                    <span aria-hidden="true">→</span>
-                    <span>Next experiment</span><strong>{nextPlan.activities[0].title}</strong>
-                  </div>
-                  <ActivityDetails activity={nextPlan.activities[0]} compact />
-                  <div className="step-actions">
-                    <button className="text-button" type="button" onClick={resetDemo}>Run a fresh demo</button>
-                    <button className="primary-button" type="button" onClick={() => { setPlanResponse(nextPlanResponse); setNextPlanResponse(null); setStage("approval"); }}>
-                      Review the next plan <span aria-hidden="true">→</span>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="step-actions">
-                  <button className="text-button" type="button" onClick={resetDemo}>Run a fresh demo</button>
-                  <button className="primary-button" type="button" onClick={revealNextPlan} disabled={busy || adaptation.action === "hold_this_week"}>
-                    {adaptation.action === "hold_this_week" ? "No new plan this week" : busy ? "Replanning…" : "See the next experiment"}<span aria-hidden="true">→</span>
-                  </button>
-                </div>
-              )}
-            </section>
-          ) : null}
+  if (screen === "login") {
+    return (
+      <main className="login-page">
+        <section className="login-art">
+          <div className="login-wordmark">hobbi<span>.</span></div>
+          <HobbiBuddy />
+          <h1>Your next thing is out there.</h1>
         </section>
-      </div>
+        <section className="login-panel">
+          <form className="login-form" onSubmit={login}>
+            <div><p className="screen-kicker">Welcome back</p><h2>Log in to Hobbi</h2></div>
+            <label>Email<input name="email" type="email" autoComplete="email" placeholder="you@example.com" required /></label>
+            <label>Password<input name="password" type="password" autoComplete="current-password" placeholder="Your password" required /></label>
+            {error ? <p className="form-error" role="alert">{error}</p> : null}
+            <button className="action-button primary" type="submit">Log in</button>
+            <div className="demo-login"><strong>Demo account</strong><span>{DEMO_EMAIL}</span><span>{DEMO_PASSWORD}</span></div>
+          </form>
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <main className="product-shell">
+      <aside className="product-nav">
+        <button className="nav-wordmark" type="button" onClick={goHome} aria-label="Hobbi home">hobbi<span>.</span></button>
+        <nav aria-label="Main navigation">
+          <button className={screen === "home" || inJourney ? "nav-item active" : "nav-item"} type="button" onClick={goHome} aria-current={screen === "home" ? "page" : undefined}><NavIcon name="home" /><span>Home</span></button>
+          <button className={screen === "profile" ? "nav-item active" : "nav-item"} type="button" onClick={() => setScreen("profile")} aria-current={screen === "profile" ? "page" : undefined}><NavIcon name="profile" /><span>Profile</span></button>
+        </nav>
+        <button className="nav-item logout" type="button" onClick={logout}><NavIcon name="logout" /><span>Log out</span></button>
+      </aside>
+
+      <section className="product-main">
+        <header className="mobile-header">
+          <button className="nav-wordmark" type="button" onClick={goHome}>hobbi<span>.</span></button>
+          {profile ? <div className="mini-avatar">{profile.display_name.slice(0, 1).toUpperCase()}</div> : null}
+        </header>
+        {inJourney ? <JourneyProgress screen={screen} /> : null}
+        {error && screen !== "profile" ? <p className="page-error" role="alert">{error}</p> : null}
+
+        {screen === "profile" ? <ProfileScreen profile={profile} selectedVibes={selectedVibes} verifiedOnly={verifiedOnly} onToggleVibe={toggleVibe} onVerifiedChange={setVerifiedOnly} onSave={saveProfile} /> : null}
+        {screen === "home" && profile ? <HomeScreen profile={profile} health={health} busy={busy} onStart={createPlan} onEdit={() => setScreen("profile")} /> : null}
+
+        {screen === "plan" && plan ? (
+          <section className="task-screen" key="plan">
+            <div className="task-heading"><p className="screen-kicker">Your match</p><h1>Try this next</h1></div>
+            <ActivityDetails activity={plan.activities[0]} />
+            <div className="task-actions"><button className="action-button secondary" type="button" onClick={goHome}>Not now</button><button className="action-button primary" type="button" onClick={() => setScreen("approval")}>Ask my adult</button></div>
+          </section>
+        ) : null}
+
+        {screen === "approval" && plan && requirements ? (
+          <section className="task-screen" key="approval">
+            <div className="task-heading"><p className="screen-kicker">Adult check</p><h1>Is this okay?</h1><p>Review the activity before approving the demo booking.</p></div>
+            <div className="adult-check-list">
+              <CheckRow label="Organiser" value={plan.activities[0].organiser} />
+              <CheckRow label="Location" value={plan.activities[0].venue_name} />
+              <CheckRow label="Cost" value={Number(plan.total_cost_sgd) === 0 ? "Free" : `S$${Number(plan.total_cost_sgd).toFixed(2)}`} />
+              <CheckRow label="Approval" value={requirements.provider_listing_ids?.length ? "Provider needs review" : "Verified organiser"} />
+            </div>
+            <a className="plain-link" href={plan.activities[0].source_url} target="_blank" rel="noreferrer">Open organiser page ↗</a>
+            <div className="task-actions"><button className="action-button secondary" type="button" onClick={() => setScreen("plan")}>Back</button><button className="action-button primary" type="button" onClick={approvePlan} disabled={busy}>{busy ? "Booking…" : "Approve as demo adult"}</button></div>
+          </section>
+        ) : null}
+
+        {screen === "booked" && booking ? <BookedScreen booking={booking} onContinue={() => setScreen("debrief")} /> : null}
+
+        {screen === "debrief" && booking ? (
+          <section className="task-screen checkin-screen" key="debrief">
+            <div className="task-heading"><p className="screen-kicker">Quick check-in</p><h1>How did it go?</h1></div>
+            <form onSubmit={recordAttendance}>
+              <div className="attendance-choice" role="group" aria-label="Attendance">
+                <button className={attended ? "choice-button selected" : "choice-button"} type="button" onClick={() => setAttended(true)} aria-pressed={attended}>🙌<span>I went</span></button>
+                <button className={!attended ? "choice-button selected" : "choice-button"} type="button" onClick={() => setAttended(false)} aria-pressed={!attended}>🫠<span>I missed it</span></button>
+              </div>
+              <label className="debrief-field">Anything else?<textarea value={debrief} onChange={(event) => setDebrief(event.target.value)} maxLength={2000} placeholder="Optional" /></label>
+              <div className="quick-replies">{["Loved it", "It was okay", "Not my thing"].map((reply) => <button type="button" key={reply} onClick={() => setDebrief(reply)}>{reply}</button>)}</div>
+              <div className="task-actions"><button className="action-button primary full" type="submit" disabled={busy}>{busy ? "Saving…" : "Save check-in"}</button></div>
+            </form>
+          </section>
+        ) : null}
+
+        {screen === "adapted" && adaptation && plan ? (
+          <section className="task-screen result-screen" key="adapted">
+            {nextPlan ? (
+              <><div className="task-heading"><p className="screen-kicker">Next up</p><h1>Try this next</h1></div><ActivityDetails activity={nextPlan.activities[0]} /><div className="task-actions"><button className="action-button secondary" type="button" onClick={goHome}>Home</button><button className="action-button primary" type="button" onClick={() => { setPlanResponse(nextPlanResponse); setNextPlanResponse(null); setBookingResponse(null); setAdaptation(null); setScreen("approval"); }}>Review activity</button></div></>
+            ) : (
+              <><HobbiBuddy small /><div className="task-heading centered"><p className="screen-kicker">Check-in saved</p><h1>{adaptation.action === "hold_this_week" ? "Take the week off" : "Got it!"}</h1><p>{adaptation.action === "hold_this_week" ? "Come back when your schedule clears up." : "Your next pick will use this feedback."}</p></div><div className="task-actions centered"><button className="action-button secondary" type="button" onClick={goHome}>Home</button>{adaptation.action !== "hold_this_week" ? <button className="action-button primary" type="button" onClick={revealNextPlan} disabled={busy}>{busy ? "Finding…" : "Find another activity"}</button> : null}</div></>
+            )}
+          </section>
+        ) : null}
+      </section>
+
+      <nav className="mobile-nav" aria-label="Mobile navigation">
+        <button className={screen === "home" || inJourney ? "active" : ""} type="button" onClick={goHome}><NavIcon name="home" /><span>Home</span></button>
+        <button className={screen === "profile" ? "active" : ""} type="button" onClick={() => setScreen("profile")}><NavIcon name="profile" /><span>Profile</span></button>
+        <button type="button" onClick={logout}><NavIcon name="logout" /><span>Log out</span></button>
+      </nav>
     </main>
   );
 }
 
-function BookedStep({ booking, onContinue }: { booking: BookingView; onContinue: () => void }) {
+function ProfileScreen({ profile, selectedVibes, verifiedOnly, onToggleVibe, onVerifiedChange, onSave }: { profile: Profile | null; selectedVibes: Vibe[]; verifiedOnly: boolean; onToggleVibe: (vibe: Vibe) => void; onVerifiedChange: (checked: boolean) => void; onSave: (event: FormEvent<HTMLFormElement>) => void }) {
   return (
-    <section className="step-panel booked-panel" key="booked">
-      <div className="sandbox-banner">
-        <span className="sandbox-stamp">Sandbox</span>
-        <div><p className="eyebrow">Broker completed the action</p><h1>Practice booking confirmed.</h1></div>
-      </div>
-      <p className="sandbox-explainer">No real provider was contacted and no payment was made. The ledger commitment and booking record are real inside this local prototype.</p>
-      <div className="booking-columns">
-        <section>
-          <p className="eyebrow">For the teen</p>
-          <h2>Know the first ten minutes.</h2>
-          <dl>
-            <div><dt>Meet</dt><dd>{booking.preparation.meet}</dd></div>
-            <div><dt>Bring</dt><dd>{booking.preparation.bring}</dd></div>
-            <div><dt>Going alone</dt><dd>{booking.preparation.people_come_alone ? "Other newcomers may arrive alone too." : "Bring someone you know if possible."}</dd></div>
-            <div><dt>Bring a friend</dt><dd>{booking.preparation.guest_allowed ? "The listing allows guests." : "Check with the organiser first."}</dd></div>
-          </dl>
-        </section>
-        <section>
-          <p className="eyebrow">For the trusted adult</p>
-          <h2>One concise record.</h2>
-          <dl>
-            <div><dt>Organiser</dt><dd>{booking.adult_summary.organiser}</dd></div>
-            <div><dt>Venue</dt><dd>{booking.adult_summary.venue}</dd></div>
-            <div><dt>Record</dt><dd className="booking-id">{booking.booking_id}</dd></div>
-          </dl>
-        </section>
-      </div>
-      <div className="step-actions">
-        <span className="quiet-confirmation">G4 checked · exactly one ledger commitment</span>
-        <button className="primary-button" type="button" onClick={onContinue}>Log what happened <span aria-hidden="true">→</span></button>
-      </div>
+    <section className="profile-screen">
+      <div className="page-heading"><p className="screen-kicker">Your profile</p><h1>{profile ? "Update your picks" : "Make Hobbi yours"}</h1><p>Set what works for you. You can change this anytime.</p></div>
+      <form className="profile-form" onSubmit={onSave}>
+        <fieldset><legend>About you</legend><div className="field-grid two"><label>Name<input name="display_name" defaultValue={profile?.display_name ?? "Maya"} required maxLength={40} /></label><label>Age<input name="age" type="number" min="13" max="17" defaultValue={profile?.declared_age ?? 15} required /></label></div></fieldset>
+        <fieldset><legend>What do you want to do?</legend><label className="goal-field"><input name="goal" defaultValue={profile?.goal ?? "Try something new after school"} required maxLength={500} /></label></fieldset>
+        <fieldset><legend>Pick your vibe <small>Choose any</small></legend><div className="vibe-grid">{vibeOptions.map((vibe) => <button className={selectedVibes.includes(vibe.value) ? "vibe-button selected" : "vibe-button"} type="button" key={vibe.value} onClick={() => onToggleVibe(vibe.value)} aria-pressed={selectedVibes.includes(vibe.value)}><span>{vibe.icon}</span>{vibe.label}</button>)}</div></fieldset>
+        <fieldset><legend>Your limits</legend><div className="field-grid limits"><label>Budget<input name="budget" type="number" min="0" step="1" defaultValue={profile?.money_total_sgd ?? 20} required /><small>S$ total</small></label><label>Time<input name="hours" type="number" min="0.5" max="40" step="0.5" defaultValue={profile?.hours_per_week ?? 2} required /><small>hours/week</small></label><label>Tries<input name="tries" type="number" min="1" max="12" defaultValue={profile?.tries_total ?? 3} required /><small>activities</small></label><label>Travel<input name="travel" type="number" min="5" max="120" step="5" defaultValue={profile?.max_travel_min ?? 45} required /><small>minutes max</small></label></div></fieldset>
+        <label className="switch-row"><span><strong>Verified organisers only</strong><small>Hide organisers that still need an adult check.</small></span><input type="checkbox" checked={verifiedOnly} onChange={(event) => onVerifiedChange(event.target.checked)} /></label>
+        <button className="action-button primary save-profile" type="submit">Save profile</button>
+      </form>
+    </section>
+  );
+}
+
+function HomeScreen({ profile, health, busy, onStart, onEdit }: { profile: Profile; health: HealthView | null; busy: boolean; onStart: () => void; onEdit: () => void }) {
+  return (
+    <section className="home-screen">
+      <header className="home-heading"><div><p className="screen-kicker">Hey {profile.display_name}!</p><h1>What should we try?</h1></div><div className="mini-avatar large">{profile.display_name.slice(0, 1).toUpperCase()}</div></header>
+      <div className="quest-panel"><div><span className="quest-label">READY WHEN YOU ARE</span><h2>Find your next activity</h2><p>{profile.goal}</p><button className="action-button primary" type="button" onClick={onStart} disabled={busy}>{busy ? "Finding a match…" : "Find an activity"}</button></div><HobbiBuddy small /></div>
+      <div className="stats-row" aria-label="Your activity limits"><div><span>🎟️</span><strong>{profile.tries_total}</strong><small>tries</small></div><div><span>💸</span><strong>S${profile.money_total_sgd}</strong><small>budget</small></div><div><span>⏱️</span><strong>{profile.hours_per_week}h</strong><small>per week</small></div></div>
+      <div className="profile-summary"><div><p className="screen-kicker">Your setup</p><h2>{profile.cold_start_vibes?.length ? profile.cold_start_vibes.map((vibe) => vibeOptions.find((item) => item.value === vibe)?.label).join(" · ") : "Surprise me"}</h2><p>Up to {profile.max_travel_min} minutes away · {profile.parental_rules?.includes("verified_only") ? "Verified only" : "Adult review allowed"}</p></div><button className="text-button" type="button" onClick={onEdit}>Edit profile</button></div>
+      <p className={health?.ready_for_real_planning ? "catalogue-status ready" : "catalogue-status"}><span />{health?.ready_for_real_planning ? `${health.real_activities} activities ready` : "Checking activities"}</p>
+    </section>
+  );
+}
+
+function CheckRow({ label, value }: { label: string; value: string }) {
+  return <div><span>{label}</span><strong>{value}</strong></div>;
+}
+
+function BookedScreen({ booking, onContinue }: { booking: BookingView; onContinue: () => void }) {
+  return (
+    <section className="task-screen booked-screen" key="booked">
+      <div className="success-mark" aria-hidden="true">✓</div>
+      <div className="task-heading centered"><p className="screen-kicker">Demo booking</p><h1>Nice, you’re in!</h1><p>No provider was contacted and no payment was made.</p></div>
+      <div className="booking-ticket"><div><span>Activity</span><strong>{booking.activity.title}</strong></div><div><span>Meet at</span><strong>{booking.preparation.meet}</strong></div><div><span>Bring</span><strong>{booking.preparation.bring}</strong></div></div>
+      <div className="task-actions centered"><button className="action-button primary" type="button" onClick={onContinue}>Check in after activity</button></div>
     </section>
   );
 }

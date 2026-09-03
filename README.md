@@ -20,6 +20,16 @@ trusted-adult key. It never sends that key to browser code. Each new journey
 uses a fresh synthetic profile, and every booking is clearly labelled as a
 sandbox action; no provider is contacted and no payment is made.
 
+Use the built-in demo account to enter the prototype:
+
+```text
+Email: maya@hobbi.test
+Password: hobbi123
+```
+
+The login is intentionally local and fake. After signing in, save the demo
+profile, return to the home screen, and start the activity flow from there.
+
 The browser contract is generated from the Pydantic display models and committed
 at `contracts/frontend-api.openapi.json`. The Next.js server routes use that
 contract as a protective layer over the agent-facing `POST /` API: the Guardian

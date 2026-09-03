@@ -8,7 +8,7 @@ describe("HobbiDemo", () => {
     vi.unstubAllGlobals();
   });
 
-  it("starts with a skippable cold start and reports catalogue readiness", async () => {
+  it("moves from demo login through profile setup to the home screen", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -24,10 +24,17 @@ describe("HobbiDemo", () => {
 
     render(<HobbiDemo />);
 
-    expect(screen.getByRole("heading", { name: "Find a first try that actually fits." })).toBeInTheDocument();
-    expect(screen.getByText("Surprise me is on.")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Move: active and energetic/i }));
-    expect(screen.getByText("1 gentle nudge selected.")).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText("35 real activities ready")).toBeInTheDocument());
+    expect(screen.getByRole("heading", { name: "Log in to Hobbi" })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "maya@hobbi.test" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "hobbi123" } });
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
+
+    expect(screen.getByRole("heading", { name: "Make Hobbi yours" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Get moving/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
+
+    expect(screen.getByRole("heading", { name: "What should we try?" })).toBeInTheDocument();
+    expect(screen.getByText(/Get moving/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("35 activities ready")).toBeInTheDocument());
   });
 });

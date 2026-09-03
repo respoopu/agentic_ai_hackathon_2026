@@ -43,7 +43,7 @@ Move closed rows here under a dated heading, preserving their ID, final owner an
 
 | ID | Priority | Final status | Item | Owner | Outcome |
 |---|---|---|---|---|---|
-| **OW-24** | P0 | **Done** | Build and verify the demo frontend | Codex | A responsive Next.js interface now drives the real API through setup, planning, exact-plan trusted-adult approval, sandbox booking, attendance/debrief and an adapted next plan. Pydantic display models generate the OpenAPI contract and TypeScript types; server routes keep the Guardian credential out of browser code and hold the teen token in an HttpOnly cookie. Safe loading, empty and error states are present; `scripts/run_demo.py` starts both services; Python contract tests, React tests, a production build, Playwright end-to-end flow and desktop/mobile visual checks pass. |
+| **OW-24** | P0 | **Done** | Build and verify the demo frontend | Codex | A responsive youth-focused Next.js interface starts with a documented fake login, keeps preferences on a dedicated profile screen, and provides a returning-user home before driving the real API through planning, exact-plan trusted-adult approval, sandbox booking, attendance/debrief and an adapted next plan. Pydantic display models generate the OpenAPI contract and TypeScript types; server routes keep the Guardian credential out of browser code and hold the teen token in an HttpOnly cookie. Safe loading, empty and error states are present; `scripts/run_demo.py` starts both services; Python contract tests, React tests, a production build, Playwright end-to-end flow and desktop/mobile visual checks pass. |
 
 ### 2 Sep 2026
 
